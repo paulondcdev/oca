@@ -1,5 +1,5 @@
 {
-  "name": "Oca",
+  "name": "oca",
   "version": "0.0.1",
   "description": "Oca makes it easier to build scalable applications on top of node.js",
   "main": "src/index.js",
