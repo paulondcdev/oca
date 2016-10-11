@@ -1,0 +1,28 @@
+{
+  "name": "Oca",
+  "version": "0.0.1",
+  "description": "Oca makes it easier to build scalable applications on top of node.js",
+  "main": "src/index.js",
+  "homepage": "https://github.com/node-oca/oca#readme",
+  "files": [
+    "build/src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/node-oca/oca.git"
+  },
+  "engines": {
+    "node": ">= 6.0.0"
+  },
+  "keywords": [
+    "es6",
+    "oop",
+	"express"
+  ],
+  "author": "Paulo Nogueira <paulondc@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/node-oca/oca/issues"
+  }
+}
