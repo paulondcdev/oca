@@ -18,7 +18,7 @@ By using Oca you write once, get it easily accessible anywhere!
   <img src="data/ocaHi.png"/>
 </p>
 
-**Key features**
+## Key features
 - Flexible architeture
 - Express integration
 - Authentication integration through passport
