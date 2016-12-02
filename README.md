@@ -10,7 +10,7 @@
 
 Oca makes it easier to build scalable applications on top of [Node.js](https://nodejs.org/en/),
 it provides an execution agnostic platform that takes care much of the common routines ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) necessary to
-to promote features of your application accross different forms of execution, through an API that emphasizes reliability and extensibility. Oca is intended to be used across a broad spectrum of applications.
+promote features of your application accross different forms of execution, through an API that emphasizes reliability and extensibility. Oca is intended to be used across a broad spectrum of applications.
 
 By using Oca you write once, get it easily accessible anywhere!
 
