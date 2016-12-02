@@ -1,5 +1,6 @@
 {
   "source": "./src",
+  "title": "Oca",
   "manual": {
     "overview": ["./data/manual/INTRODUCTION.md"]
   },
