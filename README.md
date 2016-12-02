@@ -3,8 +3,9 @@
 </p>
 
 [![Gitter chat](https://badges.gitter.im/node-oca/gitter.png)](https://gitter.im/node-oca)
-[![Build Status](https://travis-ci.org/node-oca/oca.svg?branch=master)](https://travis-ci.org/node-oca/oca) [![codecov.io](https://codecov.io/github/node-oca/oca/coverage.svg?branch=master)](https://codecov.io/github/node-oca/oca?branch=master)
-[![Esdocs](https://doc.esdoc.org/github.com/node-oca/oca/badge.svg)](https://doc.esdoc.org/github.com/node-oca/oca)
+[![Build Status](https://travis-ci.org/node-oca/oca.svg?branch=master)](https://travis-ci.org/node-oca/oca)
+[![codecov.io](https://codecov.io/github/node-oca/oca/coverage.svg?branch=master)](https://codecov.io/github/node-oca/oca?branch=master)
+[![Esdocs](https://node-oca.github.io/badge.svg)](https://node-oca.github.io/)
 </p>
 
 Oca makes it easier to build scalable applications on top of [Node.js](https://nodejs.org/en/),
@@ -29,7 +30,7 @@ By using Oca you write once, get it easily accessible anywhere!
 
 ## Documentation
 - [Introduction](data/manual/INTRODUCTION.md)
-- [API reference](https://doc.esdoc.org/github.com/node-oca/oca/)
+- [API reference](https://node-oca.github.io)
 - Tutorials (coming soon)
 - Examples (coming soon)
 
