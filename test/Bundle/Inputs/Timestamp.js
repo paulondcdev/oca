@@ -27,13 +27,13 @@ describe('Timestamp Input:', () => {
     input.value = new Date('invalid');
 
     input.validate.bind(input)().then((value) => {
-      done(new Error('unexpected value'));
+      done(new Error(`unexpected value ${value}`));
     }).catch((err) => {
       done();
     });
   });
 
-  const stringValue = 'Thu Oct 13 2016 20:36:45 GMT-0700 (PDT)';
+  const stringValue = String(new Date());
   it('Value should be able to be parsed from a string', (done) => {
     const input = Input.create('input: timestamp');
     input.parseValue(stringValue);
@@ -50,7 +50,7 @@ describe('Timestamp Input:', () => {
     input.parseValue(stringValue);
 
     input.serializeValue().then((value) => {
-      done(value === stringValue ? null : new Error('unexpected value'));
+      done(value === stringValue ? null : new Error(`unexpected value: ${value}`));
     }).catch((err) => {
       done(err);
     });
