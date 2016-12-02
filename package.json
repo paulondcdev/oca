@@ -1,6 +1,6 @@
 {
   "name": "oca",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Oca makes it easier to build scalable applications on top of Node.js",
   "scripts": {
     "build": "babel src --out-dir=dist --source-maps both",
