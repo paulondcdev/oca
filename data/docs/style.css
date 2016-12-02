@@ -1,0 +1,17 @@
+html
+{
+  max-width: 960px;
+}
+
+pre.source-code {
+  overflow: auto;
+}
+
+.layout-container > header {
+  border-bottom: solid 1px #3ec474;
+}
+
+.github-markdown img:not([src*=".svg"]) {
+  max-width: 100%;
+  box-shadow: none;
+}

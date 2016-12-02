@@ -1,0 +1,27 @@
+{
+  "source": "./src",
+  "manual": {
+    "overview": ["./data/manual/INTRODUCTION.md"]
+  },
+  "plugins": [
+    {
+      "name": "./data/docs/helper.js"
+    },
+    {
+      "name": "esdoc-es7-plugin"
+    },
+    {
+      "name": "esdoc-importpath-plugin",
+      "option": {
+        "replaces": [
+          {"from": "^src/", "to": ""},
+          {"from": ".js", "to": ""}
+        ]
+      }
+    }
+  ],
+  "styles": ["./data/docs/style.css"],
+  "destination": "./esdoc",
+  "package": "./package.json",
+  "lint": true
+}
