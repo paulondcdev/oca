@@ -33,8 +33,9 @@ By using Oca you write once, get it easily accessible anywhere!
 ## Documentation
 - [Introduction](https://github.com/node-oca/oca/blob/master/data/manual/INTRODUCTION.md)
 - [API reference](https://node-oca.github.io)
-- Tutorials (coming soon)
-- Examples (coming soon)
+- Examples
+ - [REST](https://github.com/node-oca/restExample)
+ - Tutorials (coming soon)
 
 ## Requirement
 Oca is built using modern specs [ES6](http://es6-features.org/)/ES7, it requires [Node.js](https://www.nodejs.org) version **6 or greater**
