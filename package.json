@@ -1,9 +1,10 @@
 {
   "name": "oca",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Oca makes it easier to build scalable applications on top of Node.js",
   "scripts": {
     "build": "babel src --out-dir=dist --source-maps both",
+    "prepublish": "npm run build",
     "start": "node dist",
     "docs": "esdoc -c .esdoc.json && npm run docs-assets",
     "docs-assets": "cp -R data/ esdoc/data/",
@@ -22,16 +23,14 @@
     "url": "git+https://github.com/node-oca/oca.git"
   },
   "main": "dist/index.js",
-  "files": [
-    "dist/src",
-    "README.md"
-  ],
   "engines": {
     "node": ">= 6.0.0"
   },
   "keywords": [
     "es6",
-    "oop"
+    "oop",
+    "rest",
+    "node"
   ],
   "dependencies": {
     "babel-cli": "^6.18.0",
