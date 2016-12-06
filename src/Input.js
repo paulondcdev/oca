@@ -585,11 +585,7 @@ class Input{
    * @protected
    */
   _isCached(name, at=null){
-    if (this.isVector){
-      assert(at !== null, 'Could not determine the index of the vector');
-    }
-
-    return this.cache.has(`${name}(${at || ''})`);
+    return this.cache.has(this._cacheEntry(name, at));
   }
 
   /**
@@ -603,11 +599,7 @@ class Input{
    * @protected
    */
   _setToCache(name, value, at=null){
-    if (this.isVector){
-      assert(at !== null, 'Could not determine the index of the vector');
-    }
-
-    this.cache.set(`${name}(${at || ''})`, value);
+    this.cache.set(this._cacheEntry(name, at), value);
   }
 
   /**
@@ -621,11 +613,24 @@ class Input{
    * @protected
    */
   _getFromCache(name, at=null){
+    return this.cache.get(this._cacheEntry(name, at));
+  }
+
+  /**
+   * Returns the cache entry based on the name and index (at)
+   *
+   * @param {string} name - name of the key
+   * @param {number} [at] - used when the input is set to a vector to tell the
+   * @return {string}
+   *
+   * @private
+   */
+  _cacheEntry(name, at=null){
     if (this.isVector){
       assert(at !== null, 'Could not determine the index of the vector');
     }
 
-    return this.cache.get(`${name}(${at || ''})`);
+    return (this.isVector) ? `${name}(${at})` : `${name}()`;
   }
 
   // codes used by error validations

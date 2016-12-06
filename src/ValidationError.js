@@ -12,7 +12,7 @@ const _code = Symbol('code');
  *
  * It carries additional information about the context of the error that can be used when
  * reporting/handling it. For this reason when this exception is raised through {@link RequestHandler}
- * the contents are encoded into json {@link toJson}
+ * the contents are encoded into json {@link ValidationError.toJson}
  *
  * ```javascript
  * throw new ValidationError('File does not exit!')
