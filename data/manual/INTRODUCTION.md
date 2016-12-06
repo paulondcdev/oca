@@ -6,6 +6,7 @@ where the evaluation does not need to deal with the specifics of each form, Oca 
 that for you:
 
 **Action**
+
 ```javascript
 const Oca = require('oca');
 
@@ -148,6 +149,7 @@ Oca.registerAction(SandBox, MyAction);
 ```
 
 **Initialization**
+
 To be able to use our providers we need to make sure that Oca settings have been initialized,
 It can be done by calling the line bellow during the initialization of your app
 
@@ -223,13 +225,14 @@ https://.../xxx/someInput=test
 ```
 
 **Calling the action through REST**
+
 By default when an provider and action are webfied, it's automatically available for REST
 requests
 
 ```javascript
 // adding the rest support to the express app
 const app = express();
-app.use(Oca.restful());;
+app.use(Oca.restful());
 ```
 
 Executing it
