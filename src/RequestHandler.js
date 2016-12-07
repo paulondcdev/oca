@@ -26,11 +26,14 @@ const _temporaryFolders = Symbol('temporaryFolders');
  *
  * A handler is created by the {@link Provider} through {@link Provider.requestHandler}.
  * It can be customized to address specific provider needs, such as custom {@link authenticate},
- * {@link uploadDirectory}, {@link _errorOutput} and etc
+ * {@link uploadDirectory}, {@link _errorOutput} and etc.
  *
  * The availability of the actions is done by the conjunction of webfying the
  * provider and action ({@link Provider.webfyProvider}, {@link Provider.webfyAction}).
  * By default both {@link Provider} and {@link Action} are not available for requests.
+ *
+ * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
+ * included in the error responses
  */
 class RequestHandler{
 
@@ -310,7 +313,7 @@ class RequestHandler{
 
     // adding the stack-trace information when running in development mode
     /* istanbul ignore next */
-    if (process.env.NODE_ENV === 'development' || 1){
+    if (process.env.NODE_ENV === 'development'){
       result.error.stacktrace = err.stack.split('\n');
       debug(err.stack);
     }
