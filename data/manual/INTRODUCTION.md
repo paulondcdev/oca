@@ -1,11 +1,14 @@
-## Actions
+## TL;DR version
+- [Hello World](https://github.com/node-oca/example-hello-world)
+- [REST](https://github.com/node-oca/example-rest)
+- [Middleware integration](https://github.com/node-oca/example-middleware)
+- [Authentication](https://github.com/node-oca/example-auth)
+- [Uploads](https://github.com/node-oca/example-uploads)
+- [JSON serialized actions](https://github.com/node-oca/example-json-actions)
 
-By writting evalutations using Oca API they can be triggered from many different forms. For
-instance the code bellow can be executed from web middlewares, REST, JSON serialized actions
-where the evaluation does not need to deal with the specifics of each form, Oca takes care of
-that for you:
+## What is an Action ?
 
-**Action**
+An action is used to implement evalutations
 
 ```javascript
 const Oca = require('oca');
@@ -17,9 +20,9 @@ class MyAction extends Oca.Action{
 }
 ```
 
-[Action Documentation](https://node-oca.github.io/class/src/Action.js~Action.html)
+[Action Documentation](https://node-oca.github.io/docs/class/src/Action.js~Action.html)
 
-## Inputs
+## What is an Input ?
 
 The data used for the execution is held by inputs which are defined inside of
 the Action. They are implemented with a wide range of verifications which make
@@ -30,17 +33,17 @@ Oca comes bundled with the inputs types:
 
 | Type        | Data Example |
 | ------------- |-------------|
-| [Bool](https://node-oca.github.io/class/src/Bundle/Inputs/Bool.js~Bool.html) | ```true``` |
-| [Numeric](https://node-oca.github.io/class/src/Bundle/Inputs/Numeric.js~Numeric.html) | ```10``` |
-| [Text](https://node-oca.github.io/class/src/Bundle/Inputs/Text.js~Text.html) | ```'Test'``` |
-| [FilePath](https://node-oca.github.io/class/src/Bundle/Inputs/FilePath.js~FilePath.html) | ```/tmp/someFile.txt``` |
-| [Url](https://node-oca.github.io/class/src/Bundle/Inputs/Url.js~Url.html) | ```http://www.google.com``` |
-| [Email](https://node-oca.github.io/class/src/Bundle/Inputs/Email.js~Email.html) | ```user@domain.com``` |
-| [Ip](https://node-oca.github.io/class/src/Bundle/Inputs/Ip.js~Ip.html) | ```192.168.0.1``` |
-| [Timestamp](https://node-oca.github.io/class/src/Bundle/Inputs/Timestamp.js~Timestamp.html) | ```new Date()``` |
-| [UUID](https://node-oca.github.io/class/src/Bundle/Inputs/UUID.js~UUID.html) | ```10ec58a-a0f2-4ac4-8393-c866d813b8d1```|
-| [Version](https://node-oca.github.io/class/src/Bundle/Inputs/Version.js~Version.html) | ```0.1.12```|
-| [Any](https://node-oca.github.io/class/src/Bundle/Inputs/Any.js~Any.html) | ```{a: 1, b: 2}```|
+| [Bool](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Bool.js~Bool.html) | ```true``` |
+| [Numeric](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Numeric.js~Numeric.html) | ```10``` |
+| [Text](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Text.js~Text.html) | ```'Test'``` |
+| [FilePath](https://node-oca.github.io/docs/class/src/Bundle/Inputs/FilePath.js~FilePath.html) | ```/tmp/someFile.txt``` |
+| [Url](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Url.js~Url.html) | ```http://www.google.com``` |
+| [Email](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Email.js~Email.html) | ```user@domain.com``` |
+| [Ip](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Ip.js~Ip.html) | ```192.168.0.1``` |
+| [Timestamp](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Timestamp.js~Timestamp.html) | ```new Date()``` |
+| [UUID](https://node-oca.github.io/docs/class/src/Bundle/Inputs/UUID.js~UUID.html) | ```10ec58a-a0f2-4ac4-8393-c866d813b8d1```|
+| [Version](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Version.js~Version.html) | ```0.1.12```|
+| [Any](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Any.js~Any.html) | ```{a: 1, b: 2}```|
 
 > You can easily implement your own type, if you are interested take a look at
 the input inplementations bundled with Oca
@@ -72,7 +75,6 @@ class MyAction extends Oca.Action {
 Any input can be defined as a vector by using the short array syntax `[]`:
 
 ```javascript
-// ...
 this.createInput('someInput: text[]');
 ```
 
@@ -128,9 +130,9 @@ class CustomAction extends Oca.Action{
 }
 ```
 
-[Input Documentation](https://node-oca.github.io/class/src/Input.js~Input.html)
+[Input Documentation](https://node-oca.github.io/docs/class/src/Input.js~Input.html)
 
-## Providers
+## What is a Provider ?
 
 An action is always available through a provider. It's used to group actions that
 are about the same context. For instance, `User Profile`, `User Friends`, `User Posts`
@@ -147,6 +149,8 @@ Oca.registerProvider(SandBox);
 // registering the action for the provider
 Oca.registerAction(SandBox, MyAction);
 ```
+
+## How to execute actions ?
 
 **Initialization**
 
@@ -173,7 +177,7 @@ myAction.execute().then((result) => {
 })
 ```
 
-[Provider Documentation](https://node-oca.github.io/class/src/Provider.js~Provider.html)
+[Provider Documentation](https://node-oca.github.io/docs/class/src/Provider.js~Provider.html)
 
 **Executing from Web**
 
@@ -205,7 +209,7 @@ Oca.Settings.authenticate = passport.authenticate('...')
 ```
 
 Alternatively a custom authentication method can be defined per provider basis, if
-you are interested checkout about the [RequestHandler](https://node-oca.github.io/class/src/RequestHandler.js~RequestHandler.html)
+you are interested checkout about the [RequestHandler](https://node-oca.github.io/docs/class/src/RequestHandler.js~RequestHandler.html)
 
 
 **Calling the action through middleware**
@@ -279,20 +283,20 @@ actionA.toJson().then((json) => {
   throw err;
 });
 
-[JSON Action Documentation](https://node-oca.github.io/class/src/Action.js~Action.html#instance-method-toJson)
+[JSON Action Documentation](https://node-oca.github.io/docs/class/src/Action.js~Action.html#instance-method-toJson)
 ```
 
-## Sharing Data
+## How to share data between actions & providers ?
 
 Oca shares data between providers and actions using a Session, for futher
-details please checkout the [Session Documentation](https://node-oca.github.io/class/src/Session.js~Session.html)
+details please checkout the [Session Documentation](https://node-oca.github.io/docs/class/src/Session.js~Session.html)
 
-## Configuring Oca
+## How to configure Oca ?
 
 The basic configuration can be found under Settings, for futher
-details please checkout the [Settings Documentation](https://node-oca.github.io/class/src/Settings.js~Settings.html)
+details please checkout the [Settings Documentation](https://node-oca.github.io/docs/class/src/Settings.js~Settings.html)
 
-## Caching
+## How to cache actions ?
 
 Oca provides out of the box caching system that can be enabled for any action
 

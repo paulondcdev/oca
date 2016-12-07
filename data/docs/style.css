@@ -1,17 +1,74 @@
 html
 {
   max-width: 960px;
+  font-size: 1em;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+a {
+  color: #206ac9;
+}
+
+a:hover {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 pre.source-code {
   overflow: auto;
 }
 
+h1 {
+  font-size: 2em;
+}
+
+h2 {
+  font-size: 1.5em;
+}
+
+h3 {
+  font-size: 1.17em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+.import-path{
+  visible: hidden;
+}
+
 .layout-container > header {
-  border-bottom: solid 1px #3ec474;
+  background-color: #fafafa;
+  border-bottom: solid 1px #ececec;
 }
 
 .github-markdown img:not([src*=".svg"]) {
   max-width: 100%;
   box-shadow: none;
+}
+
+.layout-container > header > a {
+  color: #333333;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.layout-container > header > a:hover{
+  color: #206ac9;
+}
+
+.navigation .nav-dir-path{
+  color: #919191;
+}
+
+.layout-container > header > a.repo-url-github {
+  font-size: 1em;
+  height: 38px;
+  width: auto;
+  padding-left: 24px;
+  background: url("../../image/github.png") no-repeat left;
+  background-size: 20px;
+  vertical-align: top;
 }

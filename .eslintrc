@@ -78,6 +78,8 @@
           "sha1",
           "sha256",
           "const",
+          "esdocs",
+          "traceback",
           "wrapup",
           "cacheable",
           "jshint",

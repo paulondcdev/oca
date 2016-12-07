@@ -35,50 +35,6 @@ const _session = Symbol('session');
  * data, it can enabled through {@link _cacheable}.
  * Also, actions can be serialized ({@link toJson}) to postpone their execution where they can be
  * executed later through ({@link Provider.createActionFromJson}).
- *
- * ```javascript
- * // implementing a custom action
- * class Sum extends Action {
- *   constructor(){
- *     super();
- *     this.createInput('a: numeric');
- *     this.createInput('b: numeric');
- *   }
- *
- *   _perform(){
- *     const result = this.input('a').value + this.input('b').value;
- *     return Promise.resolve(result);
- *   }
- * }
- *
- * // registering the action
- * Oca.registerAction('Math', Sum);
- *
- * // webfying the action
- * Oca.webfyAction('Math', Sum, Oca.Method.Get);
- * ```
- *
- * ```javascript
- * // executing it internally
- * const someProvider = Provider.create('Math');
- * const sum = someProvider.createAction('Sum');
- * foo.input('a').value = 2;
- * foo.input('b').value = 5;
- * foo.execute().then(...);
- * ```
- *
- * ```javascript
- * // executing the action from an arbitrary express route
- * app.get('/sum', Oca.middleware('Math/Sum', (err, result, req, res) => {
- *  if (err) return next(err);
- *  res.send(`result: ${result}`);
- * }));
- * ```
- *
- * ```javascript
- * // executing from a request
- * `https://.../<mathRoute>/Sum/a=2&b=5`
- * ```
  */
 class Action{
 
