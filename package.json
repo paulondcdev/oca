@@ -1,7 +1,7 @@
 {
   "name": "oca",
   "version": "0.1.4",
-  "description": "Oca makes it easier to build scalable applications on top of Node.js",
+  "description": "A framework for building solid evalutations in Node.js",
   "scripts": {
     "build": "babel src --out-dir=dist --source-maps both",
     "prepublish": "npm run build",
