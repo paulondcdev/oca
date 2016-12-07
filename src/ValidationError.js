@@ -34,6 +34,9 @@ class ValidationError extends Error{
 
     this.code = code;
     this.inputName = inputName;
+
+    // esdocs fails to parse the line bellow when using the dot notation
+    this['status'] = ValidationError.requestStatus; // eslint-disable-line dot-notation
   }
 
   /**
@@ -102,6 +105,9 @@ class ValidationError extends Error{
     const data = JSON.parse(json);
     return new ValidationError(data.message, data.code, data.inputName);
   }
+
+  // custom status code used when rendering this error through a request
+  static requestStatus = 550;
 }
 
 module.exports = ValidationError;

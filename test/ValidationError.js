@@ -11,6 +11,11 @@ describe('ValidationError:', () => {
     assert.equal(error.message, 'Some Message');
   });
 
+  it('Validation error should have 550 as status code', () => {
+    const error = new ValidationError('Some Message');
+    assert.equal(error.status, 550);
+  });
+
   it('Should create an instance with an input name', () => {
     const error = new ValidationError('Some Message', null, 'someInput');
     assert.equal(error.inputName, 'someInput');

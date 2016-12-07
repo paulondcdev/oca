@@ -278,7 +278,7 @@ describe('Restful:', () => {
       let error = null;
 
       try{
-        assert.equal(response.statusCode, 500);
+        assert.equal(response.statusCode, 550);
       }
       catch(errr){
         error = errr;
@@ -627,7 +627,7 @@ describe('Restful:', () => {
       let error = null;
 
       try{
-        assert.equal(response.statusCode, 500);
+        assert.equal(response.statusCode, 550);
       }
       catch(errr){
         error = errr;
