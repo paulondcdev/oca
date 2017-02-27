@@ -4,4 +4,12 @@ coverage
 .nyc_output
 src
 esdoc
-data
+testutils
+data/manual
+data/docs
+data/*.svg
+
+# OS
+Desktop.ini
+*.DS_Store
+Thumbs.db
