@@ -48,13 +48,9 @@ describe('LruCache:', () => {
     assert(cache.has('test'));
   });
 
-  it('Should test the maximum cap size', () => {
-    const cache = new LruCache(8, 1000);
-    cache.set('test', 10);
-    assert.equal(cache.get('test'), 10);
-    cache.set('test2', 10);
-    assert.equal(cache.get('test'), undefined);
-    assert.equal(cache.get('test2'), 10);
+  it('if a key does not exist it should return the defaultValue', () => {
+    const cache = new LruCache(1024, 1000);
+    assert.equal(cache.get('test', 12), 12);
   });
 
   it('Should test the lifespan', (done) => {

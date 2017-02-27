@@ -10,7 +10,7 @@ describe('ImmutableMap:', () => {
     const map = new ImmutableMap();
     map.set('test', 10);
 
-    assert.equal(map.length, 1);
+    assert.equal(map.size, 1);
     assert.equal(map.get('test'), 10);
   });
 
@@ -21,7 +21,7 @@ describe('ImmutableMap:', () => {
 
     map.clear();
 
-    assert.equal(map.length, 0);
+    assert.equal(map.size, 0);
   });
 
   it('Should remove an item from the map', () => {
@@ -29,9 +29,9 @@ describe('ImmutableMap:', () => {
     map.set('test', 10);
     map.set('test2', 10);
 
-    map.remove('test2');
+    map.delete('test2');
 
-    assert.equal(map.length, 1);
+    assert.equal(map.size, 1);
   });
 
   it('Should tell if the map contains the key', () => {
@@ -42,14 +42,6 @@ describe('ImmutableMap:', () => {
     assert(map.has('test'));
   });
 
-  it('Should tell if the map is empty', () => {
-    const map = new ImmutableMap();
-
-    assert(map.isEmpty);
-    map.set('test', 10);
-    assert(!map.isEmpty);
-  });
-
   it('Should return the keys that are part of the map', () => {
     const map = new ImmutableMap();
 
@@ -58,7 +50,7 @@ describe('ImmutableMap:', () => {
 
     let test = false;
     let test2 = false;
-    for (const key of map.keys){
+    for (const key of map.keys()){
       if (key === 'test'){
         test = true;
       }
@@ -78,7 +70,7 @@ describe('ImmutableMap:', () => {
 
     for (const key of ['b', 'c', 'd', 'd']){
       try{
-        value.a[key] = 'some other value';
+        value.a[key] = 'other value';
         throw new Error('unexpected');
       }
       catch(e){
