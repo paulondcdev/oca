@@ -28,7 +28,7 @@ const _session = Symbol('session');
  * action.execute().then(...) //  HelloWorld
  * ```
  *
- * The data used to perform the evaluation is held by inputs ({@link Action.createInput}).
+ * The data used to perform an evaluation is held by inputs ({@link Action.createInput}).
  * These inputs can be widely configured to enforce quality control via properties. Please
  * check the documentation for the input types to be aware about the available validations.
  *
