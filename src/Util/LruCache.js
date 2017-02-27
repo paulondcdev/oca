@@ -14,7 +14,7 @@ const _cache = Symbol('cache');
  * A cache that discards the least recently used items first
  *
  * This feature is provided by the {@link Session} to store the result of
- * cacheable actions ({@link Action._cacheable})
+ * cacheable actions ({@link Action.isCacheable})
  */
 class LruCache{
 
@@ -27,8 +27,8 @@ class LruCache{
    */
   constructor(size, lifespan){
 
-    assert(TypeCheck.isNumber(size), 'size requires a numeric value');
-    assert(TypeCheck.isNumber(lifespan), 'lifespan requires a numeric value');
+    assert(TypeCheck.isNumber(size), 'size requires a number value');
+    assert(TypeCheck.isNumber(lifespan), 'lifespan requires a number value');
 
     this[_size] = size;
     this[_lifespan] = lifespan;
@@ -135,10 +135,9 @@ class LruCache{
         }});
     }
 
-    const resultHolder = {
-      memorySize: (TypeCheck.isNone(value)) ? 0 : sizeof(value),
-      data: value,
-    };
+    const resultHolder = Object.create(null);
+    resultHolder.memorySize = sizeof(value);
+    resultHolder.data = value;
 
     this[_cache].set(key, resultHolder);
   }

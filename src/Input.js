@@ -1,20 +1,21 @@
 const assert = require('assert');
 const TypeCheck = require('js-typecheck');
-const ValidationError = require('./ValidationError');
+const ValidationFail = require('./Error/ValidationFail');
 const Util = require('./Util');
 
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _name = Symbol('name');
+const _readOnly = Symbol('readOnly');
 const _properties = Symbol('properties');
+const _lockedProperties = Symbol('lockedProperties');
 const _cache = Symbol('cache');
 
 /**
- * Base class that defines the interface for all inputs
+ * An input holds a value that is used for the execution of the {@link Action}.
  *
- * An input holds a value that is used for the execution of the {@link Action}. The
- * value carried by the input gets checked through a wide range of validations
+ * The value carried by the input gets checked through a wide range of validations
  * which make sure that the value meets the necessary requirements for
  * the execution of the {@link Action}.
  *
@@ -22,12 +23,12 @@ const _cache = Symbol('cache');
  * that can go far beyond checking the data type or matching the value through
  * a regex. In most cases these validations are driven by `properties` which usually
  * are defined at construction time. Also, non-generic validations can be
- * implemented through `extendedValidation` where it can be used to implement
- * validations that can be very specific to the action holding the input.
+ * implemented through `extendedValidation`, making possible to define validations
+ * that are tied with an action.
  *
- * Inputs are created through {@link create} using
+ * Inputs are created through {@link create} using a
  * [syntactic sugar](https://en.wikipedia.org/wiki/Syntactic_sugar) that describes
- * its name and type (aka [TypeScript](https://www.typescriptlang.org/)), for instance:
+ * their name and type (aka [TypeScript](https://www.typescriptlang.org/)), for instance:
  *
  * ```javascript
  * Input.create('myInput: bool')
@@ -46,25 +47,58 @@ const _cache = Symbol('cache');
  * Input.create('myInput?: bool[]')
  * ```
  *
- * When an action is either accessed through {@link RequestHandler} or
- * created from Json ({@link Provider.createActionFromJson}) the value of the inputs
- * are assigned through {@link Input.parseValue}.
+ * You can also create inputs through a verbose ([boilerplate](https://en.wikipedia.org/wiki/Boilerplate_code))
+ * interface where each of the options described above can be defined at construction time via properties:
+ * ```javascript
+ * Input.create('myInput', {type: 'bool', vector: true, required: false})
+ * ```
+ *
+ * Since inputs are used by actions they can be created directly inside of an {@link Action} via
+ * {@link Action.createInput} which calls internally {@link Input.create} factory method:
+ *
+ * ```
+ * class HelloWorld extends Oca.Action{
+ *   constructor(){
+ *     super();
+ *     // ♥ compact version
+ *     this.createInput('myInputA?: bool[]');
+ *
+ *     // same as effect as above, but long...
+ *     this.addInput(Input.create('myInputB?: bool[]'));
+ *   }
+ * }
+ * ```
+ *
+ * To register a new input type take a look at {@link Input.registerInput}
  *
  * <h2>Property Summary</h2>
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
- * required | boolean telling if the value is required | `true` | `true`
+ * required | boolean telling if the value is required | ::on:: | ::true::
  * immutable | boolean telling if the data of the value cannot be altered \
  * overtime, however the value of the input can still be replaced by \
- * the input value setter | `true` | `true`
- * defaultValue | default value of the input | `true` | `null`
- * vector | carries a boolean telling if the input holds a vector value. It's defined \
- * during the construction of the input | `true` |
- * private | boolean telling if the input cannot be initialized through requests, \
- * therefore the input should only be used internally | `false` |
+ * the input value setter, in order to prevent it you can set an input as \
+ * {@link readOnly} | ::on:: | ::true::
+ * defaultValue | default value of the input | ::on:: | ::null::
+ * cliElementType | tells how the input should be presented via {@link CommandLine}: \
+ * `option` or `argument` ({@link http://docopt.org}) | ::on:: | `option`
+ * vector | boolean telling if the input holds a vector value (defined \
+ * at the construction time) | ::on:: | ::auto::
+ * hidden | boolean telling if the input is hidden from the {@link HandlerParser}, \
+ * therefore the input should only be used internally | ::off:: | ::none::
  * autofill | key name about the value under the  {@link Session.autofill} \
- * that should be used to initialized the value of the input | `false` |
+ * that should be used during the initialization of the input through the session | \
+ * ::off:: | ::none::
+ * description | description about the input, currently this information is displayed \
+ * when an action is running through {@link CommandLine} | ::off:: | ::none::
+ * cliShortOption | short version of the input name used to speficy when running \
+ * through the {@link CommandLine} | ::off:: | ::none::
+ *
+ * <br/>The assignment of a property value can be done at construction time or through
+ * the setter {@link Input.assignProperty}. A property value can be queried by the
+ * getter {@link Input.property}. To add new properties to an input type, please take
+ * a look at {@link Input.registerProperty}.
  */
 class Input{
 
@@ -83,27 +117,35 @@ class Input{
     assert(extendedValidation === null || TypeCheck.isCallback(extendedValidation),
       'extendedValidation needs to be defined as function(contextValue) or null');
 
-    this[_name] = name;
-    this[_properties] = {};
-    this[_cache] = new Util.ImmutableMap();
+    // validating reserved names
+    assert(!(['help'].includes(name)), `Input name '${name}' is reserved, it cannot be used!`);
 
-    // defining default properties
-    this.assignProperty('required', true);
-    this.assignProperty('immutable', true);
-    this.assignProperty('vector', false);
-    this.assignProperty('defaultValue', null);
+    // validating input name
+    assert(name.length, 'input name cannot be empty!');
+    assert((/^([\w_-])+$/gi).test(name), `Illegal input name: ${name}`);
+
+    this[_name] = name;
+    this[_readOnly] = false;
+    this[_properties] = new Map();
+    this[_lockedProperties] = new Set();
+    this[_cache] = new Util.ImmutableMap();
 
     // defining custom properties that may override the default ones
     for (const propertyKey in properties){
       this.assignProperty(propertyKey, properties[propertyKey]);
     }
 
+    // locking properties
+    this.lockProperty('type');
+    this.lockProperty('vector');
+    this.lockProperty('defaultValue');
+
     this.value = this.property('defaultValue');
     this._extendedValidation = extendedValidation;
   }
 
   /**
-   * Factories an input instance
+   * Creates an input instance
    *
    * @param {string} inputInterface - string followed by either the pattern `name: type`
    * or `name?: type` in case of optional {@link Input}. The type is case-insensitive
@@ -116,14 +158,14 @@ class Input{
    *
    * @example
    * // minimal
-   * Input.create('someName: numeric');
+   * Input.create('inputName: numeric');
    *
    * @example
    * // full
-   * Input.create('someName: numeric', {min: 1, max: 5}, function(at){
+   * Input.create('inputName: numeric', {min: 1, max: 5}, function(at){
    *  return new Promise((resolve, reject) =>{
-   *    if (this._valueAt(at) === 3)
-   *      reject(new ValidationError('Failed for some reason'));
+   *    if (this.valueAt(at) === 3)
+   *      reject(new ValidationFail('Failed for some reason'));
    *    else
    *      resolve(this.value);
    *  });
@@ -133,31 +175,38 @@ class Input{
     const inputInterfaceParts = inputInterface.split(':');
     const propertiesFinal = Object.assign({}, properties);
 
-    if (inputInterfaceParts.length !== 2){
+    if (inputInterfaceParts.length === 2){
+      for (let i=0, len=inputInterfaceParts.length; i < len; ++i){
+        inputInterfaceParts[i] = inputInterfaceParts[i].trim();
+      }
+
+      // not required syntax
+      if (inputInterfaceParts[0].endsWith('?')){
+        inputInterfaceParts[0] = inputInterfaceParts[0].slice(0, -1);
+        propertiesFinal.required = false;
+      }
+
+      // vector syntax
+      if (inputInterfaceParts[1].endsWith('[]')){
+        inputInterfaceParts[1] = inputInterfaceParts[1].slice(0, -2);
+        propertiesFinal.vector = true;
+      }
+
+      propertiesFinal.type = inputInterfaceParts[1];
+    }
+    else if (inputInterfaceParts.length > 2){
       throw new Error("Invalid input interface, it should follow the pattern: 'name: type'");
     }
 
-    for (let i=0; i < inputInterfaceParts.length; i++){
-      inputInterfaceParts[i] = inputInterfaceParts[i].trim();
-    }
+    const InputTypeClass = this.registeredInput(propertiesFinal.type);
 
-    // not required syntax
-    if (inputInterfaceParts[0].endsWith('?')){
-      inputInterfaceParts[0] = inputInterfaceParts[0].slice(0, -1);
-      propertiesFinal.required = false;
-    }
-
-    // vector syntax
-    else if (inputInterfaceParts[1].endsWith('[]')){
-      inputInterfaceParts[1] = inputInterfaceParts[1].slice(0, -2);
-      propertiesFinal.vector = true;
-    }
-
-    const InputTypeClass = this.registeredInput(inputInterfaceParts[1]);
+    // storing the input type in lower-case to keep the same convention
+    // found in the registration
+    propertiesFinal.type = propertiesFinal.type.toLowerCase();
 
     // creates a new instance
     if (!InputTypeClass){
-      throw new Error(`Invalid input type: ${inputInterfaceParts[1]}`);
+      throw new Error(`Invalid input type: ${propertiesFinal.type}`);
     }
 
     return new InputTypeClass(inputInterfaceParts[0], propertiesFinal, extendedValidation);
@@ -202,7 +251,7 @@ class Input{
    * associated with the source input to the current input.
    *
    * @param {Input} sourceInput - input used as source to setup the current input
-   * @param {number} [at] - index used when the target input is defined as vector to
+   * @param {null|number} [at] - index used when the target input is defined as vector to
    * tell which value should be used
    * @param {boolean} [cache=true] - tells if the cache will be copied as well
    */
@@ -232,16 +281,16 @@ class Input{
 
     // transferring the cache to the current input
     if (cache){
-      assert(TypeCheck.isInstanceOf(sourceInput.cache, Util.ImmutableMap));
+      assert(sourceInput.cache instanceof Util.ImmutableMap);
 
       if (at === null){
-        for (const key of sourceInput.cache.keys){
+        for (const key of sourceInput.cache.keys()){
           this.cache.set(key, sourceInput.cache.get(key));
         }
       }
       else{
         const indexToken = `(${at})`;
-        for (const key of sourceInput.cache.keys){
+        for (const key of sourceInput.cache.keys()){
           if (key.endsWith(indexToken)){
             this._setToCache(key.slice(0, -indexToken.length), sourceInput.cache.get(key));
           }
@@ -272,7 +321,7 @@ class Input{
 
   /**
    * Executes the input validations ({@link _validation}), in case of a failed
-   * validation then an exception of type {@link ValidationError} is raised
+   * validation then an exception of type {@link ValidationFail} is raised
    *
    * @return {Promise<*>} Returns the value of the input
    */
@@ -280,28 +329,42 @@ class Input{
     // required check
     if (this.isEmpty){
       if (this.isRequired !== false){
-        throw new ValidationError('Input is required, it cannot be empty!', Input.errorCodes[0]);
+        throw new ValidationFail('Input is required, it cannot be empty!', Input.errorCodes[0], this.name);
       }
     }
 
     // vector check
     else if (this.isVector && !TypeCheck.isList(this.value)){
-      throw new ValidationError('Input needs to be a vector!', Input.errorCodes[1]);
+      throw new ValidationFail('Input needs to be a vector!', Input.errorCodes[1], this.name);
     }
 
     // otherwise perform the asynchronous validations
     else{
-      for (let i=0; i < (this.isVector ? this.value.length : 1); i++){
+      const validationPromises = [];
+      const length = this.isVector ? this.value.length : 1;
+      for (let i=0; i < length; ++i){
         // setting the context index
         const at = this.isVector ? i : null;
-
-        // running generic validations
-        await this._validation(at);
+        validationPromises.push(this._validation(at));
 
         // running extended validations
         if (TypeCheck.isCallback(this._extendedValidation)){
-          await this._extendedValidation.bind(this)(at);
+          validationPromises.push(this._extendedValidation.call(this, at));
         }
+      }
+
+      // running generic validations
+      try{
+        await Promise.all(validationPromises);
+      }
+      catch(err){
+
+        // including the input name to the validation fail
+        if (err instanceof ValidationFail){
+          err.inputName = this.name;
+        }
+
+        throw err;
       }
     }
 
@@ -312,34 +375,92 @@ class Input{
    * Returns the property value for the input property name
    *
    * @param {string} name - name of the property
-   * @param {*} [defaultValue] - default value returned in case the property
-   * does not exist
-   * @return {*} The value of the property (or the defaultValue in case of the
+   * @return {Promise<*>} The value of the property (or the defaultValue in case of the
    * property does not exist)
    */
-  property(name, defaultValue=null){
+  property(name){
     assert(TypeCheck.isString(name), 'property name needs to be defined as string');
 
-    if (this.hasProperty(name)){
-      return this[_properties][name];
+    if (this[_properties].has(name)){
+      return this[_properties].get(name);
     }
 
-    return defaultValue;
+    // checking if the property is valid
+    const allRegisteredProperties = Input._allRegisteredProperties(this.constructor);
+    if (allRegisteredProperties.has(name)){
+      return allRegisteredProperties.get(name);
+    }
+
+    throw new Error(`Property ${name} is not registered!`);
   }
 
   /**
    * Sets a property to the input, in case the property already exists then the value
-   * is going to be overridden
+   * is going to be overridden. By default the only properties that can be modified are
+   * the ones found under {@link Input.registeredInputNames}. However you can
+   * assign a non-registered property by enabling `loose` parameter.
+   *
+   * Property values can be locked. Therefore preventing modifications via
+   * {@link Input.lockProperty}.
    *
    * @param {string} name - name of the property
    * @param {*} value - value for the property
+   * @param {boolean} [loose=false] - when true lets to assign a property that is not
+   * registered to the input ({@link Input.registeredInputNames})
    */
-  assignProperty(name, value){
+  assignProperty(name, value, loose=false){
     assert(TypeCheck.isString(name), 'property name needs to be defined as string');
 
-    this[_properties][name] = value;
+    // checking if input is read-only
+    if (this.readOnly){
+      throw new Error(`Input ${this.name} is read only, cannot be modified!`);
+    }
+
+    // checking if property is valid
+    if (!loose && !Input._allRegisteredProperties(this.constructor).has(name)){
+      throw new Error(`Property ${name} is not registered!`);
+    }
+
+    // checking if property has been locked
+    if (this[_lockedProperties].has(name)){
+      throw new Error(`Property ${name} is locked!`);
+    }
+
+    this[_properties].set(name, value);
 
     this.clearCache();
+  }
+
+  /**
+   * Prevents a property value to be modified by {@link Input.assignProperty}
+   *
+   * @param {string} name - name of the property
+   * @param {boolean} [lock=true] - if true it locks the property otherwise
+   * it removes the lock from the property
+   */
+  lockProperty(name, lock=true){
+
+    // checking if input is read-only
+    if (this.readOnly){
+      throw new Error(`Input ${this.name} is read only, cannot be modified!`);
+    }
+
+    if (lock){
+      this[_lockedProperties].add(name);
+    }
+    else{
+      this[_lockedProperties].delete(name);
+    }
+  }
+
+  /**
+   * Returns a boolean telling if the property is locked ({@link Input.lockProperty})
+   *
+   * @param {string} name - name of the property
+   * @return {boolean}
+   */
+  isPropertyLocked(name){
+    return this[_lockedProperties].has(name);
   }
 
   /**
@@ -351,7 +472,7 @@ class Input{
   hasProperty(name){
     assert(TypeCheck.isString(name), 'property name needs to be defined as string');
 
-    return (name in this[_properties]);
+    return Input._allRegisteredProperties(this.constructor).has(name) || this[_properties].has(name);
   }
 
   /**
@@ -360,7 +481,9 @@ class Input{
    * @type {Array<string>}
    */
   get propertyNames(){
-    return Object.keys(this[_properties]);
+    return [...new Set([...this[_properties].keys(),
+      ...Input._allRegisteredProperties(this.constructor).keys(),
+    ])];
   }
 
   /**
@@ -369,10 +492,17 @@ class Input{
    * @param {*} inputValue - value that should be set to the input
    */
   set value(inputValue){
+
+    // checking if input is read-only
+    if (this.readOnly){
+      throw new Error(`Input ${this.name} is read only, cannot be modified!`);
+    }
+
     // Due the overhead that may occur on going through recursively and freezing
     // the whole hierarchy of the value, it freezes only value itself. In case
     // this is not enough consider in changing it to perform a deep-freeze instead
-    this._value = (!this.property('immutable') || TypeCheck.isNone(inputValue)) ? inputValue : Object.freeze(inputValue);
+    this._value = (!this.property('immutable') || TypeCheck.isNone(inputValue)) ||
+      inputValue instanceof Buffer ? inputValue : Object.freeze(inputValue);
 
     // flushing the cache when a new value is set
     this.clearCache();
@@ -398,53 +528,116 @@ class Input{
   }
 
   /**
-   * Sets the value by casting it to the type that is compatible
-   * with the input. In your input implementation you probably don't need to re-implement
-   * this method, since all of the basic types are already taking care of that. This
-   * method is called either by {@link RequestHandler} or when an action is created through
-   * Json {@link Provider.createActionFromJson}. In case the input is defined as vector
-   * the value can be defined using an array that is encoded in Json.
+   * Returns if the input is serializable
    *
-   * @param {string} value - string containing the serialized value
+   * This method should be re-implemented by derived classed to tell if the input can be
+   * serialized (default true).
+   *
+   * In case of a serializable input the methods {@link Input._encode} and {@link Input._decode}
+   * are expected to be implemented.
+   *
+   * @type {boolean}
    */
-  parseValue(value){
-    assert(TypeCheck.isString(value), 'value needs to be defined as string');
+  get isSerializable(){
+    return true;
+  }
+
+  /**
+   * Changes the read-only state of the input. A read-only input cannot have its
+   * value and properties modified. It's is mainly used during the execution of the {@link Action}
+   * where all inputs are assigned as read-only, therefore when the execution is completed
+   * the inputs are restored with the original read-only value assigned before
+   * the execution of the action
+   *
+   * @param {boolean} enable - tells if a input is read-only
+   */
+  set readOnly(enable){
+    this[_readOnly] = enable;
+  }
+
+  /**
+   * Returns a boolean telling if the input is in read-only mode. A read-only input
+   * cannot have its value and properties modified
+   *
+   * @type {boolean}
+   */
+  get readOnly(){
+    return this[_readOnly];
+  }
+
+  /**
+   * Decodes a value represented as string to the type that is compatible with the input.
+   * This method is called by the {@link Handler} or when an action is loaded/created using
+   * {@link Action.fromJson}/{@link Action.createActionFromJson}. In case the input
+   * is defined as vector then the value can be defined using an array encoded in Json.
+   * The parsed value gets returned and assigned to the input (you can control it by
+   * the `assignValue` argument).
+   *
+   * The implementation of the decoding is done by the method {@link Input._decode}.
+   * To know if an input supports decoding checkout the {@link Input.isSerializable}.
+   *
+   * Also, in case you want to know the serialization form for the inputs bundled with
+   * Oca checkout {@link HandlerParser}.
+   *
+   * @param {string} value - string containing the serialized data
+   * @param {boolean} [assignValue=true] - tells if the parsed value should be assigned
+   * to the input
+   * @return {*}
+   */
+  parseValue(value, assignValue=true){
+    assert(this.isSerializable, 'parsing not supported!');
+    assert(TypeCheck.isString(value), 'value needs to be defined as string or string array');
+
+    let result;
 
     if (value.length === 0){
-      this.value = null;
+      result = null;
     }
     else if (this.isVector){
       const decodedValue = [];
       const parsedValue = JSON.parse(value);
 
-      assert(TypeCheck.isList(parsedValue), 'Unexpected data type');
-
+      assert(TypeCheck.isList(parsedValue), 'Could not parse, unexpected data type');
       for (const parsedItem of parsedValue){
-        // if the value is encoded as string
+
+        // if the value is encoded as string just decode right away
         if (TypeCheck.isString(parsedItem)){
           decodedValue.push(this.constructor._decode(parsedItem));
         }
-        // otherwise just assign the value to the input
+        // otherwise cast it to a string so the decode can handle it
         else{
-          decodedValue.push(parsedItem);
+          decodedValue.push(this.constructor._decode(String(parsedItem)));
         }
       }
 
-      this.value = decodedValue;
+      result = decodedValue;
     }
     else{
-      this.value = this.constructor._decode(value);
+      result = this.constructor._decode(value);
     }
+
+    if (assignValue){
+      this.value = result;
+    }
+
+    return result;
   }
 
   /**
-   * This method should return a string representation about the current value that
-   * can be used later to set the load through {@link parseValue}.
-   * If the value cannot be represented as string then an exception should be raised instead.
+   * This method should return a string representation about the current value in a way that
+   * can be recovered later through {@link parseValue}.
+   *
+   * The encode implementation is done by the  method {@link Input._encode}.
+   * To know if an input supports serialization checkout the {@link Input.isSerializable}.
+   *
+   * Also, in case you want to know the serialization form for the inputs bundled with
+   * Oca checkout {@link HandlerParser}.
    *
    * @return {Promise<string>}
    */
   async serializeValue(){
+    assert(this.isSerializable, 'serialization not supported!');
+
     // making sure the value can be serialized without any issues
     await this.validate();
 
@@ -471,8 +664,8 @@ class Input{
   }
 
   /**
-   * Decodes the input value from the string representation ({@link _encode}) to the
-   * data type of the input. This method is called internally during {@link parseValue}
+   * Decodes the input value from the string representation ({@link Input._encode}) to the
+   * data type of the input. This method is called internally during {@link Input.parseValue}
    *
    * @param {string} value - encoded value
    * @return {*}
@@ -486,7 +679,7 @@ class Input{
 
   /**
    * Encodes the input value to a string representation that can be later decoded
-   * through {@link _decode}. This method is called internally during the
+   * through {@link Input._decode}. This method is called internally during the
    * {@link serializeValue}
    *
    * @param {*} value - value that should be encoded to a string
@@ -498,7 +691,7 @@ class Input{
   }
 
   /**
-   * Register an {@link Input} type to the available inputs
+   * Registers an {@link Input} type to the available inputs
    *
    * @param {Input} inputClass - input implementation that will be registered
    * @param {string} [name] - string containing the registration name for the
@@ -512,9 +705,9 @@ class Input{
     const nameFinal = ((name === '') ? inputClass.name : name).toLowerCase();
 
     // validating name
-    assert((/^([\w_\.\-])+$/gi).test(nameFinal), `Invalid input name: ${nameFinal}`); // eslint-disable-line no-useless-escape
+    assert((/^([\w_\.\-])+$/gi).test(nameFinal), `Illegal input name: ${nameFinal}`); // eslint-disable-line no-useless-escape
 
-    this._registeredInputs[nameFinal] = inputClass;
+    this._registeredInputs.set(nameFinal, inputClass);
   }
 
   /**
@@ -524,10 +717,14 @@ class Input{
    * @return {Input|null}
    */
   static registeredInput(name){
+    assert(TypeCheck.isString(name), 'Invalid name!');
+
     const normalizedName = name.toLowerCase();
-    if (normalizedName in this._registeredInputs){
-      return this._registeredInputs[normalizedName];
+
+    if (this._registeredInputs.has(normalizedName)){
+      return this._registeredInputs.get(normalizedName);
     }
+
     return null;
   }
 
@@ -537,37 +734,24 @@ class Input{
    * @type {Array<string>}
    */
   static get registeredInputNames(){
-    return Object.keys(this._registeredInputs);
+    return [...this._registeredInputs.keys()];
   }
 
   /**
-   * Use this method to implement generic validations
-   * for your input implementation. In case any validation fails this method
-   * should return a {@link ValidationError} (This method is called when the
-   * validations are perform through {@link validate})
-   *
-   * @param {number} [at] - index used when the input is defined as vector to
-   * tell which value should be used
-   * @return {Promise<*>} Returns the value of the input
-   * @protected
-   */
-  async _validation(at=null){
-    return this._valueAt(at);
-  }
-
-  /**
-   * Auxiliary method used internally by input implementations to return the value
-   * based on the current context
+   * This method enforces the consistence of the value that is being queried.
+   * Since the input can behave as vector as well, it makes sure that when it'is
+   * the case the index is being supplied otherwise it raises an exception.
+   * Use this method when you need to query the value through validations where
+   * the index (at) is always passed to them, either if the input is vector
+   * or scalar
    *
    * @param {number} [index] - used when the input is set to a vector to tell the
    * index of the value
    * @return {*}
-   * @protected
    */
-  _valueAt(index=null){
+  valueAt(index=null){
     if (this.isVector){
       assert(index !== null, 'Could not determine the index of the vector');
-
       return this.value[index];
     }
 
@@ -575,11 +759,65 @@ class Input{
   }
 
   /**
+   * Registers a property for the input type
+   *
+   * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
+   * in which the property should be registered
+   * @param {string} name - name of the property (in case the property name already
+   * exists than it going to be overridden for the input type)
+   * @param {*} [initialValue] - optional initial value for the property (undefined by default)
+   */
+  static registerProperty(inputClassOrRegisteredName, name, initialValue){
+    assert(TypeCheck.isString(name), 'property name needs to be defined as string');
+    assert(name.length, 'property name cannot be empty');
+
+    const inputType = this._resolveInputType(inputClassOrRegisteredName);
+
+    // appending to the existing registered properties
+    if (!this._registeredProperties.has(inputType)){
+      this._registeredProperties.set(inputType, new Map());
+    }
+
+    this._registeredProperties.get(inputType).set(name, initialValue);
+
+    // resetting the properties caches
+    this._propertiesCache.clear();
+  }
+
+  /**
+   * Returns a list about all registered property names including the inherited ones for
+   * the input type
+   *
+   * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
+   * @return {Array<string>}
+   */
+  static registeredPropertyNames(inputClassOrRegisteredName){
+    const inputType = this._resolveInputType(inputClassOrRegisteredName);
+
+    return [...this._allRegisteredProperties(inputType).keys()];
+  }
+
+  /**
+   * Use this method to implement generic validations
+   * for your input implementation. In case any validation fails this method
+   * should return a {@link ValidationFail} (This method is called when the
+   * validations are perform through {@link Input.validate})
+   *
+   * @param {null|number} at - index used when the input is defined as vector to
+   * tell which value should be used
+   * @return {Promise<*>} Returns the value of the input
+   * @protected
+   */
+  async _validation(at){
+    return this.valueAt(at);
+  }
+
+  /**
    * Auxiliary method used internally by input implementations to check if the key
    * is under the cache
    *
    * @param {string} name - name of the key
-   * @param {number} [at] - used when the input is set to a vector to tell the
+   * @param {null|number} [at] - used when the input is set to a vector to tell the
    * index of the value
    * @return {boolean}
    * @protected
@@ -594,7 +832,7 @@ class Input{
    *
    * @param {string} name - name of the key
    * @param {*} value - value that should be set in the cache
-   * @param {number} [at] - used when the input is set to a vector to tell the
+   * @param {null|number} [at] - used when the input is set to a vector to tell the
    * index of the value
    * @protected
    */
@@ -607,7 +845,7 @@ class Input{
    * from the cache
    *
    * @param {string} name - name of the key
-   * @param {number} [at] - used when the input is set to a vector to tell the
+   * @param {null|number} [at] - used when the input is set to a vector to tell the
    * index of the value
    * @return {*}
    * @protected
@@ -620,12 +858,12 @@ class Input{
    * Returns the cache entry based on the name and index (at)
    *
    * @param {string} name - name of the key
-   * @param {number} [at] - used when the input is set to a vector to tell the
+   * @param {number|null} at - used when the input is set to a vector to tell the
    * @return {string}
    *
    * @private
    */
-  _cacheEntry(name, at=null){
+  _cacheEntry(name, at){
     if (this.isVector){
       assert(at !== null, 'Could not determine the index of the vector');
     }
@@ -633,12 +871,72 @@ class Input{
     return (this.isVector) ? `${name}(${at})` : `${name}()`;
   }
 
+  /**
+   * Auxiliary method that resolves the registered input type based
+   *
+   * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
+   * @return {Input}
+   * @private
+   */
+  static _resolveInputType(inputClassOrRegisteredName){
+    if (TypeCheck.isSubClassOf(inputClassOrRegisteredName, Input) || inputClassOrRegisteredName === Input){
+      return inputClassOrRegisteredName;
+    }
+
+    return this.registeredInput(inputClassOrRegisteredName);
+  }
+
+  /**
+   * Auxiliary method that collects all available registered property names for the input type
+   * and returns them
+   *
+   * @param {Input} inputType - input class that should be used to collect the properties
+   * @return {Array<string>}
+   * @private
+   */
+  static _allRegisteredProperties(inputType){
+
+    if (!this._propertiesCache.has(inputType)){
+      let currentClass = inputType;
+      const inputProperties = new Map();
+
+      while (currentClass.name !== ''){
+        if (this._registeredProperties.has(currentClass)){
+          for (const [propertyName, propertyValue] of this._registeredProperties.get(currentClass)){
+            // if a property has been overriding by a sub class then skip it
+            if (!inputProperties.has(propertyName)){
+              inputProperties.set(propertyName, propertyValue);
+            }
+          }
+        }
+        currentClass = Object.getPrototypeOf(currentClass);
+      }
+
+      this._propertiesCache.set(inputType, inputProperties);
+    }
+
+    return this._propertiesCache.get(inputType);
+  }
+
   // codes used by error validations
   static errorCodes = [
     '28a03a60-a405-4737-b94d-2b695b6ce156',
     'e03709a0-6c31-4a33-9f63-fa751948a6cb',
   ];
-  static _registeredInputs = {};
+
+  static _propertiesCache = new Map();
+  static _registeredInputs = new Map();
+  static _registeredProperties = new Map();
 }
+
+// registering properties
+Input.registerProperty(Input, 'required', true);
+Input.registerProperty(Input, 'type', true);
+Input.registerProperty(Input, 'immutable', true);
+Input.registerProperty(Input, 'defaultValue', null);
+Input.registerProperty(Input, 'vector', false);
+Input.registerProperty(Input, 'hidden');
+Input.registerProperty(Input, 'autofill');
+Input.registerProperty(Input, 'description');
 
 module.exports = Input;
