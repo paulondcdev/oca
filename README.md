@@ -9,26 +9,39 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/node-oca/oca/badge.svg)](https://snyk.io/test/github/node-oca/oca)
 </p>
 
-Oca is a framework focused to build solid evaluations which can be triggered from many different forms where you write the code once and Oca takes care about the specifics that are necessary to run the evaluation, such as by web middlewares, REST requests, JSON serialized actions.
+** What is it ? **
 
-One of the main concepts behind this framework is to provide a solid platform to write realiable evaluations that developers can easily express the requirement to execute evaluations in a way that is fairly extendable and comprehensible. By doing that it reduces the need of repetitive tedeus routines ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) that can both pollute and make the code less modular.
+Oca is a framework designed to help building apps accross multiple domains. You can
+use it to build any kind of application whether web based or desktop ones. Think about
+Oca as a polyglot framework.
+
+** How does it work ? **
+
+It works by providing an interface where developers can easly describe evaluations in a way that is fairly extendable and comprehensible. This interface is focused to minimize repetitive tedeus routines ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)).
+
+These evaluations can be triggered accross multiple domains you write once and Oca takes care about the specifics that are necessary to run the evaluation, such as for web middlewares, REST requests, console applications...
 
 <p align="center">
   <img src="data/ocaHi.png"/>
 </p>
 
-[<img src="data/intro.png"/>](https://github.com/node-oca/oca/blob/master/data/manual/INTRODUCTION.md)
-
 ## Key features
-- Flexible architeture
-- Agnostic execution platform
-- Integrated caching system
-- Express integration
-- Authentication integration through passport
-- Full file upload support
-- Middleware actions
-- Auto RESTful support
-- JSON serialized actions
+- **Flexible architeture**. Oca can be integrated to any existing application. Also, it's designed from ground up to be customizable and extendable
+
+- **Reliable executions**. Oca enforces quality control over the data used by the executions by performing a wide range of verifications
+
+- **Agnostic execution platform**. Oca provides abstraction about the how the evaluations are executed, you write once and Oca takes care about it, either if it's web based or desktop ones
+
+- **Integrated caching system**. Oca provides out-the-box integrated caching system that can be easly enabled for any evaluation, speeding up your application
+
+- **Express integration**. The web support from Oca is done in conjuction with express, embracing the most popular web framework for Node.js
+
+- **RESTful support**. Evaluations can be executed through REST automatically
+
+- **Console support**. By using Oca your evaluations can be executed through command-line interface
+
+
+[<img src="data/intro.png"/>](data/manual/INTRODUCTION.md)
 
 ## Documentation
 - [API Documentation](https://node-oca.github.io)
@@ -65,13 +78,15 @@ Contributions are welcome to Oca. It can be made through many different forms de
 - Proposing features
 - Reporting issues
 - Making improvements (adding new features, improving the existing features, adding tests,
-adding examples, clarifying wording and fixing errors)
+adding testutils, clarifying wording and fixing errors)
 
 ## Acknowledgements
-Oca was heavily inspired by concepts found in the technologies below:
+Oca was inspired by:
 - [Passport](https://github.com/jaredhanson/passport)
 - [Cortex](https://github.com/ImageEngine/cortex)
 - [Express](http://expressjs.com)
+- [Docopt](http://docopt.org)
+- [Nujabes](https://www.youtube.com/watch?v=WrO9PTpuSSs)
 
 ## Licensing
 Oca is free software; you can redistribute it and/or modify it under the terms of the MIT License

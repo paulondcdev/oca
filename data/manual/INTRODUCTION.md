@@ -14,7 +14,7 @@ An action is used to implement evalutations
 const Oca = require('oca');
 
 class MyAction extends Oca.Action{
-  _perform(){
+  _perform(data){
     return Promise.resolve('hello world');
   }
 }
@@ -33,24 +33,27 @@ Oca comes bundled with the inputs types:
 
 | Type        | Data Example |
 | ------------- |-------------|
-| [Bool](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Bool.js~Bool.html) | ```true``` |
-| [Numeric](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Numeric.js~Numeric.html) | ```10``` |
-| [Text](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Text.js~Text.html) | ```'Test'``` |
-| [FilePath](https://node-oca.github.io/docs/class/src/Bundle/Inputs/FilePath.js~FilePath.html) | ```/tmp/someFile.txt``` |
-| [Url](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Url.js~Url.html) | ```http://www.google.com``` |
-| [Email](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Email.js~Email.html) | ```user@domain.com``` |
-| [Ip](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Ip.js~Ip.html) | ```192.168.0.1``` |
-| [Timestamp](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Timestamp.js~Timestamp.html) | ```new Date()``` |
-| [UUID](https://node-oca.github.io/docs/class/src/Bundle/Inputs/UUID.js~UUID.html) | ```10ec58a-a0f2-4ac4-8393-c866d813b8d1```|
-| [Version](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Version.js~Version.html) | ```0.1.12```|
-| [Any](https://node-oca.github.io/docs/class/src/Bundle/Inputs/Any.js~Any.html) | ```{a: 1, b: 2}```|
+| [Bool](https://node-oca.github.io/docs/class/src/Ext/Inputs/Bool.js~Bool.html) | ```true``` |
+| [Numeric](https://node-oca.github.io/docs/class/src/Ext/Inputs/Numeric.js~Numeric.html) | ```10``` |
+| [Text](https://node-oca.github.io/docs/class/src/Ext/Inputs/Text.js~Text.html) | ```'Test'``` |
+| [FilePath](https://node-oca.github.io/docs/class/src/Ext/Inputs/FilePath.js~FilePath.html) | ```/tmp/someFile.txt``` |
+| [Url](https://node-oca.github.io/docs/class/src/Ext/Inputs/Url.js~Url.html) | ```http://www.google.com``` |
+| [Email](https://node-oca.github.io/docs/class/src/Ext/Inputs/Email.js~Email.html) | ```user@domain.com``` |
+| [Ip](https://node-oca.github.io/docs/class/src/Ext/Inputs/Ip.js~Ip.html) | ```192.168.0.1``` |
+| [Timestamp](https://node-oca.github.io/docs/class/src/Ext/Inputs/Timestamp.js~Timestamp.html) | ```new Date()``` |
+| [UUID](https://node-oca.github.io/docs/class/src/Ext/Inputs/UUID.js~UUID.html) | ```10ec58a-a0f2-4ac4-8393-c866d813b8d1```|
+| [Version](https://node-oca.github.io/docs/class/src/Ext/Inputs/Version.js~Version.html) | ```0.1.12```|
+| [Stream](https://node-oca.github.io/docs/class/src/Ext/Inputs/Stream.js~Stream.html) | ```new stream.Writable()```|
+| [Buffer](https://node-oca.github.io/docs/class/src/Ext/Inputs/Buf.js~Buf.html) | ```new Buffer([2, 3, 4])```|
+| [Any](https://node-oca.github.io/docs/class/src/Ext/Inputs/Any.js~Any.html) | ```{a: 1, b: 2}```|
 
 > You can easily implement your own type, if you are interested take a look at
 the input inplementations bundled with Oca
 
 **Creating inputs**
 
-Inputs are created using a [syntactic sugar](https://en.wikipedia.org/wiki/Syntactic_sugar) that describes its name and type (aka [TypeScript](https://www.typescriptlang.org/)), for instance:
+Inputs are created using a [syntactic sugar](https://en.wikipedia.org/wiki/Syntactic_sugar) that describes their
+name and type (aka [TypeScript](https://www.typescriptlang.org/)), for instance:
 
 ```javascript
 const Oca = require('oca');
@@ -59,15 +62,15 @@ class MyAction extends Oca.Action {
   constructor(){
     super();
 
-    this.createInput('someInput: text'); // <--- Creating an input
+    this.createInput('myInput: text'); // <--- Creating an input
   }
 
-  _perform(){
+  _perform(data){
 
     // using it inside of the evalutation
-    const value = this.input('someInput').value;
+    const value = data.myInput;
 
-    return Promise.resolve(`hello ${value}`);
+    return Promise.resolve(`hello ${data.myInput}`);
   }
 }
 ```
@@ -75,24 +78,24 @@ class MyAction extends Oca.Action {
 Any input can be defined as a vector by using the short array syntax `[]`:
 
 ```javascript
-this.createInput('someInput: text[]');
+this.createInput('myInput: text[]');
 ```
 
 Additionally, you can specify if an input is optional (not required) by adding
 `?` beside of the input name:
 
 ```javascript
-this.createInput('someInput?: text[]');
+this.createInput('myInput?: text[]');
 ```
 
 **Input properties**
 
-Properties are used to drive the validations, each input type has their
+Properties are used to drive the behaviour of the input, each input type has their
 own set of properties
 
 For instance, setting the minimum and maximum allowed number of characters
 ```javascript
-this.createInput('someInput: text', {min: 8, max: 16});
+this.createInput('myInput: text', {min: 8, max: 16});
 ```
 
 Another example, making sure the file exists and also file size does not exceed the maximum allowed
@@ -104,7 +107,7 @@ Checkout the input documentation to know the available properties
 
 **Custom input verifications**
 
-You may need verifications that are very related with the action that is hosting them. Oca
+You may need verifications that are very related with the action that is hosting the input. Oca
 lets you to implement custom verifications for any input without having to implement a new input
 type. It's done by using the extendedValidation callback.
 
@@ -118,7 +121,7 @@ class CustomAction extends Oca.Action{
   constructor(){
     super();
 
-    // the third argument can be defiend as extendedValidation callback :point_left:
+    // the third argument can be defined as extendedValidation callback
     this.createInput('a: text', {}, function(at=null){
 
       // my custom validation
@@ -132,42 +135,14 @@ class CustomAction extends Oca.Action{
 
 [Input Documentation](https://node-oca.github.io/docs/class/src/Input.js~Input.html)
 
-## What is a Provider ?
-
-An action is always available through a provider. It's used to group actions that
-are about the same context. For instance, `User Profile`, `User Friends`, `User Posts`
-are part of the `User` provider
-
-```javascript
-const Oca = require('oca');
-
-class SandBox extends Oca.Provider{}
-
-// registering provider
-Oca.registerProvider(SandBox);
-
-// registering the action for the provider
-Oca.registerAction(SandBox, MyAction);
-```
-
 ## How to execute actions ?
 
-**Initialization**
-
-To be able to use our providers we need to make sure that Oca settings have been initialized,
-It can be done by calling the line bellow during the initialization of your app
+**Executing an action a registerd action**
 
 ```javascript
-Oca.initialize();
-```
+const myAction = Oca.createAction('myAction');
 
-**Executing an action from a provider**
-
-```javascript
-const sandBox = Oca.createProvider('SandBox', new Oca.Session());
-const myAction = sandBox.createAction('MyAction');
-
-myAction.input('someInput').value = 'Some Text';
+myAction.input('myInput').value = 'Some Text';
 
 // executing the action
 myAction.execute().then((result) => {
@@ -177,19 +152,15 @@ myAction.execute().then((result) => {
 })
 ```
 
-[Provider Documentation](https://node-oca.github.io/docs/class/src/Provider.js~Provider.html)
-
 **Executing from Web**
 
-First we need to tell our Provider and Action to be available through
+First we need to tell our Action to be available through
 web requests, it's done by webfying them:
 
 ```javascript
-// In the registration of the provider add the line bellow
-Oca.webfyProvider(SandBox, {restRoute: '/SomeWhere'})
 
 // In the registration of the action add the line bellow
-Oca.webfyAction(SandBox, MyAction, Oca.Method.Get);
+Oca.webfyAction(MyAction, 'get');
 ```
 
 You can enable authorization prior to the execution of any action, this is done
@@ -197,19 +168,28 @@ by webfying the action with the option ```auth=true```:
 
 ```javascript
 // In the registration of the action add the line bellow
-Oca.webfyAction(SandBox, MyAction, Oca.Method.Get, {auth: true});
+Oca.webfyAction(MyAction, 'get', {auth: true});
 ```
 
-When an action requires auth you also need to specify the passport
-authentication under the Oca's settings
+Also, you can tell if the action is visible by the restful support, by defining
+a route for it ```restRoute='/api/myAction'```.
+
+```javascript
+// In the registration of the action add the line bellow
+Oca.webfyAction(MyAction, 'get', {auth: true, restRoute: '/api/myAction'});
+```
+
+When an action requires auth you need to tell what is the passport
+authentication that should be used for the webfied actions flagged with ```auth=true```,
+this is done by adding a middleware that gets executed before the action
 
 ```javascript
 const passport = require('passport');
-Oca.Settings.authenticate = passport.authenticate('...')
+Oca.addBeforeAuthAction(passport.authenticate('...'));
 ```
 
-Alternatively a custom authentication method can be defined per provider basis, if
-you are interested checkout about the [RequestHandler](https://node-oca.github.io/docs/class/src/RequestHandler.js~RequestHandler.html)
+Alternatively a custom authentication method can be defined per handler basis, if
+you are interested checkout about the [Web Handler](https://node-oca.github.io/docs/class/src/Ext/Handlers/Web.js~Web.html)
 
 
 **Calling the action through middleware**
@@ -217,7 +197,7 @@ you are interested checkout about the [RequestHandler](https://node-oca.github.i
 ```javascript
 // adding add a middleware which is going to execute the action
 const app = express();
-app.get('/xxx', Oca.middleware('SandBox/MyAction', (err, result, req, res) => {
+app.get('/xxx', Oca.middleware('myAction', (err, result, req, res) => {
   if (err) return next(err);
   res.send(`result: ${result}`);
 }));
@@ -225,13 +205,18 @@ app.get('/xxx', Oca.middleware('SandBox/MyAction', (err, result, req, res) => {
 
 Executing it
 ```
-https://.../xxx/someInput=test
+https://.../xxx/myInput=test
 ```
 
 **Calling the action through REST**
 
-By default when an provider and action are webfied, it's automatically available for REST
-requests
+When webfying an action you need to define the rest route that should be used
+to access the action.
+
+```javascript
+// webfying an action with support for rest requests
+Oca.webfyAction(MyAction, 'get', {auth: true, restRoute: '/api/myAction'});
+```
 
 ```javascript
 // adding the rest support to the express app
@@ -241,7 +226,7 @@ app.use(Oca.restful());
 
 Executing it
 ```
-https://.../SandBox/MyAction/someInput=world
+https://.../api/myAction/myInput=world
 ```
 
 Oca responses the rest request using JSON following google's json style, for the example above
@@ -263,18 +248,17 @@ assigned with the path about where the file has been uploaded to.
 **Calling actions from a serialized JSON form**
 
 Oca lets you to postpone an action execution by baking them into JSON, it can be used for
-batch operations
+console operations
 
 ```javascript
-const sandBox = Oca.createProvider('SandBox', new Session());
-const myAction = sandBox.createAction('MyAction');
-myAction.input('someInput').value = 'Text';
+const myAction = Oca.createAction('myAction');
+myAction.input('myInput').value = 'Text';
 
 // serializing the action into json
 actionA.toJson().then((json) => {
 
   // re-creating the action
-  const myAction2 = Oca.Provider.createActionFromJson(json);
+  const myAction2 = Oca.Action.createActionFromJson(json);
 
   // executing it
   return myAction2.execute();
@@ -282,13 +266,13 @@ actionA.toJson().then((json) => {
 }).catch((err) => {
   throw err;
 });
-
-[JSON Action Documentation](https://node-oca.github.io/docs/class/src/Action.js~Action.html#instance-method-toJson)
 ```
 
-## How to share data between actions & providers ?
+[JSON Action Documentation](https://node-oca.github.io/docs/class/src/Action.js~Action.html#instance-method-toJson)
 
-Oca shares data between providers and actions using a Session, for futher
+## How to share data between actions ?
+
+Oca shares data between actions using a Session, for futher
 details please checkout the [Session Documentation](https://node-oca.github.io/docs/class/src/Session.js~Session.html)
 
 ## How to configure Oca ?
@@ -311,30 +295,27 @@ class Hello extends Oca.Action{
     this.createInput('what: text');
   }
 
-  _cacheable(){
+  get isCacheable(){
     // Flags the action can be cacheable
     return true;
   }
 
-  _perform(){
+  _perform(data){
     // printing how many times the execution is called
     Hello.counter += 1;
     console.log(`Called: ${Hello.counter}`);
 
-    const value = this.input('what').value;
+    const value = data.what;
     return Promise.resolve(`hello ${value} ${this._counter}`);
   }
 }
 Hello.counter = 0;
 
 // Registering the action
-Oca.registerAction(SandBox, Hello);
-
-// creating the action
-const sandBox = Oca.createProvider('SandBox', new Session());
+Oca.registerAction(Hello);
 
 // creating action
-const hello = sandBox.createAction('Hello');
+const hello = Oca.createAction('hello');
 
 // configuring inputs
 hello.input('what').value = 'World';
@@ -343,7 +324,7 @@ hello.input('what').value = 'World';
 hello.execute().then((result) => {
   // creating the same action again, this time it should return the value from
   // the cache
-  const hello2 = sandBox.createAction('Hello');
+  const hello2 = this.createAction('Hello');
   hello2.input('what').value = 'World';
   return hello2.execute();
 }).catch((err) => {
@@ -367,12 +348,9 @@ class DownloadLink extends Oca.Action{
     this.createInput('link: url', {exists: true});
   }
 
-  _perform(){
-    // creating a provider that contains the file operation actions
-    const fileOperation = Oca.createProvider('FileOperation', this.session);
-
+  _perform(data){
     // creating the checksum action
-    const downloadAction = fileOperation.createAction('Download');
+    const downloadAction = this.createAction('file.download');
 
     // transfering the value, same as if it would be done as:
     // downloadAction.input('inputUrl').value = this.input('link').value;
@@ -384,7 +362,7 @@ class DownloadLink extends Oca.Action{
 
     // returns an object containing the hash and file
     return downloadAction.execute().then((filePath) => {
-      const checksumAction = fileOperation.createAction('Checksum');
+      const checksumAction = this.createAction('file.checksum');
       checksumAction.input('file').value = filePath;
 
       // final result
@@ -396,11 +374,10 @@ class DownloadLink extends Oca.Action{
 }
 
 // Registering the action
-Oca.registerAction(SandBox, DownloadLink);
+Oca.registerAction(DownloadLink, 'cool.downloadlink');
 
 // creating the action
-const sandBox = Oca.createProvider('SandBox', new Session());
-const downloadLink = sandBox.createAction('DownloadLink');
+const downloadLink = Oca.createAction('cool.downloadLink');
 
 // setting the input (google's logo)
 downloadLink.input('link').value = 'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png';
