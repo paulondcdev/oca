@@ -52,7 +52,7 @@ const _request = Symbol('request');
  *
  * **Route parameters:**
  * If an webfied action contains route parameters defined (`/users/:userId/books/:bookId`)
- * then this parser tries to find them under the action input names.
+ * this parser is going to try to find them under the action input names.
  * Therefore when a route parameter matches to the name of an input then the value of
  * the parameter is loaded to the input.
  *
