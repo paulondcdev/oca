@@ -3,7 +3,6 @@ const assert = require('assert');
 const TypeCheck = require('js-typecheck');
 const Input = require('./Input');
 const Session = require('./Session');
-const ValidationError = require('./ValidationError');
 
 
 // symbols used for private instance variables to avoid any potential clashing
@@ -13,28 +12,65 @@ const _info = Symbol('info');
 const _session = Symbol('session');
 
 /**
- * An action is used to evaluate operations.
+ * An action is used to perform an evaluation.
  *
- * It provides a layer that can be used to wrap any evaluation in which this layer
- * takes control of the execution. It makes the evaluation much more flexible by providing
- * an abstracted interface that can be triggered from many different forms.
+ * By implementing an evaluation through an action, the evaluation is wrapped by an
+ * interface that can be triggered from many different forms ({@link Handler}).
  *
- * The data used to perform the execution is held by inputs ({@link createInput}).
- * These inputs can be widely configured to enforce quality control, it's done by
- * checking the data held by the input through validations that are performed asynchronously,
- * therefore enabling validations that fully verify the data.
+ * ```
+  * class HelloWorld extends Oca.Action{
+ *   _perform(data){
+ *     return Promise.resolve('Hello World');
+ *   }
+ * }
  *
- * The execution is triggered through {@link execute} that internally calls {@link _perform}
- * which should be used to implement the evaluation of the action.
+ * const action = new HelloWorld();
+ * action.execute().then(...) //  HelloWorld
+ * ```
  *
- * Actions are registered and created through Providers {@link Provider.registerAction}
- * and {@link Provider.createAction}.
+ * The data used to perform the evaluation is held by inputs ({@link Action.createInput}).
+ * These inputs can be widely configured to enforce quality control via properties. Please
+ * check the documentation for the input types to be aware about the available validations.
  *
- * Any action can take advantage of the caching mechanism which is designed to improve the performance
- * by avoiding re-evaluations in actions that may be executed multiple times for the same
- * data, it can enabled through {@link _cacheable}.
- * Also, actions can be serialized ({@link toJson}) to postpone their execution where they can be
- * executed later through ({@link Provider.createActionFromJson}).
+ * ```
+ * class HelloWorld extends Oca.Action{
+ *   constructor(){
+ *     super();
+ *     this.createInput('repeat: numeric', {max: 100});
+ *   }
+ *   _perform(data){
+ *     const result = 'HelloWorld '.repeat(data.repeat);
+ *     return Promise.resolve(result);
+ *   }
+ * }
+ *
+ * const action = new HelloWorld();
+ * action.input('repeat').value = 3;
+ * action.execute().then(...) //  HelloWorld HelloWorld HelloWorld
+ * ```
+ *
+ * An evaluation is triggered through {@link Action.execute} that internally calls {@link Action._perform}
+ * which is the method that should be used to implement the evaluation of the action.
+ *
+ * Actions are registered via {@link Action.registerAction}, in case you want to use a compound name
+ * with a prefix common across some group of actions for that use '.' as separator.
+ * Also, there are two ways to create actions:
+ *
+ * - {@link Action.createAction} - allows actions to be created inside of the execution of an action
+ * by doing that it creates actions that share the same {@link Session}.
+ *
+ * - {@link Action.create} - creates an action (it can be called as `Oca.createAction`)
+ * by inside of an action instance which creates
+ * the actions by sharing the same session or use the static method to create actions where you are
+ * able to specify a different session.
+ *
+ * An action can be serialized ({@link Action.toJson}) to postpone their execution where it can be
+ * recreated later through {@link Action.createActionFromJson} or in case of a non registered action
+ * then the serialized data can loaded through {@link Action.fromJson}.
+ *
+ * Also, actions can take advantage of the caching mechanism designed to improve the performance
+ * by avoiding re-evaluations in actions that might be executed multiple times using the same input
+ * data, it can enabled through {@link Action.isCacheable}.
  */
 class Action{
 
@@ -42,42 +78,40 @@ class Action{
    * Creates an action
    */
   constructor(){
-    this[_inputs] = [];
-    this[_info] = {};
+
+    this[_inputs] = new Map();
+    this[_info] = Object.create(null);
     this[_session] = null;
 
-    // Adding the api input, all actions will inherit this input, this is used when the action is
-    // triggered by a request, so this input is used to make sure that the request
-    // is still compatible with the action signature.
-    // In case the request does not provide this information, this input will be ignored.
+    // Adding the api input, all actions will inherit this input.
+    // This input is used to make sure that the version requested
+    // is still compatible with the action.
     // To set a minimum require api version, use the property: minimumRequired
     // example:
     // this.input('api').assignProperty('minimumRequired', '10.1.0');
-    this.createInput('api?: version');
+    this.createInput('api?: version', {description: 'version used to make sure that the api is still compatible'});
   }
 
   /**
    * Associates an {@link Session} with the action, by doing this all inputs that
-   * are flagged by the 'autofill' property are initialized with the
+   * are flagged with 'autofill' property will be initialized with the
    * session value
    *
-   * @param {Session} session - session object
+   * @param {Session} value - session object
    */
-  set session(session){
-    assert(session === null || TypeCheck.isInstanceOf(session, Session), 'session must be an object or null');
+  set session(value){
+    assert(value === null || value instanceof Session, 'session must be an instance of Session or null');
 
-    this[_session] = session;
+    this[_session] = value;
 
-    // update the session inputs based on the request
-    if (session !== null){
+    if (value !== null){
       // setting the session inputs
-      for (const inputName of this.inputNames){
-        const input = this.input(inputName);
+      for (const input of this[_inputs].values()){
 
         // setting the autofill inputs
-        const autofillName = input.property('autofill', null);
-        if (autofillName && autofillName in session.autofill){
-          input.value = session.autofill[autofillName];
+        const autofillName = input.property('autofill');
+        if (autofillName && autofillName in value.autofill){
+          input.value = value.autofill[autofillName];
         }
       }
     }
@@ -93,8 +127,22 @@ class Action{
   }
 
   /**
-   * Factories a new input through {@link Input.create} then adds it
-   * to the action inputs {@link addInput}
+  * Returns a boolean telling if the action is cacheable (`false` by default).
+  *
+  * This method should be re-implement by derived classes to tell if the action
+  * is cacheable. This information is used by {@link Action.execute}.
+  *
+  * The configuration about the LRU cache can be found under the {@link Session}.
+  *
+  * @type {boolean}
+  */
+  get isCacheable(){
+    return false;
+  }
+
+  /**
+   * Creates a new input through {@link Input.create} then adds it
+   * to the action inputs {@link Action.addInput}
    *
    * @param {string} inputInterface - string followed by either the pattern `name: type`
    * or `name?: type` in case of optional {@link Input}
@@ -115,14 +163,14 @@ class Action{
    */
   addInput(inputInstance){
     // making sure the input is derived from Inputs
-    assert(TypeCheck.isInstanceOf(inputInstance, Input), 'Invalid Input Type!');
+    assert(inputInstance instanceof Input, 'Invalid Input Type!');
 
     // making sure the new input name is not in use
-    if (this.inputNames.includes(inputInstance.name)){
+    if (this[_inputs].has(inputInstance.name)){
       throw new Error('Input name is already in use!');
     }
 
-    this[_inputs].push(inputInstance);
+    this[_inputs].set(inputInstance.name, inputInstance);
   }
 
   /**
@@ -131,11 +179,11 @@ class Action{
    * @type {Array<string>}
    */
   get inputNames(){
-    return this[_inputs].map(input => input.name);
+    return [...this[_inputs].keys()];
   }
 
   /**
-   * Returns an input object based on the input name name
+   * Returns the input instance based on the given name
    *
    * @param {string} inputName - name of the input
    * @param {*} [defaultValue] - default value that is returned in case the
@@ -145,10 +193,8 @@ class Action{
   input(inputName, defaultValue=null){
     assert(TypeCheck.isString(inputName), 'inputName needs to be defined as string!');
 
-    for (const input of this[_inputs]){
-      if (inputName === input.name){
-        return input;
-      }
+    if (this[_inputs].has(inputName)){
+      return this[_inputs].get(inputName);
     }
 
     return defaultValue;
@@ -158,19 +204,17 @@ class Action{
    * Executes the action and returns the result through a promise
    *
    * @param {boolean} [useCache=true] - tells if the action should try to use the LRU
-   * cache to avoid the execution. This option is only used when the action is {@link _cacheable}
-   * @param {boolean} [finalize=false] - tells if the execution should finalize the session
-   * (if true the session will be finalized even if the action fails) {@link Session.finalize}
+   * cache to avoid the execution. This option is only used when the action is {@link Action.isCacheable}
    * @return {Promise<*>}
    */
-  async execute(useCache=true, finalize=false){
+  async execute(useCache=true){
     let result = null;
     let err = null;
 
     // pulling out result from the cache (if applicable)
     let actionSignature = null;
-    if (useCache && this._cacheable){
-      actionSignature = await this.id;
+    if (useCache && this.isCacheable){
+      actionSignature = await this.id();
 
       // checking if the input hash is under the cache
       if (this.session.resultCache.has(actionSignature)){
@@ -181,11 +225,31 @@ class Action{
     // checking if the inputs are valid (it throws an exception in case an input fails)
     await this._inputsValidation();
 
+    const data = Object.create(null);
+    const readOnlyOriginalValues = new Map();
+
+    // making inputs read-only during the execution, so they can't be
+    // modified during the execution otherwise it would be very dangerous,
+    // since a modified input would not get validated until the next execution.
+    // The original read-only value is restored in the end of the execution. Also,
+    // this process collects the input values that are stored under 'data' which
+    // is passed as argument of _perform method, 'data' is used as a more convenient
+    // way to query the value of the inputs
+    for (const [name, input] of this[_inputs]){
+      readOnlyOriginalValues.set(input, input.readOnly);
+
+      // making input as readOnly
+      input.readOnly = true;
+
+      // input value
+      data[name] = input.value;
+    }
+
     // the action is performed inside of a try/catch block to call the _finalize
     // no matter what, since that can be used to perform clean-up operations...
     try{
-      // perform the action
-      result = await this._perform();
+      // performing the action
+      result = await this._perform(data);
     }
     catch(errr){
       err = errr;
@@ -199,8 +263,10 @@ class Action{
       throw this._processError(errr);
     }
     finally{
-      if (finalize){
-        await this.session.finalize();
+
+      // restoring the read-only
+      for (const [input, originalReadOnly] of readOnlyOriginalValues){
+        input.readOnly = originalReadOnly;
       }
     }
 
@@ -214,35 +280,45 @@ class Action{
 
   /**
    * Bakes the current interface of the action into json format.
-   * This can be used to postpone the execution which can be achieved later
-   * through {@link Provider.createActionFromJson}
+   * This can be used to postpone the execution which can be done
+   * through {@link Action.createActionFromJson} or simply by loading
+   * the json data through {@link Action.fromJson}
    *
-   * @param {boolean} [bakeAutofill=true] - tells if the {@link Session.autofill} will be
+   * @param {boolean} [autofill=true] - tells if the {@link Session.autofill} will be
    * included in the serialization
    * @return {Promise<string>} serialized json version of the action
    */
-  async toJson(bakeAutofill=true){
-    const actionInputs = {};
-    for (const inputName of this.inputNames){
-      const input = this.input(inputName);
-      actionInputs[inputName] = await input.serializeValue();
-    }
+  async toJson(autofill=true){
 
-    const result = {
-      id: this.id,
-      info: this.info,
-      inputs: actionInputs,
-      session: {
-        autofill: (bakeAutofill && this.session) ? this.session.autofill : {},
-      },
-    };
+    const actionInputs = await this._serializeInputs();
+
+    const result = Object.create(null);
+    result.id = this.id();
+    result.info = this.info;
+    result.inputs = actionInputs;
+    result.session = Object.create(null);
+    result.session.autofill = (autofill && this.session) ? this.session.autofill : {};
 
     return JSON.stringify(result, null, '\t');
   }
 
   /**
+   * Loads the interface of the action from json (serialized through {@link Action.toJson}).
+   *
+   * @param {string} serializedAction - serialized json information generated by {@link Action.toJson}
+   * @param {boolean} [autofill=true] - tells if the {@link Session.autofill} should
+   * be loaded
+   */
+  fromJson(serializedAction, autofill=true){
+
+    const actionContents = JSON.parse(serializedAction);
+
+    this._loadContents(actionContents, autofill);
+  }
+
+  /**
    * Returns a plain object containing information about the creation
-   * of the action, such as: `providerName`, `actionName`, etc.
+   * of the action, such as: `registeredName`, etc.
    *
    * @return {Object}
    */
@@ -251,52 +327,189 @@ class Action{
   }
 
   /**
-   * Returns an unique signature based on the action name and the current state
-   * of the their inputs
+   * Returns an unique signature based on the action current state which is based
+   * on the input types, input values and meta data information about the action.
    *
-   * @type {Promise<string>}
+   * For a more reliable signature make sure that the action has been created through
+   * the factory method ({@link Action.create}).
+   *
+   * @return {Promise<string>}
    */
-  get id(){
-    if (!this.info.providerName || !this.info.actionName){
-      throw new Error("Can't read the information about the action, was the action created through a provider?");
+  async id(){
+    let actionSignature = '';
+    const separator = ';\n';
+
+    if (this.info.registeredName){
+      actionSignature = this.info.registeredName;
+    }
+    // using the class name can be very flawed, make sure to always creating actions
+    // via their registration name
+    else{
+      actionSignature = this.constructor.name;
     }
 
-    return (async () => {
-      const separator = ';\n';
-      let actionSignature = `${this.info.providerName}/${this.info.actionName}${separator}`;
+    actionSignature += separator;
+    const actionInputs = await this._serializeInputs();
+    for (const inputName in actionInputs){
+      actionSignature += `${inputName}: ${actionInputs[inputName]}${separator}`;
+    }
 
-      for (const input of this[_inputs]){
-        const bakedValue = await input.serializeValue();
-        actionSignature += `${input.name}: ${bakedValue}${separator}`;
-      }
+    return crypto.createHash('sha256').update(actionSignature).digest('hex');
+  }
 
-      return crypto.createHash('sha1').update(actionSignature).digest('hex');
-    })();
+
+  /**
+   * Allows the creation of an action based on the current action, by doing this it passes
+   * the current {@link Action.session} to the static create method {@link Action.create} method.
+   * Therefore creating an action that shares the same session.
+   *
+   * @param {string} actionName - registered action name (case-insensitive)
+   * @return {Action|null}
+   */
+  createAction(actionName){
+    return Action.create(actionName, this.session);
+  }
+
+  /**
+   * Creates an action based on the serialized input which is generated by
+   * {@link Action.toJson}
+   *
+   * @param {string} serializedAction - json encoded action
+   * @param {boolean} [autofill=true] - tells if the autofill information should be
+   * loaded
+   * @return {Action|null}
+   */
+  static createActionFromJson(serializedAction, autofill=true){
+    assert(TypeCheck.isString(serializedAction), 'serializedAction needs to be defined as string!');
+
+    const actionContents = JSON.parse(serializedAction);
+    const registeredName = actionContents.info.registeredName;
+
+    assert(TypeCheck.isString(registeredName), 'Could not find the action information');
+    const action = this.create(registeredName);
+
+    assert(action, `Action not found: ${registeredName}`);
+
+    action._loadContents(actionContents, autofill);
+
+    return action;
+  }
+
+  /**
+   * Creates an action based on the registered action name, in case the action does
+   * not exist `null` is returned instead
+   *
+   * @param {string} actionName - registered action name (case-insensitive)
+   * @param {Session} [session] - optional session object, in case none session is
+   * provided a new session object is created
+   * @return {Action|null}
+   */
+  static create(actionName, session=null){
+    assert(TypeCheck.isString(actionName), 'Action name needs to be defined as string');
+    assert(session === null || session instanceof Session, 'Invalid session type!');
+
+    const RegisteredAction = this.registeredAction(actionName);
+
+    if (RegisteredAction){
+      const action = new RegisteredAction();
+
+      // adding the session to the action
+      action.session = session || new Session();
+
+      // adding the registered name to the action
+      action.info.registeredName = actionName.toLowerCase();
+
+      return action;
+    }
+
+    return RegisteredAction;
+  }
+
+  /**
+   * Registers an {@link Action} to the available actions
+   *
+   * In case you want to use a compound name with a prefix common across some group
+   * of actions, you can use '.' as separator.
+   *
+   * @param {Action} actionClass - action implementation that will be registered
+   * @param {string} [name] - string containing the registration name for the
+   * action, this name is used later to create the action ({@link Action.create}).
+   * In case of an empty string, the registration is done by using the name
+   * of the type.
+   */
+  static registerAction(actionClass, name=''){
+
+    assert(TypeCheck.isSubClassOf(actionClass, Action), 'Invalid action type');
+
+    const nameFinal = ((name === '') ? actionClass.name : name).toLowerCase();
+
+    // validating name
+    assert(nameFinal.length, 'action name cannot be empty');
+    assert((/^([\w_\.\-])+$/gi).test(nameFinal), `Illegal action name: ${nameFinal}`); // eslint-disable-line no-useless-escape
+
+    this._registeredActions.set(nameFinal, actionClass);
+  }
+
+  /**
+   * Returns the action based on the registration name
+   *
+   * @param {string} name - name of the registered action
+   * @return {Action|null}
+   */
+  static registeredAction(name){
+    assert(TypeCheck.isString(name), 'Invalid name!');
+
+    const normalizedName = name.toLowerCase();
+
+    if (this._registeredActions.has(normalizedName)){
+      return this._registeredActions.get(normalizedName);
+    }
+
+    return null;
+  }
+
+  /**
+   * Returns a list containing the names of the registered actions
+   *
+   * @type {Array<string>}
+   */
+  static get registeredActionNames(){
+    return [...this._registeredActions.keys()];
   }
 
   /**
    * This method should be used to implement the evaluation of the action, it's called
-   * by {@link execute} after all inputs have been validated. It's expected to return
-   * a Promise containing the return value of the execution.
+   * by {@link Action.execute} after all inputs have been validated. It's expected to return
+   * a Promise containing the result of the evaluation.
    *
-   * You don't need to serialize the value for the response of the request (in
-   * case the action is triggered through a request), this is done automatically
-   * by {@link RequestHandler.render}
+   * During the execution of the action all inputs are assigned as read-only ({@link Input.readOnly}),
+   * this is done to prevent any modification in the input while the execution is happening,
+   * by the end of the execution the inputs are assigned back with the read-only state
+   * that was assigned before of the execution.
    *
+   * *Result through a {@link Handler}:*
+   *
+   * The {@link Handler.output} is responsible for the result serialization. Therefore
+   * when using a handler the result is rendered based on the data type.
+   * Both Readable Stream and Buffer are resulted as stream where everything else
+   * is automatically serialized using json (this may vary per {@link Handler} bases).
+   *
+   * @param {Object} data - plain object containing the value of the inputs, this is just to
+   * provide a more convenient way to query the value of the inputs inside of the
+   * execution for instance: ```data.myInput``` instead of ```this.input('myInput').value```.
    * @return {Promise<*>} value that should be returned by the action
    *
    * @abstract
    * @protected
    */
-  _perform(){
+  _perform(data){
     return Promise.reject(Error('Not implemented error!'));
   }
 
   /**
    * This method is called after the execution of the action.
    *
-   * Some examples bellow about what you could do by re-implementing this method:
-   *
+   * You could re-implement this method to:
    * - Add arbitrary information to a log
    * - In case of errors to purge temporary files
    * - Customize exceptions to a more contextual one
@@ -317,58 +530,80 @@ class Action{
   }
 
   /**
-  * Returns a boolean telling if the action is cacheable (`false` by default)
-  *
-  * The configuration about the LRU cache can be found under the {@link Settings}:
-  * {@link Settings.lruCacheSize} and {@link Settings.lruCacheLifespan}
-  *
-  * @type {boolean}
-  * @protected
-  */
-  get _cacheable(){
-    return false;
+   * Auxiliary method used to the contents of the action
+   *
+   * @param {Object} actionContents - object created when a serialized action
+   * is parsed
+   * @param {boolean} autofill - tells if the {@link Session.autofill} should
+   * be loaded
+   * @private
+   */
+  _loadContents(actionContents, autofill){
+    if (autofill && this.session){
+      for (const autofillName in actionContents.session.autofill){
+        this.session.autofill[autofillName] = actionContents.session.autofill[autofillName];
+      }
+    }
+
+    for (const inputName in actionContents.inputs){
+      const input = this.input(inputName);
+      assert(input, `Invalid input ${inputName}`);
+
+      input.parseValue(actionContents.inputs[inputName]);
+    }
   }
 
   /**
-   * Auxiliary method that is used to include additional information
-   * to the exception raised during execution
+   * Returns the value of the action inputs serialized
+   *
+   * @return {Promise<Object>}
+   * @private
+   */
+  async _serializeInputs(){
+    const inputNames = this.inputNames;
+    const serializeValuePromises = inputNames.map(x => this.input(x).serializeValue());
+    const serializedResult = await Promise.all(serializeValuePromises);
+
+    const actionInputs = Object.create(null);
+    for (let i=0, len=inputNames.length; i < len; ++i){
+      actionInputs[inputNames[i]] = serializedResult[i];
+    }
+
+    return actionInputs;
+  }
+
+  /**
+   * Auxiliary method used to include additional information
+   * to the exception raised during execution of the action
    *
    * @param {Error} err - exception that should be processed
-   * @param {Input} [input] - input about where the error was raised
    * @return {Error}
    * @private
    */
-  _processError(err, input=null){
-    // got an validation error, lets bake it into json
-    if (TypeCheck.isInstanceOf(err, ValidationError) && input){
-      err.inputName = input.name; // eslint-disable-line no-param-reassign
+  _processError(err){
+    if (this.info.registeredName){
+      err.stack = `Error: ${this.info.registeredName}\n${err.stack}`;
     }
-
-    err.stack = `Error: ${this.info.providerName}/${this.info.actionName}\n${err.stack}`; // eslint-disable-line no-param-reassign
-
     return err;
   }
 
   /**
    * Auxiliary method that runs the validations of all inputs
    *
-   * @return {Promise<boolean>}
    * @private
    */
-  _inputsValidation(){
-    return Promise.all(
+  async _inputsValidation(){
 
-      this[_inputs].map((input) => {
-        // in order to format the exception, it needs to be wrapped into a new promise
-        return new Promise((resolve, reject) => {
-          input.validate().then(() => {
-            resolve();
-          }).catch((err) => {
-            reject(this._processError(err, input));
-          });
-        });
-      }));
+    try{
+      await Promise.all([...this[_inputs].values()].map(input => input.validate()));
+    }
+    catch(err){
+      this._processError(err);
+      throw err;
+    }
   }
+
+  static _registeredActions = new Map();
 }
 
 module.exports = Action;

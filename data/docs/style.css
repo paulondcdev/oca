@@ -29,6 +29,7 @@ h2 {
 
 h3 {
   font-size: 1.17em;
+  background-color: #e9eff0;
 }
 
 h4 {
@@ -40,8 +41,10 @@ h4 {
 }
 
 .layout-container > header {
-  background-color: #fafafa;
-  border-bottom: solid 1px #ececec;
+  background-color: #3b3b3b;
+  border: none;
+  box-shadow: 0 0 6px 1px rgba(0, 0, 0, 0.5);
+  margin-bottom: 10px;
 }
 
 .github-markdown img:not([src*=".svg"]) {
@@ -50,17 +53,21 @@ h4 {
 }
 
 .layout-container > header > a {
-  color: #333333;
+  color: #e9f3f1;
   font-size: 1em;
-  font-weight: bold;
+  font-weight: normal;;
 }
 
 .layout-container > header > a:hover{
-  color: #206ac9;
+  color: #FFF;
 }
 
-.navigation .nav-dir-path{
-  color: #919191;
+.kind-class{
+  display: none;
+}
+
+.navigation > div {
+  margin-bottom: 20px;
 }
 
 .layout-container > header > a.repo-url-github {
@@ -68,7 +75,102 @@ h4 {
   height: 38px;
   width: auto;
   padding-left: 24px;
-  background: url("../../image/github.png") no-repeat left;
+  background: url("../../data/docs/github.png") no-repeat left;
   background-size: 20px;
   vertical-align: top;
+}
+
+.manual-breadcrumb-list{
+  display: none;
+}
+
+.import-path{
+  display: none;
+}
+
+.navigation{
+  overflow: auto;
+  padding-top: 32px;
+  margin-bottom: 30px;
+  width: 200px;
+  padding-left: 0;
+  border-right: 0;
+}
+
+.navigation .nav-dir-path{
+  color: #888;
+  font-weight: normal;
+  margin-left: 0;
+  font-size: 0.8em;
+  margin-top: 1em;
+}
+
+.navigation li {
+  margin: 6px 0;
+  margin-left: 0.75em;
+}
+
+.navigation li a {
+  color: #207a5f;
+}
+
+.content{
+  margin-left: 210px;
+  overflow: auto;
+  box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.3);
+}
+
+.content .detail > div {
+  margin-left: 0;
+}
+
+.search-input, select{
+  color: #FFF;
+}
+
+.search-input{
+  border-color: #dadada;
+}
+
+.search-input-edge{
+  background-color: transparent;
+}
+
+.footer{
+  border-top: none;
+}
+
+.navigation .manual-toc-root > div{
+  margin-top: 10px;
+}
+
+.manual-toc .indent-h2, .manual-toc .indent-h1{
+  margin-left: 0;
+  padding: 0;
+}
+
+table.summary thead, .description thead, table.files-summary thead, table.test-summary thead {
+  background: #e2e2e2;
+  color: #000;
+}
+
+.inherited-summary thead a {
+  color: #000;
+}
+
+.content .detail h4 + :not(pre) {
+  margin-left: 0;
+}
+
+.content .detail > div {
+  margin-left: 2px;
+}
+
+#ocaSmallLogo {
+  width: 40px;
+  height: 40px;
+}
+
+p > code, li > code {
+  font-size: 95%;
 }

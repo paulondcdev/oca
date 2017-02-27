@@ -30,25 +30,37 @@
         "lang": "en_US",
         "skipWords": [
           "param",
+          "pre",
           "oca",
+          "func",
+          "arg",
           "autofill",
           "auth",
           "webfy",
           "webfying",
+          "webfication",
           "webfied",
           "util",
+          "struct",
+          "ascii",
           "lru",
           "ip",
+          "testutils",
           "basename",
           "filename",
           "src",
+          "buf",
           "http",
           "https",
           "api",
+          "desc",
           "tmp",
+          "parsers",
           "enum",
           "checksum",
           "bool",
+          "stdout",
+          "stderr",
           "middleware",
           "middlewares",
           "dir",
@@ -60,6 +72,7 @@
           "ffff",
           "ipv4",
           "ipv6",
+          "argv",
           "req",
           "res",
           "jpg",
@@ -75,7 +88,6 @@
           "istanbul",
           "nbsp",
           "algo",
-          "sha1",
           "sha256",
           "const",
           "esdocs",
@@ -91,16 +103,24 @@
           "loopfunc",
           "intermediated",
           "utf",
+          "cli",
+          "mkdirs",
           "dev",
+          "neodoc",
+          "parallelization",
           "integrations",
           "promisifying",
           "serializable",
+          "docopt",
+          "handlers",
+          "passportjs",
+          "expressjs",
 
           // modules
           "promisify",
           "minimatch",
-          "mkdirp",
           "typecheck",
+          "os",
           "fs",
           "uuid",
           "sizeof"
@@ -165,6 +185,13 @@
     ],
     "space-infix-ops": [
       0
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+      "props":
+        false
+      }
     ],
     "space-before-blocks": [
       "error",
@@ -255,5 +282,5 @@
       }
     ]
   },
-  "extends": "airbnb"
+  "extends": "airbnb-base"
 }

@@ -1,51 +1,32 @@
-module.exports.Util = require('./Util');
-const Settings = require('./Settings');
+const modules = {};
+const shortcuts = {};
 
-module.exports.Settings = Settings;
-module.exports.ValidationError = require('./ValidationError');
-module.exports.Input = require('./Input');
-module.exports.Action = require('./Action');
-module.exports.ExecutionQueue = require('./ExecutionQueue');
-module.exports.Session = require('./Session');
+// modules
+modules.Error = require('./Error');
+modules.Util = require('./Util');
+modules.Settings = require('./Settings');
+modules.Input = require('./Input');
+modules.Action = require('./Action');
+modules.Tasks = require('./Tasks');
+modules.Session = require('./Session');
+modules.Handler = require('./Handler');
+modules.HandlerParser = require('./HandlerParser');
+modules.Ext = require('./Ext');
 
-const RequestHandler = require('./RequestHandler');
-const Provider = require('./Provider');
+// handler shortcuts
+shortcuts.createHandler = modules.Handler.create.bind(modules.Handler);
+shortcuts.registerHandler = modules.Handler.registerHandler.bind(modules.Handler);
 
-module.exports.Provider = Provider;
-module.exports.RequestHandler = RequestHandler;
-module.exports.Bundle = require('./Bundle');
+// action shortcuts
+shortcuts.createAction = modules.Action.create.bind(modules.Action);
+shortcuts.registerAction = modules.Action.registerAction.bind(modules.Action);
 
-// shortcuts
-module.exports.initialize = (...args) => {
-  return Settings.initialize(...args);
-};
+// web handler shortcuts
+const webHandler = modules.Ext.Handlers.Web;
+shortcuts.webfyAction = webHandler.webfyAction.bind(webHandler);
+shortcuts.addBeforeAction = webHandler.addBeforeAction.bind(webHandler);
+shortcuts.addBeforeAuthAction = webHandler.addBeforeAuthAction.bind(webHandler);
+shortcuts.middleware = webHandler.middleware.bind(webHandler);
+shortcuts.restful = webHandler.restful.bind(webHandler);
 
-module.exports.middleware = (...args) => {
-  return Provider.middleware(...args);
-};
-
-module.exports.restful = (...args) => {
-  return Provider.restful(...args);
-};
-
-module.exports.createProvider = (...args) => {
-  return Provider.create(...args);
-};
-
-module.exports.registerAction = (...args) => {
-  return Provider.registerAction(...args);
-};
-
-module.exports.webfyAction = (...args) => {
-  return Provider.webfyAction(...args);
-};
-
-module.exports.webfyProvider = (...args) => {
-  return Provider.webfyProvider(...args);
-};
-
-module.exports.registerProvider = (...args) => {
-  return Provider.registerProvider(...args);
-};
-
-module.exports.Method = RequestHandler.Method;
+Object.assign(module.exports, modules, shortcuts);

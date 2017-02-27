@@ -1,0 +1,407 @@
+const assert = require('assert');
+const Oca = require('../../../../../src');
+const testutils = require('../../../../../testutils');
+
+// the modules bellow are optional integrations, only required as devDependencies
+// for testing purpose
+const request = require('request'); // eslint-disable-line
+const express = require('express'); // eslint-disable-line
+const passport = require('passport'); // eslint-disable-line
+const BasicStrategy = require('passport-http').BasicStrategy; // eslint-disable-line
+
+
+describe('Web Restful Auth:', () => {
+
+  let server = null;
+  let app = null;
+  let port = null;
+
+  class WebCustomAuth1 extends Oca.Ext.Handlers.Web{
+    static beforeAuthAction(){
+      const result = super.beforeAuthAction();
+      result.push(passport.authenticate('basic', {session: false}));
+      return result;
+    }
+  }
+
+  class WebCustomAuth2 extends Oca.Ext.Handlers.Web{
+    static beforeAuthAction(){
+      const result = super.beforeAuthAction();
+      result.push(passport.authenticate('basic2', {session: false}));
+      return result;
+    }
+  }
+
+  class SimpleSumAction extends testutils.Actions.Shared.Sum{
+    constructor(){
+      super();
+      this.createInput('forceFail?: bool');
+    }
+
+    _perform(data){
+      if (data.forceFail){
+        return Promise.reject(new Error('Forced to fail'));
+      }
+      return super._perform(data);
+    }
+  }
+
+  before((done) => {
+
+    // registrations
+    Oca.Handler.registerHandler(WebCustomAuth1, 'web', 'a.*');
+    Oca.Handler.registerHandler(WebCustomAuth2, 'web', 'b.*');
+
+    Oca.registerAction(SimpleSumAction, 'a.simpleSumAction');
+    Oca.registerAction(SimpleSumAction, 'a.simpleSumActionDelete');
+    Oca.registerAction(SimpleSumAction, 'b.simpleSumAction');
+    Oca.registerAction(testutils.Actions.Shared.UploadAction, 'b.uploadAction');
+
+    // webfying actions
+    Oca.webfyAction('a.simpleSumAction', ['get', 'post'], {auth: true, restRoute: '/A'});
+    Oca.webfyAction('a.simpleSumActionDelete', 'delete', {auth: true, restRoute: '/A'});
+    Oca.webfyAction('a.simpleSumAction', 'patch', {auth: true, restRoute: '/A/customName'});
+    Oca.webfyAction('b.simpleSumAction', ['get', 'post'], {auth: true, restRoute: '/B'});
+    Oca.webfyAction('b.simpleSumAction', 'patch', {auth: false, restRoute: '/B'});
+    Oca.webfyAction('b.uploadAction', 'put', {auth: true, restRoute: '/B'});
+
+    // auth 1
+    passport.use(new BasicStrategy(
+      (username, password, authDone) => {
+        if (username.valueOf() === 'user' &&
+          password.valueOf() === '1234'){
+          return authDone(null, 'user');
+        }
+        return authDone(null, false);
+      }));
+
+    // auth 2
+    const customBasicStrategy = new BasicStrategy(
+      (username, password, authDone) => {
+        if (username.valueOf() === 'user2' &&
+          password.valueOf() === '12345'){
+          return authDone(null, 'user2');
+        }
+        return authDone(null, false);
+      });
+    customBasicStrategy.name = 'basic2';
+    passport.use(customBasicStrategy);
+
+    // express server
+    app = express();
+    app.use(passport.initialize());
+    server = app.listen(0, () => {
+      done();
+    });
+
+    Oca.restful(app);
+    port = server.address().port;
+  });
+
+  after(() => {
+    if (server){
+      server.close();
+    }
+  });
+
+  it('Should execute an action using through a custom action route name', (done) => {
+
+    request.patch(`http://localhost:${port}/A/customName?a=10&b=30`, {
+      auth: {
+        user: 'user',
+        pass: '1234',
+        sendImmediately: true,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+        assert.equal(result.data, 40);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should perform an action through GET that is restricted by auth', (done) => {
+
+    request.get(`http://localhost:${port}/B?a=10&b=30`, {
+      auth: {
+        user: 'user2',
+        pass: '12345',
+        sendImmediately: true,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+        assert.equal(result.data, 40);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should perform an action through PATH without requiring auth', (done) => {
+
+    request.patch(`http://localhost:${port}/B?a=10&b=30`, {
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+        assert.equal(result.data, 40);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should perform an action through POST that is restricted by auth (Web.authentication)', (done) => {
+    request.post(`http://localhost:${port}/A`, {
+      auth: {
+        user: 'user',
+        pass: '1234',
+        sendImmediately: true,
+      },
+      form: {
+        a: 10,
+        b: 30,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+      try{
+        assert.equal(response.statusCode, 200);
+        const result = JSON.parse(body);
+        assert.equal(result.data, 40);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should perform an action through POST that is restricted by auth (custom Web.authentication)', (done) => {
+    request.post(`http://localhost:${port}/B`, {
+      auth: {
+        user: 'user2',
+        pass: '12345',
+        sendImmediately: true,
+      },
+      form: {
+        a: 10,
+        b: 30,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+        assert.equal(result.data, 40);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should fail to perform an action through DELETE (method not webfied by the action) that is restricted by auth (basic)', (done) => {
+    request.delete(`http://localhost:${port}/B`, {
+      auth: {
+        user: 'user2',
+        pass: '12345',
+        sendImmediately: true,
+      },
+      form: {
+        a: 10,
+        b: 30,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 404);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should perform an action through PUT with single file upload that requires auth', (done) => {
+    const postFormData = {
+      a: 'A value',
+
+      file: {
+        value: new Buffer([1, 2, 3]),
+        options: {
+          filename: 'foo.bin',
+          contentType: 'application/bin',
+        },
+      },
+    };
+
+    request.put({url: `http://localhost:${port}/B`,
+      auth: {
+        user: 'user2',
+        pass: '12345',
+        sendImmediately: true,
+      },
+      formData: postFormData}, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+
+        assert.equal(result.data.fileHash, '039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81');
+        assert.equal(result.data.a, postFormData.a);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should perform an action through DELETE that is restricted by auth', (done) => {
+
+    request.delete(`http://localhost:${port}/A?a=20&b=30`, {
+      auth: {
+        user: 'user',
+        pass: '1234',
+        sendImmediately: false,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+        assert.equal(result.data, 50);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should not be able to perform an action through GET that requires auth', (done) => {
+
+    request.get(`http://localhost:${port}/B?a=10&b=30`, {
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 401);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should fail to perform an action through GET by a wrong auth', (done) => {
+
+    request.get(`http://localhost:${port}/B?a=10&b=30`, {
+      auth: {
+        user: 'user1',
+        pass: '12345',
+        sendImmediately: true,
+      },
+    }, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 401);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+});
