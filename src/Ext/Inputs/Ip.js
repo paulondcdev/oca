@@ -40,8 +40,8 @@ class Ip extends BaseText{
   /**
    * Returns a boolean telling if the value is ipv4
    *
-   * @param {null|number} [at] - index used when the input is defined as vector to
-   * tell which value should be used
+   * @param {null|number} [at] - index used when input has been created as a vector that
+   * tells which value should be used
    * @return {boolean}
    */
   isV4(at=null){
@@ -53,8 +53,8 @@ class Ip extends BaseText{
   /**
    * Returns a boolean telling if the value is ipv6
    *
-   * @param {null|number} [at] - index used when the input is defined as vector to
-   * tell which value should be used
+   * @param {null|number} [at] - index used when input has been created as a vector that
+   * tells which value should be used
    * @return {boolean}
    */
   isV6(at=null){
@@ -66,8 +66,8 @@ class Ip extends BaseText{
   /**
    * Returns a boolean telling if the value is a private ip address
    *
-   * @param {null|number} [at] - index used when the input is defined as vector to
-   * tell which value should be used
+   * @param {null|number} [at] - index used when input has been created as a vector that
+   * tells which value should be used
    * @return {boolean}
    */
   isPrivate(at=null){
@@ -79,8 +79,8 @@ class Ip extends BaseText{
   /**
    * Implements the ip address validations
    *
-   * @param {null|number} at - index used when the input is defined as vector to
-   * tell which value should be used
+   * @param {null|number} at - index used when input has been created as a vector that
+   * tells which value should be used
    * @return {Promise<*>} value held by the input based on the current context (at)
    * @protected
    */
