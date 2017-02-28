@@ -28,7 +28,8 @@ class Session{
    * feature is used to set the initial input value for inputs that contain the `autofill`
    * property. It works by looking if the value of the autofill input property is under the
    * {@link Session.autofill} then if found it sets the input value with the value of the
-   * {@link Session.autofill}
+   * {@link Session.autofill}. This process occurs when a session is assigned to the action
+   * ({@link Action.session}).
    * @param {Tasks} [wrapup] - task object used to hold actions and promises that are triggered
    * when finalizing ({@link finalize}) the session
    * @param {LruCache} [resultCache] - cache used to store results of cacheable actions
@@ -54,7 +55,8 @@ class Session{
    * This feature is used to set the initial input value for inputs that contain the `autofill`
    * property. It works by looking if the value of the autofill input property is under the
    * {@link Session.autofill} then if found it sets the input value with the value of the
-   * {@link Session.autofill}
+   * {@link Session.autofill}. This process occurs when a session is assigned to the action
+   * ({@link Action.session}).
    *
    * When inputs that contain the property `autofill` are initialized through the
    * {@link Handler} they will try to find their values under the autofill,
