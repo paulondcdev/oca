@@ -761,6 +761,11 @@ class Input{
   /**
    * Registers a property for the input type
    *
+   * ```
+   * // example of registering a new property
+   * Oca.Input.registerProperty('text', 'myCustomProperty', 'A initial value if necessary')
+   * ```
+   *
    * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
    * in which the property should be registered
    * @param {string} name - name of the property (in case the property name already
