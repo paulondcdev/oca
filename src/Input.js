@@ -63,7 +63,7 @@ const _cache = Symbol('cache');
  *     // ♥ compact version
  *     this.createInput('myInputA?: bool[]');
  *
- *     // same as effect as above, but long...
+ *     // same as effect as above, but not so friendly to read
  *     this.addInput(Input.create('myInputB?: bool[]'));
  *   }
  * }
