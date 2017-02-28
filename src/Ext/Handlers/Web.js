@@ -485,17 +485,24 @@ class Web extends Handler{
    * Implements the response for an error value
    *
    * The error response gets automatically encoded using json, following
-   * google's json style guide.
+   * google's json style guide. In case of an error status `500` the standard
+   * result is ignored and a message `Internal Server Error` is used instead.
    *
    * @param {Error} err - exception that should be outputted as error response
    * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
   _errorOutput(err){
-    const result = super._errorOutput(err);
-
+    let result = super._errorOutput(err);
+    const status = result.error.code;
     this._addTopLevelProperties(result);
-    this.response.status(err.status).json(result);
+
+    // should not leak any error message for the status code 500
+    if (status === 500){
+      result = 'Internal Server Error';
+    }
+
+    this.response.status(status).json(result);
 
     return result;
   }

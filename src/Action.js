@@ -367,7 +367,13 @@ class Action{
    * @return {Action|null}
    */
   createAction(actionName){
-    return Action.create(actionName, this.session);
+    const action = Action.create(actionName, this.session);
+
+    // overriding the meta-data information about the origin of the action, by telling
+    // it has been created from inside of another action
+    action.info.origin = 'nested';
+
+    return action;
   }
 
   /**
@@ -418,6 +424,11 @@ class Action{
 
       // adding the registered name to the action
       action.info.registeredName = actionName.toLowerCase();
+
+      // adding a meta-data information telling the action is a top level one
+      // it has not being created inside of another action through the
+      // Action.createAction
+      action.info.origin = 'topLevel';
 
       return action;
     }
@@ -581,6 +592,14 @@ class Action{
    * @private
    */
   _processError(err){
+
+    // adding a member that tells the origin of the error
+    if (!err.origin){
+      err.origin = this.info.origin;
+    }
+
+    // adding the registered action name to the stack information, for
+    // debugging purposes
     if (this.info.registeredName){
       err.stack = `Error: ${this.info.registeredName}\n${err.stack}`;
     }
