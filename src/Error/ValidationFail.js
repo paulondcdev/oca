@@ -10,7 +10,7 @@ const _code = Symbol('code');
 const _message = Symbol('message');
 
 /**
- * Exception raised by {@link Input} validations
+ * Exception raised by {@link Input} validations.
  *
  * It carries additional information about the context of the error that can be used when
  * reporting/handling it. For this reason when this exception is raised through a {@link Handler}
@@ -40,13 +40,28 @@ class ValidationFail extends Error{
     this.inputName = inputName;
 
     /**
-     * Validation fail is assigned with the status code found at
+     * Status code used by the {@link Handler} when this error is raised from inside of a top
+     * level action (an action that has not been created from another action).
+     *
+     * Value driven by:
      * `Settings.get('error/validationFail/status')`
      * (default: `422`)
      *
      * @type {number}
      */
     this.status = Settings.get('error/validationFail/status');
+
+    /**
+     * Status code used by the {@link Handler} when this error is raised inside of an action
+     * that has been created from another action ({@link Action.createAction}).
+     *
+     * Value driven by:
+     * `Settings.get('error/validationFail/nestedStatus')`
+     * (default: `500`)
+     *
+     * @type {number}
+     */
+    this.nestedStatus = Settings.get('error/validationFail/nestedStatus');
 
     // storing the original message
     this[_message] = message;
@@ -139,5 +154,6 @@ class ValidationFail extends Error{
 
 // default settings
 Settings.set('error/validationFail/status', 422);
+Settings.set('error/validationFail/nestedStatus', 500);
 
 module.exports = ValidationFail;
