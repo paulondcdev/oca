@@ -29,7 +29,7 @@ const _session = Symbol('session');
  *
  * ```
  * // creating an instance of an action
- * const action = new MyAction();
+ * const action = Oca.createAction('...');
  *
  * // creating a handle based on the handler registration name
  * const handler = Oca.createHandler('myHandler');
