@@ -144,6 +144,9 @@ class Session{
    * Terminates the session by executing the {@link wrapup}
    * tasks and flushing the {@link lruCache}.
    *
+   * This is called by the {@link Handler} during the execution of
+   * {@link Handler.output}.
+   *
    * @return {Promise}
    */
   async finalize(){
