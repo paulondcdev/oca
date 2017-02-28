@@ -691,7 +691,7 @@ class Input{
   }
 
   /**
-   * Registers an {@link Input} type to the available inputs
+   * Registers a new input type to the available inputs
    *
    * @param {Input} inputClass - input implementation that will be registered
    * @param {string} [name] - string containing the registration name for the
