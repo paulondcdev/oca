@@ -2,7 +2,6 @@ const assert = require('assert');
 const stream = require('stream');
 const EventEmitter = require('events');
 const TypeCheck = require('js-typecheck');
-const ValidationFail = require('./Error/ValidationFail');
 const debug = require('debug')('Oca');
 const Session = require('./Session');
 const minimatch = require('minimatch');
@@ -97,79 +96,6 @@ class Handler{
         });
       });
     }
-  }
-
-  /**
-   * Translates an {@link Error} to a data structure that's serialized as output. Therefore
-   * this method is called by the {@link Handler.output} when an exception is passed
-   * as output.
-   *
-   * Any error can carry a status code. It helps to identify the kind of error, by default it
-   * follows the HTTP status code, however you can assign any value you want that may help client to be
-   * aware about type of error.
-   *
-   * The status can be done by assigning a `status` code to the error (for instance ```err.status = 501;```).
-   * This practice can be found in the errors shipped with oca ({@link Conflict}, {@link NoContent},
-   * {@link NotFound} and {@link ValidationFail}). In case none status is found in the error then `500`
-   * is used automatically.
-   *
-   * Also, in case of a {@link ValidationFail} it gets converted to json ({@link ValidationFail.toJson}).
-   *
-   * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
-   * included in the error output
-   *
-   * @param {Error} err - Exception that should be serialized as en error output
-   * @return {Object} serialized data
-   * @protected
-   */
-  _errorOutput(err){
-    err.status = err.status || 500;
-
-    const result = Object.create(null);
-    result.error = Object.create(null);
-    result.error.code = err.status;
-    result.error.message = (err instanceof ValidationFail)? err.toJson() : err.message;
-
-    // adding the stack-trace information when running in development mode
-    /* istanbul ignore next */
-    if (process.env.NODE_ENV === 'development'){
-      process.stderr.write(`${err.stack}\n`);
-      result.error.stacktrace = err.stack.split('\n');
-      debug(err.stack);
-    }
-
-    return result;
-  }
-
-  /**
-   * Translates the success value to a data structure that is serialized as output.
-   * Usually the value gets serialized using json, however there is the stream support
-   * exception where any Readable stream and Buffer are streamed as output
-   * (it should be supported by handler basis). This method is called by
-   * {@link Handler.output}.
-   *
-   * @param {*} value - value to be outputted
-   * @return {Object} Object that is going to be serialized
-   * @protected
-   */
-  _successOutput(value){
-
-    // stream output
-    if (value instanceof Buffer){
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(value);
-
-      return bufferStream;
-    }
-    else if (value instanceof stream.Readable){
-      return value;
-    }
-
-    // default result
-    const result = Object.create(null);
-    result.data = value;
-
-    return result;
   }
 
   /**
@@ -361,6 +287,95 @@ class Handler{
    */
   static onFinalizeError(listener){
     this._sessionEvent.on('error', listener);
+  }
+
+  /**
+   * Translates an {@link Error} to a data structure that's serialized as output. Therefore
+   * this method is called by the {@link Handler.output} when an exception is passed
+   * as output.
+   *
+   * Any error can carry a status code. It helps to identify the kind of error, by default it
+   * follows the HTTP status code, however you can assign any value you want that may help client to be
+   * aware about type of error.
+   *
+   * There are two kinds of status codes that can be assigned for any error:
+   *
+   * - status: used when an error is raised from inside of a top level action
+   * (an action that has not been created from another action).
+   *
+   * - nestedStatus: used when an error is raised inside of an action that has been
+   * created from another action ({@link Action.createAction}), in case nestedStatus is not defined
+   * then `status` code is going to be used instead.
+   *
+   * The `status` and `nestedStatus` can be done by adding them to any error (for instance ```err.status = 501;```).
+   * This practice can be found in all errors shipped with oca ({@link Conflict}, {@link NoContent},
+   * {@link NotFound} and {@link ValidationFail}). In case none status is found in the error then `500`
+   * is used automatically.
+   *
+   * By default the contents of the error output are driven by the `err.message`, however if an error
+   * contains `err.toJson` method ({@link ValidationFail.toJson}) then it's used instead of the message.
+   *
+   * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
+   * included in the error output
+   *
+   * @param {Error} err - Exception that should be serialized as en error output
+   * @return {Object} serialized data
+   * @protected
+   */
+  _errorOutput(err){
+    let status = err.status || 500;
+
+    // checking if the error has been raised from inside of another action, if so
+    // it uses the nestedStatus code defined as a member of the error
+    if (err.origin === 'nested' && err.nestedStatus){
+      status = err.nestedStatus;
+    }
+
+    const result = Object.create(null);
+    result.error = Object.create(null);
+    result.error.code = status;
+    result.error.message = (TypeCheck.isCallable(err.toJson)) ? err.toJson() : err.message;
+
+    // adding the stack-trace information when running in development mode
+    /* istanbul ignore next */
+    if (process.env.NODE_ENV === 'development'){
+      process.stderr.write(`${err.stack}\n`);
+      result.error.stacktrace = err.stack.split('\n');
+      debug(err.stack);
+    }
+
+    return result;
+  }
+
+  /**
+   * Translates the success value to a data structure that is serialized as output.
+   * Usually the value gets serialized using json, however there is the stream support
+   * exception where any Readable stream and Buffer are streamed as output
+   * (it should be supported by handler basis). This method is called by
+   * {@link Handler.output}.
+   *
+   * @param {*} value - value to be outputted
+   * @return {Object} Object that is going to be serialized
+   * @protected
+   */
+  _successOutput(value){
+
+    // stream output
+    if (value instanceof Buffer){
+      const bufferStream = new stream.PassThrough();
+      bufferStream.end(value);
+
+      return bufferStream;
+    }
+    else if (value instanceof stream.Readable){
+      return value;
+    }
+
+    // default result
+    const result = Object.create(null);
+    result.data = value;
+
+    return result;
   }
 
   static _sessionEvent = new EventEmitter();
