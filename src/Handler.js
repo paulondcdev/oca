@@ -269,8 +269,8 @@ class Handler{
   }
 
   /**
-   * Adds a listener for an exception raised by the {@link Session.finalize} inside of
-   * {@link Handler.output}.This event passes the error as argument.
+   * Adds a listener for the exception raised by the {@link Session.finalize} inside of
+   * {@link Handler.output}. This event passes the error as argument.
    *
    * Currently this event is static to make easy for developers to hook it when
    * it occurs, if none listener is registered to it then the error is thrown,
