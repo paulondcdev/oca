@@ -20,9 +20,9 @@ const _session = Symbol('session');
  * data is then loaded to the action via {@link Handler.loadToAction}.
  *
  * The output data of a handler is done via {@link Handler.output}. The way the data is serialized
- * is determined by the handler implementation ({@link Handler._successOutput}, {@link Handler._errorOutput}).
- * Usually it gets serialized using json, however there is the stream support exception where any
- * Readable stream and Buffer are streamed as output (it may vary per handler basis).
+ * is determined by a handler implementation ({@link Handler._successOutput}, {@link Handler._errorOutput}).
+ * Handler implementations are recommended to serialize the output using json for a non readable stream or
+ * buffer value, otherwise to stream them as output (it may vary per handler basis).
  *
  * Handlers are created by their registration name ({@link Handler.registerHandler}), the creation
  * is done by {@link Handler.create} or `Oca.createHandler`:
@@ -122,10 +122,12 @@ class Handler{
     const inputValues = await parser.parseInputValues();
     const autofillValues = await parser.parseAutofillValues();
 
+    // setting inputs
     for (const inputName in inputValues){
       action.input(inputName).value = inputValues[inputName];
     }
 
+    // setting autofill
     for (const autofillName in autofillValues){
       this.session.autofill[autofillName] = autofillValues[autofillName];
     }
@@ -290,9 +292,9 @@ class Handler{
   }
 
   /**
-   * Translates an {@link Error} to a data structure that's serialized as output. Therefore
-   * this method is called by the {@link Handler.output} when an exception is passed
-   * as output.
+   * Translates an {@link Error} to a data structure that is later serialized by a handler implementation
+   * as output. The handler implementations are recommended to serialize the output using json. This method is
+   * called by the {@link Handler.output} when an exception is passed as output.
    *
    * Any error can carry a status code. It helps to identify the kind of error, by default it
    * follows the HTTP status code, however you can assign any value you want that may help client to be
@@ -313,7 +315,7 @@ class Handler{
    * is used automatically.
    *
    * By default the contents of the error output are driven by the `err.message`, however if an error
-   * contains `err.toJson` method ({@link ValidationFail.toJson}) then it's used instead of the message.
+   * contains `err.toJson` method ({@link ValidationFail.toJson}) then that's used instead of the message.
    *
    * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
    * included in the error output
@@ -348,11 +350,16 @@ class Handler{
   }
 
   /**
-   * Translates the success value to a data structure that is serialized as output.
-   * Usually the value gets serialized using json, however there is the stream support
-   * exception where any Readable stream and Buffer are streamed as output
-   * (it should be supported by handler basis). This method is called by
-   * {@link Handler.output}.
+   * Translates the success value to a data structure that is later serialized
+   * by a handler implementation as output.
+   * The handler implementations are recommended to serialize the output using json
+   * for a non readable stream or buffer value, otherwise to stream them as output
+   * (if supported by the handler).
+   *
+   * Note: any Buffer value passed to this method gets automatically converted to a
+   * readable stream.
+   *
+   * This method is called by {@link Handler.output}.
    *
    * @param {*} value - value to be outputted
    * @return {Object} Object that is going to be serialized
