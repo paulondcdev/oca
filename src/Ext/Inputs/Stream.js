@@ -18,7 +18,7 @@ const Input = require('../../Input');
  * --- | --- | :---: | :---:
  * hidden | boolean telling if the input is hidden from the {@link HandlerParser}, \
  * therefore the input should only be used internally | ::on:: | ::true::
- * streamType | specific stream type name allowed by the input: `readable`, `writable`, \
+ * streamType | specific stream type allowed by the input: `readable`, `writable`, \
  * `duplex` and `transform` | ::off:: | ::none::
  *
  * All properties including the inherited ones can be listed via
