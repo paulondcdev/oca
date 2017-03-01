@@ -220,18 +220,14 @@ class Action{
       }
     }
 
-    // checking if the inputs are valid (it throws an exception in case an input fails)
-    await this._inputsValidation();
-
     const data = Object.create(null);
     const readOnlyOriginalValues = new Map();
 
-    // making inputs read-only during the execution, so they can't be
-    // modified during the execution otherwise it would be very dangerous,
+    // making inputs read-only during the execution, otherwise it would be very dangerous
     // since a modified input would not get validated until the next execution.
     // The original read-only value is restored in the end of the execution. Also,
     // this process collects the input values that are stored under 'data' which
-    // is passed as argument of _perform method, 'data' is used as a more convenient
+    // is later passed as argument of _perform method, it's used as a more convenient
     // way to query the value of the inputs
     for (const [name, input] of this[_inputs]){
       readOnlyOriginalValues.set(input, input.readOnly);
@@ -241,6 +237,19 @@ class Action{
 
       // input value
       data[name] = input.value;
+    }
+
+    // checking if the inputs are valid (it throws an exception in case an input fails)
+    try{
+      await this._inputsValidation();
+    }
+    catch(errr){
+      // restoring the read-only
+      for (const [input, originalReadOnly] of readOnlyOriginalValues){
+        input.readOnly = originalReadOnly;
+      }
+
+      throw this._processError(errr);
     }
 
     // the action is performed inside of a try/catch block to call the _finalize
@@ -607,17 +616,11 @@ class Action{
   /**
    * Auxiliary method that runs the validations of all inputs
    *
+   * @return {Promise}
    * @private
    */
-  async _inputsValidation(){
-
-    try{
-      await Promise.all([...this[_inputs].values()].map(input => input.validate()));
-    }
-    catch(err){
-      this._processError(err);
-      throw err;
-    }
+  _inputsValidation(){
+    return Promise.all([...this[_inputs].values()].map(input => input.validate()));
   }
 
   static _registeredActions = new Map();
