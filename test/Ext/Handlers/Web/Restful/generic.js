@@ -17,17 +17,9 @@ describe('Web Restful Generic:', () => {
   let app = null;
   let port = null;
 
-  class SimpleSumAction extends testutils.Actions.Shared.Sum{
-    constructor(){
-      super();
-      this.createInput('forceFail?: bool');
-    }
-
+  class ForceToFail extends Oca.Action{
     _perform(data){
-      if (data.forceFail){
-        return Promise.reject(new Error('Forced to fail'));
-      }
-      return super._perform(data);
+      return Promise.reject(new Error('Forced to fail'));
     }
   }
 
@@ -45,12 +37,14 @@ describe('Web Restful Generic:', () => {
   before((done) => {
 
     // registrations
-    Oca.registerAction(SimpleSumAction);
+    Oca.registerAction(testutils.Actions.Shared.Sum, 'sum');
+    Oca.registerAction(ForceToFail);
     Oca.registerAction(CheckRemoteAddress);
 
     // webfying actions
-    Oca.webfyAction(SimpleSumAction, 'get', {restRoute: '/A'});
-    Oca.webfyAction(SimpleSumAction, 'patch', {restRoute: '/A/:a/test'});
+    Oca.webfyAction('sum', 'get', {restRoute: '/A'});
+    Oca.webfyAction('sum', 'patch', {restRoute: '/A/:a/test'});
+    Oca.webfyAction(ForceToFail, 'get', {restRoute: '/forceToFail'});
     Oca.webfyAction(CheckRemoteAddress, 'get', {restRoute: '/D'});
 
     // express server
@@ -232,7 +226,7 @@ describe('Web Restful Generic:', () => {
 
   it('Should fail to perform an action that raises an exception', (done) => {
 
-    request.get(`http://localhost:${port}/A?a=10&b=30&forceFail=true`, (err, response, body) => {
+    request.get(`http://localhost:${port}/forceToFail`, (err, response, body) => {
 
       if (err){
         return done(err);

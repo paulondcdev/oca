@@ -32,29 +32,15 @@ describe('Web Restful Auth:', () => {
     }
   }
 
-  class SimpleSumAction extends testutils.Actions.Shared.Sum{
-    constructor(){
-      super();
-      this.createInput('forceFail?: bool');
-    }
-
-    _perform(data){
-      if (data.forceFail){
-        return Promise.reject(new Error('Forced to fail'));
-      }
-      return super._perform(data);
-    }
-  }
-
   before((done) => {
 
     // registrations
     Oca.Handler.registerHandler(WebCustomAuth1, 'web', 'a.*');
     Oca.Handler.registerHandler(WebCustomAuth2, 'web', 'b.*');
 
-    Oca.registerAction(SimpleSumAction, 'a.simpleSumAction');
-    Oca.registerAction(SimpleSumAction, 'a.simpleSumActionDelete');
-    Oca.registerAction(SimpleSumAction, 'b.simpleSumAction');
+    Oca.registerAction(testutils.Actions.Shared.Sum, 'a.simpleSumAction');
+    Oca.registerAction(testutils.Actions.Shared.Sum, 'a.simpleSumActionDelete');
+    Oca.registerAction(testutils.Actions.Shared.Sum, 'b.simpleSumAction');
     Oca.registerAction(testutils.Actions.Shared.UploadAction, 'b.uploadAction');
 
     // webfying actions
