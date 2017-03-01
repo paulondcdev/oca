@@ -32,6 +32,17 @@ describe('Text Input:', () => {
     return input.validate.bind(input)();
   });
 
+  it('Should parse a vector value from JSON', () => {
+    const input = Input.create('input: text[]');
+    const data = ['a', null, ''];
+
+    input.parseValue(JSON.stringify(data));
+
+    assert.equal(input.value[0], 'a');
+    assert.equal(input.value[1], null);
+    assert.equal(input.value[2], null);
+  });
+
   it('Should accept a string array', () => {
     const input = Input.create('input: text[]');
     input.value = ['a', 'b', 'c'];
