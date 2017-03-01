@@ -28,9 +28,9 @@ const _session = Symbol('session');
  * action.execute().then(...) //  HelloWorld
  * ```
  *
- * The data used to perform the evaluation is held by inputs ({@link Action.createInput}).
- * These inputs can be widely configured to enforce quality control via properties. Please
- * check the documentation for the input types to be aware about the available validations.
+ * The data used to perform an evaluation is held by inputs ({@link Action.createInput}).
+ * These inputs can be widely configured to enforce quality control via properties,
+ * the available properties can be found under the documentation for each input type.
  *
  * ```
  * class HelloWorld extends Oca.Action{
@@ -56,13 +56,11 @@ const _session = Symbol('session');
  * with a prefix common across some group of actions for that use '.' as separator.
  * Also, there are two ways to create actions:
  *
- * - {@link Action.createAction} - allows actions to be created inside of the execution of an action
+ * - {@link Action.createAction} - allows actions to be created inside of another action
  * by doing that it creates actions that share the same {@link Session}.
  *
- * - {@link Action.create} - creates an action (it can be called as `Oca.createAction`)
- * by inside of an action instance which creates
- * the actions by sharing the same session or use the static method to create actions where you are
- * able to specify a different session.
+ * - {@link Action.create} - factory an action (also available as `Oca.createAction`) with
+ * a new session or custom session.
  *
  * An action can be serialized ({@link Action.toJson}) to postpone their execution where it can be
  * recreated later through {@link Action.createActionFromJson} or in case of a non registered action

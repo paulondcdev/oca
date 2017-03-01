@@ -63,7 +63,7 @@ const _cache = Symbol('cache');
  *     // ♥ compact version
  *     this.createInput('myInputA?: bool[]');
  *
- *     // same as effect as above, but long...
+ *     // same as effect as above, but not so friendly to read
  *     this.addInput(Input.create('myInputB?: bool[]'));
  *   }
  * }
@@ -252,7 +252,7 @@ class Input{
    *
    * @param {Input} sourceInput - input used as source to setup the current input
    * @param {null|number} [at] - index used when the target input is defined as vector to
-   * tell which value should be used
+   * tells which value should be used
    * @param {boolean} [cache=true] - tells if the cache will be copied as well
    */
   setupFrom(sourceInput, at=null, cache=true){
@@ -691,7 +691,7 @@ class Input{
   }
 
   /**
-   * Registers an {@link Input} type to the available inputs
+   * Registers a new input type to the available inputs
    *
    * @param {Input} inputClass - input implementation that will be registered
    * @param {string} [name] - string containing the registration name for the
@@ -761,6 +761,11 @@ class Input{
   /**
    * Registers a property for the input type
    *
+   * ```
+   * // example of registering a new property
+   * Oca.Input.registerProperty('text', 'myCustomProperty', 'A initial value if necessary')
+   * ```
+   *
    * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
    * in which the property should be registered
    * @param {string} name - name of the property (in case the property name already
@@ -803,8 +808,8 @@ class Input{
    * should return a {@link ValidationFail} (This method is called when the
    * validations are perform through {@link Input.validate})
    *
-   * @param {null|number} at - index used when the input is defined as vector to
-   * tell which value should be used
+   * @param {null|number} at - index used when input has been created as a vector that
+   * tells which value should be used
    * @return {Promise<*>} Returns the value of the input
    * @protected
    */

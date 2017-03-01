@@ -9,17 +9,16 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/node-oca/oca/badge.svg)](https://snyk.io/test/github/node-oca/oca)
 </p>
 
-** What is it ? **
+**What is it ?**
 
 Oca is a framework designed to help building apps accross multiple domains. You can
-use it to build any kind of application whether web based or desktop ones. Think about
-Oca as a polyglot framework.
+use it to build any kind of application whether web based or desktop ones.
 
-** How does it work ? **
+**How does it work ?**
 
-It works by providing an interface where developers can easly describe evaluations in a way that is fairly extendable and comprehensible. This interface is focused to minimize repetitive tedeus routines ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)).
+It works by providing an interface focused to describe evaluations in a way that is fairly extendable and comprehensible. Although a process that minimize repetitive tedeus routines  ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) and produces a more versatile code base.
 
-These evaluations can be triggered accross multiple domains you write once and Oca takes care about the specifics that are necessary to run the evaluation, such as for web middlewares, REST requests, console applications...
+These evaluations can be triggered accross multiple domains you write once and Oca takes care about the specifics that are necessary to run the evaluation.
 
 <p align="center">
   <img src="data/ocaHi.png"/>

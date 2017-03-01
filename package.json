@@ -1,7 +1,7 @@
 {
   "name": "oca",
   "version": "0.2.0",
-  "description": "A multi-domain framework for building apps in Node.js",
+  "description": "A framework for building solid evalutations in Node.js",
   "scripts": {
     "build": "babel src --out-dir=dist --source-maps both",
     "build-dev": "babel src --watch --out-dir=dist --source-maps both",

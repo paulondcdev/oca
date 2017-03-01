@@ -41,8 +41,9 @@ const _result = Symbol('result');
  *
  * <br/>**Hidding inputs from parsers:**
  * A parser only sees inputs that are capable of serialization
- * ({@link Input.isSerializable}). Also, the property `hidden` can be used
- * to hide specific inputs from the parser, for instance:
+ * ({@link Input.isSerializable}) and visible inputs. Therefore, any input assigned
+ * with the property `hidden` is going to be visible by the parser, use this property
+ * to hide any input you don't want to expose, for instance:
  *
  * ```
  * class Example extends Oca.Action{

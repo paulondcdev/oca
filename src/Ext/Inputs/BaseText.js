@@ -28,8 +28,8 @@ class BaseText extends Input{
   /**
    * Implements the string validations
    *
-   * @param {null|number} at - index used when the input is defined as vector to
-   * tell which value should be used
+   * @param {null|number} at - index used when input has been created as a vector that
+   * tells which value should be used
    * @return {Promise<*>} value held by the input based on the current context (at)
    * @protected
    */
