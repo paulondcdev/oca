@@ -601,14 +601,24 @@ class Action{
   _processError(err){
 
     // adding a member that tells the origin of the error
+    let topLevel = false;
     if (!err.origin){
       err.origin = this.info.origin;
+      topLevel = true;
     }
 
     // adding the registered action name to the stack information, for
     // debugging purposes
     if (this.info.registeredName){
-      err.stack = `Error: ${this.info.registeredName}\n${err.stack}`;
+
+      // including the registered name in a way that includes all action levels
+      // aka: `/topLevelAction/nestedActionA/nestedActionB 🗯'
+      let actionName = this.info.registeredName;
+      if (topLevel){
+        actionName += ' 🗯\n';
+      }
+
+      err.stack = `/${actionName}${err.stack}`;
     }
     return err;
   }
