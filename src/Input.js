@@ -590,6 +590,7 @@ class Input{
 
     let result;
 
+    // empty string is treated as null
     if (value.length === 0){
       result = null;
     }
@@ -599,15 +600,20 @@ class Input{
 
       assert(TypeCheck.isList(parsedValue), 'Could not parse, unexpected data type');
       for (const parsedItem of parsedValue){
+        let finalParsedItem = parsedItem;
 
-        // if the value is encoded as string just decode right away
-        if (TypeCheck.isString(parsedItem)){
-          decodedValue.push(this.constructor._decode(parsedItem));
+        // casting the parsed value to a string if necessary
+        if (!TypeCheck.isString(parsedItem) && parsedItem !== null){
+          finalParsedItem = String(parsedItem);
         }
-        // otherwise cast it to a string so the decode can handle it
-        else{
-          decodedValue.push(this.constructor._decode(String(parsedItem)));
+
+        // empty string is treated as null
+        if (finalParsedItem === ''){
+          finalParsedItem = null;
         }
+
+        // decoding the value
+        decodedValue.push(finalParsedItem ? this.constructor._decode(finalParsedItem) : null);
       }
 
       result = decodedValue;
