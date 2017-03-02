@@ -18,8 +18,8 @@ const Input = require('../../Input');
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
- * min | minimum permitted value | ::off:: | ::none::
- * max | maximum permitted value | ::off:: | ::none::
+ * min | minimum allowed value | ::off:: | ::none::
+ * max | maximum allowed value | ::off:: | ::none::
  *
  * All properties including the inherited ones can be listed via
  * {@link registeredPropertyNames}
