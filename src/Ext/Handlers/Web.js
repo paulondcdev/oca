@@ -488,14 +488,29 @@ class Web extends Handler{
    * google's json style guide. In case of an error status `500` the standard
    * result is ignored and a message `Internal Server Error` is used instead.
    *
+   * Custom headers can be set to the response by adding members to the error followed
+   * by the 'header' prefix and the suffix containing the header type, for instance:
+   *
+   * ```
+   * // 'Cache-Control' header
+   * value.headerCacheControl = 'private, no-cache, no-store, must-revalidate'
+   * ```
+   *
+   * Also, headers can be defined through a before action middlewares
+   * ({@link Web.addBeforeAction} and {@link Web.addBeforeAuthAction})
+   *
    * @param {Error} err - exception that should be outputted as error response
    * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
   _errorOutput(err){
+
     let result = super._errorOutput(err);
     const status = result.error.code;
     this._addTopLevelProperties(result);
+
+    // setting headers
+    this._setResponseHeaders(err);
 
     // should not leak any error message for the status code 500
     if (status === 500){
@@ -508,15 +523,24 @@ class Web extends Handler{
   }
 
   /**
-   * Implements the response for a success value
+   * Implements the response for a success value.
    *
-   * Readable streams are piped using 'application/octet-stream' as
-   * contentType, it can be controlled by adding a contentType member to
-   * the readable stream, for instance:
-   * `resultStream.contentType = 'application/octet-stream';`
+   * Custom headers can be set to the response by adding members to the value followed
+   * by the 'header' prefix and the suffix containing the header type, for instance:
    *
-   * Non readable stream values are automatically encoded using json, following
-   * google's json style guide.
+   * ```
+   * // 'Content-Type' header
+   * value.headerContentType = 'application/octet-stream'
+   * ```
+   *
+   * Also, headers can be defined through a before action middlewares
+   * ({@link Web.addBeforeAction} and {@link Web.addBeforeAuthAction})
+   *
+   * Readable streams are piped using 'application/octet-stream' by default
+   * (if it has not been defined).
+   *
+   * Non readable stream values are automatically encoded using json, following the
+   * basics of google's json style guide.
    *
    * @param {*} value - value to be outputted
    * @return {Object} Object that is going to be serialized
@@ -527,14 +551,18 @@ class Web extends Handler{
 
     const result = super._successOutput(value);
 
+    // setting header based on the value
+    const addedHeaders = this._setResponseHeaders(value);
+
     // readable stream
     if (result instanceof stream.Readable){
 
-      // alternatively the stream can define a custom contentType, otherwise
-      // it outputs as binary
-      const contentType = value.contentType || 'application/octet-stream';
+      // setting a default content-type for readable stream in case
+      // it has not been set previously
+      if (!addedHeaders.includes('Content-Type')){
+        this.response.setHeader('Content-Type', 'application/octet-stream');
+      }
 
-      this.response.setHeader('content-type', contentType);
       result.pipe(this.response);
       return;
     }
@@ -542,6 +570,33 @@ class Web extends Handler{
     // json output
     this._addTopLevelProperties(result);
     this.response.status(200).json(result);
+
+    return result;
+  }
+
+  /**
+   * Looks for any header member defined as part of the output value and sets them
+   * to the response header. It expects a camelCase name convention with the prefix
+   * 'header' where it gets translated the header name convention, for instance:
+   * 'headerContentType' translates to 'Content-Type'.
+   *
+   * @param {*} outputValue - output value
+   * @return {Array<string>} List of defined header names
+   * @private
+   */
+  _setResponseHeaders(outputValue){
+    const result = [];
+
+    for (const member in outputValue){
+      if (member.length > 6 && member.startsWith('header')){
+        const headerName = member.slice(6).replace(/([a-z])([A-Z])/g, '$1-$2');
+        const headerValue = outputValue[member];
+
+        // assigning a header value to the response
+        this.response.setHeader(headerName, headerValue);
+        result.push(headerName);
+      }
+    }
 
     return result;
   }
@@ -609,6 +664,7 @@ class Web extends Handler{
       res.locals.web = Handler.create('web', normalizedName);
       res.locals.web.request = req;
       res.locals.web.response = res;
+
       const actionDataIndex = this._actionMethodToWebfiedIndex[normalizedName][method];
       res.locals.web.requireAuth = this._webfyActions[actionDataIndex].auth;
 

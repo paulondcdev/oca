@@ -115,6 +115,7 @@
           "handlers",
           "passportjs",
           "expressjs",
+          "revalidate",
 
           // modules
           "promisify",

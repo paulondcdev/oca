@@ -21,7 +21,7 @@ class StreamOutput extends Oca.Action{
       bufferStream.end(new Buffer('test'));
 
       // setting a custom content type
-      bufferStream.contentType = 'text/plain';
+      bufferStream.headerContentType = 'text/plain';
 
       return bufferStream;
     }
