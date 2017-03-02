@@ -22,7 +22,7 @@ const _result = Symbol('result');
  * where each input implementation has its own way of parsing the serialized data,
  * to find out about how a value is serialized for an specific input type you could simply
  * set an arbitrary value to the input you are interessed then query it back through
- * {@link Input.serializeValue}. The datasheet bellow displays a basic serialization
+ * {@link Input.serializeValue}. Also, you can take a look in the basic serialization
  * reference for the inputs blundled with Oca:
  *
  * Input Type | Scalar Serialization | Vector Serialization (it's compatible with JSON)
@@ -145,8 +145,14 @@ class HandlerParser{
   }
 
   /**
-   * This method should be re-implemented by derived classes to perform the parsing.
-   * It should return a plain object containing the input name and the parsed value.
+   * This method should be re-implemented by derived classes to perform the handler parsing.
+   *
+   * It should return a plain object containing the input name and the value for that.
+   * Where any input value from either String or Array types are considered valid values that
+   * are later ({@link HandlerParser.parseInputValues}, {@link HandlerParser.parseAutofillValues})
+   * used to parse the value of the input ({@link Input.parseValue}), otherwise the value
+   * is ignored.
+   *
    * Only return the ones that were found by the parsing. Also, in case of any error
    * during the parsing then an exception should be raised.
    *
@@ -181,6 +187,9 @@ class HandlerParser{
           this[_result][inputName] = input.parseValue(value, false);
         }
         else if (TypeCheck.isList(value)){
+          // currently it's converting any array to a JSON string which is supported
+          // by the input parsing. Lets keep an eye on this for now, since it may cause
+          // an overhead
           this[_result][inputName] = input.parseValue(JSON.stringify(value), false);
         }
       }
