@@ -577,7 +577,7 @@ class Web extends Handler{
   /**
    * Looks for any header member defined as part of the output value and sets them
    * to the response header. It expects a camelCase name convention with the prefix
-   * 'header' where it gets translated the header name convention, for instance:
+   * 'header' where it gets translated to the header name convention, for instance:
    * 'headerContentType' translates to 'Content-Type'.
    *
    * @param {*} outputValue - output value
