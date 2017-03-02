@@ -596,6 +596,10 @@ class Input{
     }
     else if (this.isVector){
       const decodedValue = [];
+
+      // it may worth to allow passing an Array directly as valid value as well, so it would
+      // avoid the overhead of encoding/decoding JSON when using it internally. Let's keep
+      // an eye on it for now.
       const parsedValue = JSON.parse(value);
 
       assert(TypeCheck.isList(parsedValue), 'Could not parse, unexpected data type');
@@ -798,6 +802,11 @@ class Input{
   /**
    * Returns a list about all registered property names including the inherited ones for
    * the input type
+   *
+   * ```
+   * // returning the all properties for an input type (using 'numeric' as example)
+   * Oca.Input.registeredPropertyNames('numeric');
+   * ```
    *
    * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
    * @return {Array<string>}

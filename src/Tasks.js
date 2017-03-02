@@ -9,12 +9,9 @@ const _executionOrder = Symbol('executionOrder');
 /**
  * Object that holds actions and promises which are executed at specific events.
  *
- * This object is used by the {@link Session.wrapup} to hold actions and
- * promises that are triggered when a {@link Session} is about
- * to be terminated ({@link Session.finalize}). It can be used to avoid
- * the execution of an action that may be triggered multiple times across
- * nested actions where ideally it should be executed only once at the end
- * (see `runOnlyOnce` at {@link Tasks.addAction}).
+ * Inside Oca tasks are used by the {@link Session.wrapup} to hold actions and
+ * promises that are triggered when a {@link Session} is about to be terminated
+ * ({@link Session.finalize}).
  */
 class Tasks{
 
@@ -27,6 +24,10 @@ class Tasks{
 
   /**
    * Adds an action to the tasks
+   *
+   * `runOnlyOnce` can used to avoid the execution of an action that may be triggered
+   * multiple times across nested actions where ideally it should be executed only once,
+   * it's done by using the action's id ({@link Action.id}).
    *
    * @param {Action} action - action instance that should be executed in the wrap up
    * @param {boolean} [runOnlyOnce=true] - tells if the action should be ignore in case

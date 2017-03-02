@@ -9,12 +9,12 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/node-oca/oca/badge.svg)](https://snyk.io/test/github/node-oca/oca)
 </p>
 
-**What is it ?**
+### What is it ?
 
 Oca is a framework designed to help building apps accross multiple domains. You can
 use it to build any kind of application whether web based or desktop ones.
 
-**How does it work ?**
+### How does it work ?
 
 It works by providing an interface focused to describe evaluations in a way that is fairly extendable and comprehensible. Although a process that minimize repetitive tedeus routines  ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) and produces a more versatile code base.
 
@@ -33,7 +33,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 
 - **Integrated caching system**. Oca provides out-the-box integrated caching system that can be easly enabled for any evaluation, speeding up your application
 
-- **Express integration**. The web support from Oca is done in conjuction with express, embracing the most popular web framework for Node.js
+- **Express integration**. The web support from Oca is done using express, embracing the most popular web framework for Node.js
 
 - **RESTful support**. Evaluations can be executed through REST automatically
 
@@ -56,7 +56,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 ## Requirement
 [<img src="data/nodejs.png"/>](https://www.nodejs.org)
 
-Oca is built using modern specs [ES6](http://es6-features.org/)/ES7, it requires [Node.js](https://www.nodejs.org) version **6 or greater**
+Oca is built using modern specs [ES6](http://es6-features.org/)/ES7, it requires [Node.js](https://www.nodejs.org) version **6** or **greater**
 
 ## Install
 ```
