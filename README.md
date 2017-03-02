@@ -56,7 +56,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 ## Requirement
 [<img src="data/nodejs.png"/>](https://www.nodejs.org)
 
-Oca is built using modern specs [ES6](http://es6-features.org/)/ES7, it requires [Node.js](https://www.nodejs.org) version **6** or **greater**
+Oca is built using modern specs ES6/ES7, it requires [Node.js](https://www.nodejs.org) version **6** or **greater**
 
 ## Install
 ```
