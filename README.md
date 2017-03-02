@@ -66,14 +66,13 @@ npm install oca --save
 ## Getting help
 Use the GitHub issues for tracking bugs and feature requests Also, feel free to talk about Oca at:
 - Gitter [node-oca](https://gitter.im/node-oca)
-- IRC #node-oca on [freenode](http://irc.lc/freenode/node-oca)
 
 ## Issues
 Oca development discussions and bug reports are collected on [Issues](https://github.com/node-oca/oca/issues)
 
 ## Contributing
 Contributions are welcome to Oca. It can be made through many different forms depending on your level of interest:
-- Participating in gitter/irc discussions
+- Participating in gitter discussions
 - Proposing features
 - Reporting issues
 - Making improvements (adding new features, improving the existing features, adding tests,
