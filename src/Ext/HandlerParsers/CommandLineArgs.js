@@ -171,7 +171,7 @@ class CommandLineArgs extends HandlerParser{
   }
 
   /**
-   * Returns an object containing the elements that can used by the commandLine
+   * Returns an object containing the elements that can be used by the commandLine
    *
    * @param {Array<Input>} inputList - list of input that should be used to build
    * query the help
