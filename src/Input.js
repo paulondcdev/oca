@@ -530,7 +530,7 @@ class Input{
   /**
    * Returns if the input is serializable
    *
-   * This method should be re-implemented by derived classed to tell if the input can be
+   * This method should be re-implemented by derived classes to tell if the input can be
    * serialized (default true).
    *
    * In case of a serializable input the methods {@link Input._encode} and {@link Input._decode}
