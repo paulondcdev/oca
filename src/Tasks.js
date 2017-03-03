@@ -25,7 +25,7 @@ class Tasks{
   /**
    * Adds an action to the tasks
    *
-   * `runOnlyOnce` can used to avoid the execution of an action that may be triggered
+   * `runOnlyOnce` can be used to avoid the execution of an action that may be triggered
    * multiple times across nested actions where ideally it should be executed only once,
    * it's done by using the action's id ({@link Action.id}).
    *

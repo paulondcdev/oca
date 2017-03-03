@@ -484,8 +484,8 @@ class Web extends Handler{
   /**
    * Implements the response for an error value
    *
-   * The error response gets automatically encoded using json, following
-   * google's json style guide. In case of an error status `500` the standard
+   * The error response gets automatically encoded using json, following the basics
+   * of google's json style guide. In case of an error status `500` the standard
    * result is ignored and a message `Internal Server Error` is used instead.
    *
    * Custom headers can be set to the response by adding members to the error followed
@@ -577,7 +577,7 @@ class Web extends Handler{
   /**
    * Looks for any header member defined as part of the output value and sets them
    * to the response header. It expects a camelCase name convention with the prefix
-   * 'header' where it gets translated the header name convention, for instance:
+   * 'header' where it gets translated to the header name convention, for instance:
    * 'headerContentType' translates to 'Content-Type'.
    *
    * @param {*} outputValue - output value
