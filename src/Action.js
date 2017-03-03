@@ -326,8 +326,10 @@ class Action{
   }
 
   /**
-   * Returns a plain object containing meta-data information about the action
-   * of the action, such as: `registeredName`, etc.
+   * Returns a plain object containing meta-data information about the action.
+   *
+   * It can be changed to include additional meta-data information that can be
+   * used across the handlers ({@link Handler.output}).
    *
    * @return {Object}
    */
