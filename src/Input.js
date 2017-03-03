@@ -804,7 +804,7 @@ class Input{
    * the input type
    *
    * ```
-   * // returning the all properties for an input type (using 'numeric' as example)
+   * // returning all properties for an input type (using 'numeric' as example)
    * Oca.Input.registeredPropertyNames('numeric');
    * ```
    *
