@@ -368,7 +368,6 @@ class Action{
     return crypto.createHash('sha256').update(actionSignature).digest('hex');
   }
 
-
   /**
    * Allows the creation of an action based on the current action, by doing this it passes
    * the current {@link Action.session} to the static create method {@link Action.create} method.
