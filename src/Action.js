@@ -8,7 +8,7 @@ const Session = require('./Session');
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _inputs = Symbol('inputs');
-const _info = Symbol('info');
+const _metadata = Symbol('metadata');
 const _session = Symbol('session');
 
 /**
@@ -78,7 +78,9 @@ class Action{
   constructor(){
 
     this[_inputs] = new Map();
-    this[_info] = Object.create(null);
+    this[_metadata] = Object.create(null);
+    this[_metadata].action = Object.create(null);
+    this[_metadata].result = Object.create(null);
     this[_session] = null;
 
     // Adding the api input, all actions will inherit this input.
@@ -301,7 +303,7 @@ class Action{
 
     const result = Object.create(null);
     result.id = this.id();
-    result.info = this.info;
+    result.metadata = this.metadata;
     result.inputs = actionInputs;
     result.session = Object.create(null);
     result.session.autofill = (autofill && this.session) ? this.session.autofill : {};
@@ -324,13 +326,13 @@ class Action{
   }
 
   /**
-   * Returns a plain object containing information about the creation
+   * Returns a plain object containing meta-data information about the action
    * of the action, such as: `registeredName`, etc.
    *
    * @return {Object}
    */
-  get info(){
-    return this[_info];
+  get metadata(){
+    return this[_metadata];
   }
 
   /**
@@ -346,8 +348,8 @@ class Action{
     let actionSignature = '';
     const separator = ';\n';
 
-    if (this.info.registeredName){
-      actionSignature = this.info.registeredName;
+    if (this.metadata.action.registeredName){
+      actionSignature = this.metadata.action.registeredName;
     }
     // using the class name can be very flawed, make sure to always creating actions
     // via their registration name
@@ -378,7 +380,7 @@ class Action{
 
     // overriding the meta-data information about the origin of the action, by telling
     // it has been created from inside of another action
-    action.info.origin = 'nested';
+    action.metadata.action.origin = 'nested';
 
     return action;
   }
@@ -396,7 +398,7 @@ class Action{
     assert(TypeCheck.isString(serializedAction), 'serializedAction needs to be defined as string!');
 
     const actionContents = JSON.parse(serializedAction);
-    const registeredName = actionContents.info.registeredName;
+    const registeredName = actionContents.metadata.action.registeredName;
 
     assert(TypeCheck.isString(registeredName), 'Could not find the action information');
     const action = this.create(registeredName);
@@ -429,13 +431,13 @@ class Action{
       // adding the session to the action
       action.session = session || new Session();
 
-      // adding the registered name to the action
-      action.info.registeredName = actionName.toLowerCase();
+      // adding the action name used to create the action under the meta-data
+      action.metadata.action.registeredName = actionName;
 
       // adding a meta-data information telling the action is a top level one
       // it has not being created inside of another action through the
       // Action.createAction
-      action.info.origin = 'topLevel';
+      action.metadata.action.origin = 'topLevel';
 
       return action;
     }
@@ -603,23 +605,25 @@ class Action{
     // adding a member that tells the origin of the error
     let topLevel = false;
     if (!err.origin){
-      err.origin = this.info.origin;
+      err.origin = this.metadata.action.origin;
       topLevel = true;
     }
 
-    // adding the registered action name to the stack information, for
+    // adding the action class name and the registered name to the stack information, for
     // debugging purposes
-    if (this.info.registeredName){
-
-      // including the registered name in a way that includes all action levels
-      // aka: `/topLevelAction/nestedActionA/nestedActionB 🗯'
-      let actionName = this.info.registeredName;
-      if (topLevel){
-        actionName += ' 🗯\n';
-      }
-
-      err.stack = `/${actionName}${err.stack}`;
+    let actionName = this.constructor.name;
+    if (this.metadata.action.registeredName){
+      actionName += ` (${this.metadata.action.registeredName})`;
     }
+
+    // including the action name information in a way that includes all action levels
+    // aka: `/TopLevelAction (...)/NestedActionA (...)/NestedActionB (...) 🗯'
+    if (topLevel){
+      actionName += ' <- Action\n';
+    }
+
+    err.stack = `/${actionName}${err.stack}`;
+
     return err;
   }
 

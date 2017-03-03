@@ -200,7 +200,11 @@ class CommandLine extends Handler{
   }
 
   /**
-   * Implements the response for an error value
+   * Implements the response for an error value.
+   *
+   * *Output options*:
+   * Currently this output does not have any options in place, therefore any
+   * option passed to this output will be ignored.
    *
    * The error output gets automatically encoded using json. The only exception are
    * parsing error messages that are identified by the status
@@ -208,10 +212,13 @@ class CommandLine extends Handler{
    * any encoding.
    *
    * @param {Error} err - exception that should be outputted as error response
+   * @param {Object} outputOptions - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
-  _errorOutput(err){
+  _errorOutput(err, outputOptions){
 
     process.exitCode = 1;
 
@@ -231,16 +238,23 @@ class CommandLine extends Handler{
   }
 
   /**
-   * Implements the response for a success value
+   * Implements the response for a success value.
    *
    * Readable streams are piped to {@link CommandLine.stdout} where
    * Non-readable stream values get outputted using json encoding.
    *
+   * *Output options*:
+   * Currently this output does not have any options in place, therefore any
+   * option passed to this output will be ignored.
+   *
    * @param {*} value - value to be outputted
+   * @param {Object} outputOptions - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @return {Object} Object that is going to be serialized
    * @protected
    */
-  _successOutput(value){
+  _successOutput(value, outputOptions){
 
     /* istanbul ignore next */
     if (value === undefined){
