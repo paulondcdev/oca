@@ -66,25 +66,53 @@ class Handler{
   }
 
   /**
-   * Results a value through the handler
+   * Results a value through the handler.
    *
    * In case the value is an exception then it's treated as {@link Handler._errorOutput}
    * otherwise the value is treated as {@link Handler._successOutput}.
    *
-   * When `finalizeSession` is enabled (default) the {@link Handler.session} gets finalized
+   * The argument outputOptions can be used to change the default output behavior of a handler
+   * implementation. It expects a plain object containing the options where each handler implementation should
+   * implement their own set of options.
+   *
+   * Also, you may want to drive output custom options based on the result metadata found in the
+   * action, for instance:
+   *
+   * ```
+   * class MyAction extends Oca.Action{
+   *    _perform(data){
+   *
+   *      // defining a custom option
+   *      this.metadata.result.myHandlerOption = 10;
+   *      // ...
+   *    }
+   * }
+   * ```
+   *
+   * Later on when executing this method, you just need to pass the result metadata from
+   * the action to the output:
+   *
+   * ```
+   * myHandler.output(value, myAction.metadata.result);
+   * ```
+   *
+   * If `finalizeSession` is enabled (default) the {@link Handler.session} gets finalized
    * in the end of the output process. Any error raised during session finalization is emitted by
    * the {@link Handler.onFinalizeError} event.
    *
    * @param {*} value - raw value that should be resulted by the handler
+   * @param {Object} [outputOptions] - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @param {boolean} [finalizeSession=true] - tells if it should finalize the session
    * ({@link Session.finalize})
    */
-  output(value, finalizeSession=true){
+  output(value, outputOptions={}, finalizeSession=true){
     if (value instanceof Error){
-      this._errorOutput(value);
+      this._errorOutput(value, outputOptions);
     }
     else{
-      this._successOutput(value);
+      this._successOutput(value, outputOptions);
     }
 
     // the session finalization runs in parallel, since it does secondary tasks
@@ -320,11 +348,14 @@ class Handler{
    * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
    * included in the error output
    *
-   * @param {Error} err - Exception that should be serialized as en error output
+   * @param {Error} err - exception that should be serialized as en error output
+   * @param {Object} outputOptions - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @return {Object} serialized data
    * @protected
    */
-  _errorOutput(err){
+  _errorOutput(err, outputOptions){
     let status = err.status || 500;
 
     // checking if the error has been raised from inside of another action, if so
@@ -362,10 +393,13 @@ class Handler{
    * This method is called by {@link Handler.output}.
    *
    * @param {*} value - value to be outputted
+   * @param {Object} outputOptions - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @return {Object} Object that is going to be serialized
    * @protected
    */
-  _successOutput(value){
+  _successOutput(value, outputOptions){
 
     // stream output
     if (value instanceof Buffer){

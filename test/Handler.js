@@ -221,7 +221,7 @@ describe('Handler:', () => {
 
       await handler.loadToAction(action);
       const result = await action.execute();
-      handler.output(result, false);
+      handler.output(result, action.metadata.result, false);
     })();
   });
 

@@ -116,6 +116,7 @@
           "passportjs",
           "expressjs",
           "revalidate",
+          "metadata",
 
           // modules
           "promisify",

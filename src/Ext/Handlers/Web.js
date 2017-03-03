@@ -16,7 +16,7 @@ const _response = Symbol('response');
 
 
 /**
- * Handles the web integration through expressjs and passportjs
+ * Handles the web integration through expressjs and passportjs.
  *
  * It enables the execution of actions that are triggered by web requests by parsing
  * ({@link WebRequest}) the information that is passed to the action
@@ -107,7 +107,7 @@ class Web extends Handler{
 
   /**
    * Collects the parsed information from the request and loads it to the action using
-   * {@link Handler.loadToAction}
+   * {@link Handler.loadToAction}.
    *
    * By the default it uses the {@link WebRequest} parser if none parser is specified.
    *
@@ -138,7 +138,7 @@ class Web extends Handler{
   }
 
   /**
-   * Sets the request object created by the express server
+   * Sets the request object created by the express server.
    *
    * It also includes the request as part of the session: `session.get('request')`
    *
@@ -231,7 +231,7 @@ class Web extends Handler{
   }
 
   /**
-   * Makes an action available for requests
+   * Makes an action available for requests.
    *
    * By doing that the action gets visible for the {@link restful} and {@link middleware} support.
    *
@@ -340,7 +340,7 @@ class Web extends Handler{
   }
 
   /**
-   * Adds a middleware that is executed before an action
+   * Adds a middleware that is executed before an action.
    *
    * Use this feature when you want to execute a custom middleware before the
    * execution of an action. If you want to add a middleware for an specific
@@ -382,7 +382,7 @@ class Web extends Handler{
   }
 
   /**
-   * Adds a middleware that is executed before an action that requires authentication
+   * Adds a middleware that is executed before an action that requires authentication.
    *
    * Use this feature when you want to execute a custom middleware before the
    * execution of an action that requires authentication. If you want to add a
@@ -427,7 +427,7 @@ class Web extends Handler{
   }
 
   /**
-   * Returns a list middlewares which are executed before an action
+   * Returns a list middlewares which are executed before an action.
    *
    * This method can be re-implemented by subclasses to include custom middlewares
    * that are tied with a specific web handler implementation. By default it returns
@@ -453,7 +453,7 @@ class Web extends Handler{
   }
 
   /**
-   * Adds the restful support to the express app
+   * Adds the restful support to the express app.
    *
    * It works by registering the routes from webfied visible actions
    * ({@link Web.webfyAction}) to the express app. The response of an action executed
@@ -482,35 +482,28 @@ class Web extends Handler{
   }
 
   /**
-   * Implements the response for an error value
+   * Implements the response for an error value.
    *
    * The error response gets automatically encoded using json, following the basics
    * of google's json style guide. In case of an error status `500` the standard
    * result is ignored and a message `Internal Server Error` is used instead.
    *
-   * Custom headers can be set to the response by adding members to the error followed
-   * by the 'header' prefix and the suffix containing the header type, for instance:
-   *
-   * ```
-   * // 'Cache-Control' header
-   * value.headerCacheControl = 'private, no-cache, no-store, must-revalidate'
-   * ```
-   *
-   * Also, headers can be defined through a before action middlewares
-   * ({@link Web.addBeforeAction} and {@link Web.addBeforeAuthAction})
+   * *Output options*:
+   * Currently this output does not have any options in place, therefore any
+   * option passed to this output will be ignored.
    *
    * @param {Error} err - exception that should be outputted as error response
+   * @param {Object} outputOptions - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
-  _errorOutput(err){
+  _errorOutput(err, outputOptions){
 
     let result = super._errorOutput(err);
     const status = result.error.code;
     this._addTopLevelProperties(result);
-
-    // setting headers
-    this._setResponseHeaders(err);
 
     // should not leak any error message for the status code 500
     if (status === 500){
@@ -525,12 +518,14 @@ class Web extends Handler{
   /**
    * Implements the response for a success value.
    *
-   * Custom headers can be set to the response by adding members to the value followed
-   * by the 'header' prefix and the suffix containing the header type, for instance:
+   * *Output options*: It can be used to defined custom headers to the response, by adding the 'header'
+   * entry under the options where the children should represent a header type & value. Make
+   * sure that the children are defined the using the camelCase convention, for
+   * instance:
    *
    * ```
    * // 'Content-Type' header
-   * value.headerContentType = 'application/octet-stream'
+   * options.header.contentType = 'application/octet-stream'
    * ```
    *
    * Also, headers can be defined through a before action middlewares
@@ -543,23 +538,26 @@ class Web extends Handler{
    * basics of google's json style guide.
    *
    * @param {*} value - value to be outputted
+   * @param {Object} outputOptions - plain object containing custom options that should be used
+   * by the output where each handler implementation contains their own set of options. This value
+   * is usually driven by the `Action.metadata.result`.
    * @return {Object} Object that is going to be serialized
    * @see https://google.github.io/styleguide/jsoncstyleguide.xml
    * @protected
    */
-  _successOutput(value){
+  _successOutput(value, outputOptions){
 
     const result = super._successOutput(value);
 
-    // setting header based on the value
-    const addedHeaders = this._setResponseHeaders(value);
+    // setting header
+    this._setResponseHeaders(outputOptions);
 
     // readable stream
     if (result instanceof stream.Readable){
 
       // setting a default content-type for readable stream in case
       // it has not been set previously
-      if (!addedHeaders.includes('Content-Type')){
+      if (!(outputOptions.header && outputOptions.header.contentType)){
         this.response.setHeader('Content-Type', 'application/octet-stream');
       }
 
@@ -575,30 +573,24 @@ class Web extends Handler{
   }
 
   /**
-   * Looks for any header member defined as part of the output value and sets them
-   * to the response header. It expects a camelCase name convention with the prefix
-   * 'header' where it gets translated to the header name convention, for instance:
-   * 'headerContentType' translates to 'Content-Type'.
+   * Looks for any header member defined as part of the options and sets them
+   * to the response header. It expects a camelCase name convention for the header name
+   *  where it gets translated to the header name convention, for instance:
+   * 'options.header.contentType' translates to 'Content-Type'.
    *
-   * @param {*} outputValue - output value
-   * @return {Array<string>} List of defined header names
+   * @param {*} options - options passed to the output
    * @private
    */
-  _setResponseHeaders(outputValue){
-    const result = [];
+  _setResponseHeaders(options){
 
-    for (const member in outputValue){
-      if (member.length > 6 && member.startsWith('header')){
-        const headerName = member.slice(6).replace(/([a-z])([A-Z])/g, '$1-$2');
-        const headerValue = outputValue[member];
+    if (options.header){
+      for (const headerName in options.header){
+        const convertedHeaderName = headerName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
         // assigning a header value to the response
-        this.response.setHeader(headerName, headerValue);
-        result.push(headerName);
+        this.response.setHeader(convertedHeaderName, options.header[headerName]);
       }
     }
-
-    return result;
   }
 
   /**
@@ -688,7 +680,7 @@ class Web extends Handler{
         return action.execute();
       }).then((result) => {
         if (render){
-          web.output(result);
+          web.output(result, action.metadata.result);
         }
         // callback that handles the response (Oca.middleware)
         else{
