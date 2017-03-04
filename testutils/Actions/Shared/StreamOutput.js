@@ -21,8 +21,10 @@ class StreamOutput extends Oca.Action{
       bufferStream.end(new Buffer('test'));
 
       // setting a custom content type
-      this.metadata.result.header = {
-        contentType: 'text/plain',
+      this.metadata.result.web = {
+        header: {
+          contentType: 'text/plain',
+        },
       };
 
       return bufferStream;
