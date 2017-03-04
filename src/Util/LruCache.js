@@ -11,10 +11,10 @@ const _lifespan = Symbol('lifespan');
 const _cache = Symbol('cache');
 
 /**
- * A cache that discards the least recently used items first
+ * A cache that discards the least recently used items first.
  *
  * This feature is provided by the {@link Session} to store the result of
- * cacheable actions ({@link Action.isCacheable})
+ * cacheable actions ({@link Action.isCacheable}).
  */
 class LruCache{
 

@@ -17,7 +17,7 @@ const _temporaryFolders = Symbol('temporaryFolders');
 const _request = Symbol('request');
 
 /**
- * Web request parser
+ * Web request parser.
  *
  * This parser is used by the {@link Web} handler to query values from a request.
  *
