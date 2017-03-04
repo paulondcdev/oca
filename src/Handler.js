@@ -73,8 +73,8 @@ class Handler{
    *
    * The argument outputOptions can be used to change the output behavior of a handler
    * implementation. It expects a plain object containing the options defined by each handler.
-   * To know the available options always check the documentation of {@link Handler._successOutput} and
-   * {@link Handler._errorOutput} in the handler implementation you are interested.
+   * To know the available options always check the documentation for {@link Handler._successOutput}
+   * and {@link Handler._errorOutput} in the handler implementation you are interested.
    *
    * ```
    * // setting output options
@@ -83,8 +83,8 @@ class Handler{
    * });
    * ```
    *
-   * You may want to drive the output options based on the result metadata found in the
-   * action (it's open to the handler implementation to support it), for instance:
+   * When executing a handler output you can use the action's result metadata to drive the
+   * output options:
    *
    * ```
    * class MyAction extends Oca.Action{
@@ -98,12 +98,8 @@ class Handler{
    *      // ...
    *    }
    * }
-   * ```
    *
-   * Later on in the handler execution, you need to pass the result metadata from
-   * the action to the output (this is done by the {@link Web} handler):
-   *
-   * ```
+   * // ...
    * myHandler.output(value, myAction.metadata.result.handlerName);
    * ```
    *
