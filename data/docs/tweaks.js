@@ -14,6 +14,7 @@ exports.onHandleHTML = (ev) => {
   .replace('<header>', '<header><a href="./index.html"><img src="data/thumbnail.png" id="ocaSmallLogo" width="40" height="40" align="top"/></a>')
   .replace('>Repository</a>', '>Oca&nbsp;GitHub</a>')
   .replace(/#http#:\//g, `http:/`)
+  .replace(new RegExp('https://node-oca.github.io/docs/data/', 'g'), 'data/')
   .replace('Oca API Document', 'Oca')
   .replace('<img src="data/logo.png">', '<p align="center"><img src="data/logo.png"></p>')
   .replace('<img src="data/ocaHi.png">', '<p align="center"><img src="data/ocaHi.png"></p>')
@@ -29,7 +30,7 @@ exports.onHandleHTML = (ev) => {
   .replace(new RegExp('::false::', 'g'), '<img src="data/docs/value/false.png" title="false">')
   .replace(new RegExp('::auto::', 'g'), '<img src="data/docs/value/auto.png" title="auto">')
   .replace(new RegExp('::on::', 'g'), '<img src="data/docs/toggle/on.png" title="yes">')
-  .replace(new RegExp('::off::', 'g'), '<img src="data/docs/toggle/off.png" title="no">');
+  .replace(new RegExp('::off::', 'g'), '<img src="data/docs/toggle/off.png" title="no">')
 
   // adding the star button to the README displayed in the index page
   if (ev.data.html.indexOf(' alt="Known Vulnerabilities"></a>' !== -1)){

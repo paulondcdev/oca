@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="data/logo.png"/>
+  <img src="https://node-oca.github.io/docs/data/logo.png"/>
 </p>
 
 [![Gitter chat](https://badges.gitter.im/node-oca/gitter.png)](https://gitter.im/node-oca)
@@ -21,7 +21,7 @@ It works by providing an interface focused to describe evaluations in a way that
 These evaluations can be triggered accross multiple domains you write once and Oca takes care about the specifics that are necessary to run the evaluation.
 
 <p align="center">
-  <img src="data/ocaHi.png"/>
+  <img src="https://node-oca.github.io/docs/data/ocaHi.png"/>
 </p>
 
 ## Key features
@@ -40,7 +40,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 - **Console support**. By using Oca your evaluations can be executed through command-line interface
 
 
-[<img src="data/intro.png"/>](data/manual/INTRODUCTION.md)
+[<img src="https://node-oca.github.io/docs/data/intro.png"/>](data/manual/INTRODUCTION.md)
 
 ## Documentation
 - [API Documentation](https://node-oca.github.io)
@@ -54,7 +54,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 - Tutorials (coming soon)
 
 ## Requirement
-[<img src="data/nodejs.png"/>](https://www.nodejs.org)
+[<img src="https://node-oca.github.io/docs/data/nodejs.png"/>](https://www.nodejs.org)
 
 Oca is built using modern specs ES6/ES7, it requires [Node.js](https://www.nodejs.org) version **6** or **greater**
 
