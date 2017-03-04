@@ -12,7 +12,7 @@ const HandlerParser = require('../../HandlerParser');
 const _args = Symbol('args');
 
 /**
- * Command-line arguments parser
+ * Command-line arguments parser.
  *
  * This parser is used by the {@link CommandLine} handler, it supports most of
  * the docopt specification. Also, if the parser finds an error it's capable of

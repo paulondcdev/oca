@@ -78,10 +78,10 @@ class Action{
   constructor(){
 
     this[_inputs] = new Map();
+    this[_session] = null;
     this[_metadata] = Object.create(null);
     this[_metadata].action = Object.create(null);
     this[_metadata].result = Object.create(null);
-    this[_session] = null;
 
     // Adding the api input, all actions will inherit this input.
     // This input is used to make sure that the version requested
@@ -301,12 +301,16 @@ class Action{
 
     const actionInputs = await this._serializeInputs();
 
-    const result = Object.create(null);
-    result.id = this.id();
-    result.metadata = this.metadata;
-    result.inputs = actionInputs;
-    result.session = Object.create(null);
-    result.session.autofill = (autofill && this.session) ? this.session.autofill : {};
+    const result = {
+      id: this.id(),
+      inputs: actionInputs,
+      metadata: {
+        action: this.metadata.action,
+      },
+      session: {
+        autofill: (autofill && this.session) ? this.session.autofill : {},
+      },
+    };
 
     return JSON.stringify(result, null, '\t');
   }
@@ -328,8 +332,8 @@ class Action{
   /**
    * Returns a plain object containing meta-data information about the action.
    *
-   * It can be changed to include additional meta-data information that can be
-   * used across the handlers ({@link Handler.output}).
+   * It can be used to include additional meta-data information that later
+   * can be used by a handler during the output process ({@link Handler.output}).
    *
    * @return {Object}
    */
@@ -618,9 +622,9 @@ class Action{
     }
 
     // including the action name information in a way that includes all action levels
-    // aka: `/TopLevelAction (...)/NestedActionA (...)/NestedActionB (...) 🗯'
+    // aka: `/TopLevelAction (...)/NestedActionA (...)/NestedActionB (...)!'
     if (topLevel){
-      actionName += ' <- Action\n';
+      actionName += '!\n';
     }
 
     err.stack = `/${actionName}${err.stack}`;

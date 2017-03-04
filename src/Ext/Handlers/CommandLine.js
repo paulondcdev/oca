@@ -14,7 +14,7 @@ const _description = Symbol('description');
 
 
 /**
-* Handles the command-line integration using docopt specification
+* Handles the command-line integration using docopt specification.
 *
 * It enables the execution of actions that are triggered by command-line interfaces
 * by parsing ({@link CommandLineArgs}) the information that is passed to the action
@@ -213,8 +213,7 @@ class CommandLine extends Handler{
    *
    * @param {Error} err - exception that should be outputted as error response
    * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options
    * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
@@ -249,8 +248,7 @@ class CommandLine extends Handler{
    *
    * @param {*} value - value to be outputted
    * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options
    * @return {Object} Object that is going to be serialized
    * @protected
    */

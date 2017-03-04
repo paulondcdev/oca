@@ -77,10 +77,10 @@ const _response = Symbol('response');
  * ```javascript
  * const app = express();
  * app.get(
- *  '/foo',
- *  Oca.middleware('myRegisteredAction', (err, result, req, res) => {
- *    // some sauce...
- *  })
+ *    '/foo',
+ *    Oca.middleware('myRegisteredAction', (err, result, req, res) => {
+ *      // some sauce...
+ *    })
  * );
  * ```
  *
@@ -322,11 +322,11 @@ class Web extends Handler{
    * ```javascript
    * const app = express();
    * app.get(
-   *  '/foo',
-   *  Oca.middleware('myRegisteredAction', (err, result, req, res) => {
-   *    ...
-   *  })
-   * )
+   *    '/foo',
+   *    Oca.middleware('myRegisteredAction', (err, result, req, res) => {
+   *      // ...
+   *    })
+   * );
    * ```
    *
    * @param {string} actionName - registered action name
@@ -365,7 +365,7 @@ class Web extends Handler{
    *   constructor(){
    *      super();
    *      // gets assigned with `something` value
-   *      this.createInput('a: text', {autofill: 'customValue'})
+   *      this.createInput('a: text', {autofill: 'customValue'});
    *   }
    * }
    * ```
@@ -494,8 +494,7 @@ class Web extends Handler{
    *
    * @param {Error} err - exception that should be outputted as error response
    * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options
    * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
@@ -524,11 +523,26 @@ class Web extends Handler{
    * instance:
    *
    * ```
-   * // 'Content-Type' header
+   * // defining 'Content-Type' header through the output options
    * options.header.contentType = 'application/octet-stream'
+   *
+   * // defining 'Content-Type' header through an action (used in the restful support)
+   * class MyAction extends Oca.Action{
+   *    _perform(data){
+   *
+   *      // 'Content-Type' header
+   *      this.metadata.result.web = {
+   *        header: {
+   *          contentType: 'application/octet-stream',
+   *        }
+   *      };
+   *
+   *      // ...
+   *    }
+   * }
    * ```
    *
-   * Also, headers can be defined through a before action middlewares
+   * Also, headers can be defined through 'before action middlewares'
    * ({@link Web.addBeforeAction} and {@link Web.addBeforeAuthAction})
    *
    * Readable streams are piped using 'application/octet-stream' by default
@@ -539,8 +553,7 @@ class Web extends Handler{
    *
    * @param {*} value - value to be outputted
    * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options
    * @return {Object} Object that is going to be serialized
    * @see https://google.github.io/styleguide/jsoncstyleguide.xml
    * @protected
@@ -680,7 +693,7 @@ class Web extends Handler{
         return action.execute();
       }).then((result) => {
         if (render){
-          web.output(result, action.metadata.result);
+          web.output(result, action.metadata.result.web);
         }
         // callback that handles the response (Oca.middleware)
         else{

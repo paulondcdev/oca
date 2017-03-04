@@ -51,7 +51,7 @@ const _session = Symbol('session');
  * ```
  *
  * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
- * included in the error output
+ * included in the error output.
  */
 class Handler{
 
@@ -71,30 +71,44 @@ class Handler{
    * In case the value is an exception then it's treated as {@link Handler._errorOutput}
    * otherwise the value is treated as {@link Handler._successOutput}.
    *
-   * The argument outputOptions can be used to change the default output behavior of a handler
-   * implementation. It expects a plain object containing the options where each handler implementation should
-   * implement their own set of options.
+   * The argument outputOptions can be used to change the output behavior of a handler
+   * implementation. It expects a plain object containing the options defined by each handler.
+   * To know the available options always check the documentation of {@link Handler._successOutput} and
+   * {@link Handler._errorOutput} in the handler implementation you are interested.
    *
-   * Also, you may want to drive output custom options based on the result metadata found in the
-   * action, for instance:
+   * ```
+   * // setting output options
+   * myHandler.output(value, {
+   *  someOutputOption: 10,
+   * });
+   * ```
+   *
+   * You may want to drive the output options based on the result metadata found in the
+   * action (it's open to the handler implementation to support it), for instance:
    *
    * ```
    * class MyAction extends Oca.Action{
    *    _perform(data){
    *
-   *      // defining a custom option
-   *      this.metadata.result.myHandlerOption = 10;
+   *      // defining a custom output option
+   *      this.metadata.result.handlerName = {
+   *        someOutputOption: 10,
+   *      };
+   *
    *      // ...
    *    }
    * }
    * ```
    *
-   * Later on when executing this method, you just need to pass the result metadata from
-   * the action to the output:
+   * Later on in the handler execution, you need to pass the result metadata from
+   * the action to the output (this is done by the {@link Web} handler):
    *
    * ```
-   * myHandler.output(value, myAction.metadata.result);
+   * myHandler.output(value, myAction.metadata.result.handlerName);
    * ```
+   *
+   * Since the result is shared among all handlers the result may change in the future to
+   * include a level name for the handler.
    *
    * If `finalizeSession` is enabled (default) the {@link Handler.session} gets finalized
    * in the end of the output process. Any error raised during session finalization is emitted by
@@ -102,12 +116,12 @@ class Handler{
    *
    * @param {*} value - raw value that should be resulted by the handler
    * @param {Object} [outputOptions] - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options.
    * @param {boolean} [finalizeSession=true] - tells if it should finalize the session
    * ({@link Session.finalize})
    */
   output(value, outputOptions={}, finalizeSession=true){
+
     if (value instanceof Error){
       this._errorOutput(value, outputOptions);
     }
@@ -350,8 +364,7 @@ class Handler{
    *
    * @param {Error} err - exception that should be serialized as en error output
    * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options
    * @return {Object} serialized data
    * @protected
    */
@@ -394,8 +407,7 @@ class Handler{
    *
    * @param {*} value - value to be outputted
    * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options. This value
-   * is usually driven by the `Action.metadata.result`.
+   * by the output where each handler implementation contains their own set of options
    * @return {Object} Object that is going to be serialized
    * @protected
    */

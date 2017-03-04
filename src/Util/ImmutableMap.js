@@ -2,7 +2,7 @@ const TypeCheck = require('js-typecheck');
 
 
 /**
- * Map implementation designed to hold immutable data
+ * Map implementation designed to hold immutable data.
  *
  * This object makes sure that values held by the map cannot have their data
  * modified.
