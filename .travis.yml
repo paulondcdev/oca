@@ -3,7 +3,15 @@ sudo: false
 node_js:
   - "7"
   - "6"
+env:
+  CXX=g++-5.2
 script:
   - npm run test-ci
 install:
   - npm install
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-5.2
