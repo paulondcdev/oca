@@ -1,5 +1,6 @@
 const Settings = require('../Settings');
 
+
 /**
  * Exception raised when the required resource that should be updated does not exist.
  *
