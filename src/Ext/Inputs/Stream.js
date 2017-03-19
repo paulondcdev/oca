@@ -16,7 +16,7 @@ const Input = require('../../Input');
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
- * hidden | boolean telling if the input is hidden from the {@link HandlerParser}, \
+ * hidden | boolean telling if the input is hidden from the {@link Reader}, \
  * therefore the input should only be used internally | ::on:: | ::true::
  * streamType | specific stream type allowed by the input: `readable`, `writable`, \
  * `duplex` and `transform` | ::off:: | ::none::

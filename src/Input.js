@@ -3,7 +3,6 @@ const TypeCheck = require('js-typecheck');
 const ValidationFail = require('./Error/ValidationFail');
 const Util = require('./Util');
 
-
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _name = Symbol('name');
@@ -11,6 +10,7 @@ const _readOnly = Symbol('readOnly');
 const _properties = Symbol('properties');
 const _lockedProperties = Symbol('lockedProperties');
 const _cache = Symbol('cache');
+
 
 /**
  * An input holds a value that is used for the execution of the {@link Action}.
@@ -24,9 +24,9 @@ const _cache = Symbol('cache');
  * a regex. In most cases these validations are driven by `properties` which usually
  * are defined at construction time. Also, non-generic validations can be
  * implemented through `extendedValidation`, making possible to define validations
- * that are tied with an action.
+ * that are tied with an action itself.
  *
- * Inputs are created through {@link create} using a
+ * Inputs are created through {@link Input.create} using a
  * [syntactic sugar](https://en.wikipedia.org/wiki/Syntactic_sugar) that describes
  * their name and type (aka [TypeScript](https://www.typescriptlang.org/)), for instance:
  *
@@ -54,7 +54,7 @@ const _cache = Symbol('cache');
  * ```
  *
  * Since inputs are used by actions they can be created directly inside of an {@link Action} via
- * {@link Action.createInput} which calls internally {@link Input.create} factory method:
+ * {@link Action.createInput} which internally triggers {@link Input.create} factory method:
  *
  * ```
  * class HelloWorld extends Oca.Action{
@@ -75,7 +75,8 @@ const _cache = Symbol('cache');
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
- * required | boolean telling if the value is required | ::on:: | ::true::
+ * required | boolean telling if the value is required (defined at the construction time) \
+ * | ::on:: | ::true::
  * immutable | boolean telling if the data of the value cannot be altered \
  * overtime, however the value of the input can still be replaced by \
  * the input value setter, in order to prevent it you can set an input as \
@@ -85,7 +86,7 @@ const _cache = Symbol('cache');
  * `option` or `argument` ({@link http://docopt.org}) | ::on:: | `option`
  * vector | boolean telling if the input holds a vector value (defined \
  * at the construction time) | ::on:: | ::auto::
- * hidden | boolean telling if the input is hidden from the {@link HandlerParser}, \
+ * hidden | boolean telling if the input is hidden from the {@link Reader}, \
  * therefore the input should only be used internally | ::off:: | ::none::
  * autofill | key name about the value under the  {@link Session.autofill} \
  * that should be used during the initialization of the input through the session | \
@@ -577,7 +578,7 @@ class Input{
    * To know if an input supports decoding checkout the {@link Input.isSerializable}.
    *
    * Also, in case you want to know the serialization form for the inputs bundled with
-   * Oca checkout {@link HandlerParser}.
+   * Oca checkout {@link Reader}.
    *
    * @param {string} value - string containing the serialized data
    * @param {boolean} [assignValue=true] - tells if the parsed value should be assigned
@@ -641,7 +642,7 @@ class Input{
    * To know if an input supports serialization checkout the {@link Input.isSerializable}.
    *
    * Also, in case you want to know the serialization form for the inputs bundled with
-   * Oca checkout {@link HandlerParser}.
+   * Oca checkout {@link Reader}.
    *
    * @return {Promise<string>}
    */

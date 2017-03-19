@@ -14,7 +14,7 @@ const Input = require('../../Input');
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
- * hidden | boolean telling if the input is hidden from the {@link HandlerParser}, \
+ * hidden | boolean telling if the input is hidden from the {@link Reader}, \
  * therefore the input should only be used internally | ::on:: | ::true::
  * maxLength | maximum size of the buffer in bytes | ::off:: | ::none::
  *

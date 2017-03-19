@@ -17,9 +17,10 @@ const Input = require('../../Input');
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
- * hidden | boolean telling if the input is hidden from the {@link HandlerParser}, \
+ * hidden | boolean telling if the input is hidden from the {@link Reader}, \
  * therefore the input should only be used internally | ::on:: | ::true::
- * allowedInstance | Specific object type that should be allowed by the input | ::off:: | ::none::
+ * allowedInstance | Specific object type that should be allowed by the input \
+ * | ::off:: | ::none::
  *
  * All properties including the inherited ones can be listed via
  * {@link registeredPropertyNames}
