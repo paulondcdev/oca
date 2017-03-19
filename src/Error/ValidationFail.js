@@ -2,12 +2,12 @@ const assert = require('assert');
 const TypeCheck = require('js-typecheck');
 const Settings = require('../Settings');
 
-
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _inputName = Symbol('inputName');
 const _code = Symbol('code');
 const _message = Symbol('message');
+
 
 /**
  * Exception raised by {@link Input} validations.
@@ -45,7 +45,7 @@ class ValidationFail extends Error{
      *
      * Value driven by:
      * `Settings.get('error/validationFail/status')`
-     * (default: `422`)
+     * (default: `400`)
      *
      * @type {number}
      */
@@ -153,7 +153,7 @@ class ValidationFail extends Error{
 }
 
 // default settings
-Settings.set('error/validationFail/status', 422);
+Settings.set('error/validationFail/status', 400);
 Settings.set('error/validationFail/nestedStatus', 500);
 
 module.exports = ValidationFail;
