@@ -5,7 +5,6 @@ const stream = require('stream');
 const Oca = require('../../../../src');
 
 const Action = Oca.Action;
-const Settings = Oca.Settings;
 
 
 describe('CommandLine Generic:', () => {
@@ -54,27 +53,21 @@ describe('CommandLine Generic:', () => {
     }
   }
 
-  beforeEach(() => {
-    Settings.set('handler/commandLine/stdout', new WriteStream());
-    Settings.set('handler/commandLine/stderr', new WriteStream());
-  });
-
-  afterEach(() => {
-    Settings.set('handler/commandLine/stdout', process.stdout);
-    Settings.set('handler/commandLine/stderr', process.stderr);
+  before(() => {
+    Oca.registerAction(FullSpec);
+    Oca.registerAction(MultipleArgs);
   });
 
   it('Should list the help about the command', () => {
     return (async () => {
 
       const commandLine = Oca.createHandler('commandLine');
-      commandLine.description = 'A command';
+      commandLine.stdout = new WriteStream();
+      commandLine.stderr = new WriteStream();
       commandLine.args = ['node', 'file', '-h'];
-      const action = new FullSpec();
 
       try{
-        await commandLine.loadToAction(action);
-        await action.execute();
+        await commandLine.execute('fullSpec', {description: 'A command'});
         throw new Error('Should have failed');
       }
       catch(err){
@@ -88,7 +81,8 @@ describe('CommandLine Generic:', () => {
     return (async () => {
 
       const commandLine = Oca.createHandler('commandLine');
-      const action = new FullSpec();
+      commandLine.stdout = new WriteStream();
+      commandLine.stderr = new WriteStream();
       commandLine.args = [
         'node',
         'file',
@@ -102,8 +96,7 @@ describe('CommandLine Generic:', () => {
       ];
 
       try{
-        await commandLine.loadToAction(action);
-        await action.execute();
+        await commandLine.execute('fullSpec');
         throw new Error('Should have failed');
       }
       catch(err){
@@ -117,6 +110,8 @@ describe('CommandLine Generic:', () => {
     return (async () => {
 
       const commandLine = Oca.createHandler('commandLine');
+      commandLine.stdout = new WriteStream();
+      commandLine.stderr = new WriteStream();
       commandLine.args = [
         'node',
         'file',
@@ -133,9 +128,7 @@ describe('CommandLine Generic:', () => {
         'argumentOptionalA2',
       ];
 
-      const action = new FullSpec();
-      await commandLine.loadToAction(action);
-      const result = await action.execute();
+      const result = await commandLine.execute('fullSpec');
 
       assert.equal(result.argumentA, 'argumentValueA');
       assert.equal(result.argumentB, 'argumentValueB');
@@ -160,6 +153,8 @@ describe('CommandLine Generic:', () => {
     return (async () => {
 
       const commandLine = Oca.createHandler('commandLine');
+      commandLine.stdout = new WriteStream();
+      commandLine.stderr = new WriteStream();
       commandLine.args = [
         'node',
         'file',
@@ -176,9 +171,7 @@ describe('CommandLine Generic:', () => {
         'test2.txt',
       ];
 
-      const action = new FullSpec();
-      await commandLine.loadToAction(action);
-      const result = await action.execute();
+      const result = await commandLine.execute('fullSpec');
 
       assert.equal(result.argumentA, 'argumentValueA');
       assert.equal(result.argumentB, 'argumentValueB');
@@ -203,6 +196,8 @@ describe('CommandLine Generic:', () => {
     return (async () => {
 
       const commandLine = Oca.createHandler('commandLine');
+      commandLine.stdout = new WriteStream();
+      commandLine.stderr = new WriteStream();
       commandLine.args = [
         'node',
         'file',
@@ -222,9 +217,7 @@ describe('CommandLine Generic:', () => {
         '1',
       ];
 
-      const action = new FullSpec();
-      await commandLine.loadToAction(action);
-      const result = await action.execute();
+      const result = await commandLine.execute('fullSpec');
 
       assert.equal(result.argumentA, 'argumentValueA');
       assert.equal(result.argumentB, 'argumentValueB');
@@ -247,6 +240,8 @@ describe('CommandLine Generic:', () => {
     return (async () => {
 
       const commandLine = Oca.createHandler('commandLine');
+      commandLine.stdout = new WriteStream();
+      commandLine.stderr = new WriteStream();
       commandLine.args = [
         'node',
         'file',
@@ -264,9 +259,7 @@ describe('CommandLine Generic:', () => {
         'g3',
       ];
 
-      const action = new FullSpec();
-      await commandLine.loadToAction(action);
-      const result = await action.execute();
+      const result = await commandLine.execute('fullSpec');
 
       assert.equal(result.argumentA, 'argumentValueA');
       assert.equal(result.argumentB, 'argumentValueB');
@@ -288,8 +281,9 @@ describe('CommandLine Generic:', () => {
 
   it('Should test the command-line success render output', () => {
 
-    let result;
     const commandLine = Oca.createHandler('commandLine');
+    commandLine.stdout = new WriteStream();
+    commandLine.stderr = new WriteStream();
     commandLine.args = [
       'node',
       'file',
@@ -308,13 +302,11 @@ describe('CommandLine Generic:', () => {
     ];
 
     return (async () => {
-      const action = new FullSpec();
-      await commandLine.loadToAction(action);
-      result = await action.execute();
+      const result = await commandLine.execute('fullSpec');
       commandLine.output(result);
 
-      const stderr = Buffer.concat(Settings.get('handler/commandLine/stderr').data).toString('ascii');
-      const stdout = Buffer.concat(Settings.get('handler/commandLine/stdout').data).toString('ascii');
+      const stderr = Buffer.concat(commandLine.stderr.data).toString('ascii');
+      const stdout = Buffer.concat(commandLine.stdout.data).toString('ascii');
 
       assert.equal(stderr, '');
       const parsedResult = JSON.parse(stdout);
@@ -340,6 +332,8 @@ describe('CommandLine Generic:', () => {
   it('Should test the command-line fail render output (usage)', () => {
 
     const commandLine = Oca.createHandler('commandLine');
+    commandLine.stdout = new WriteStream();
+    commandLine.stderr = new WriteStream();
     commandLine.args = [
       'node',
       'file',
@@ -349,17 +343,15 @@ describe('CommandLine Generic:', () => {
       let error;
 
       try{
-        const action = new FullSpec();
-        await commandLine.loadToAction(action);
-        await action.execute();
+        await commandLine.execute('fullSpec');
       }
       catch(err){
         commandLine.output(err);
         error = err;
       }
 
-      const stderr = Buffer.concat(Settings.get('handler/commandLine/stderr').data).toString('ascii');
-      const stdout = Buffer.concat(Settings.get('handler/commandLine/stdout').data).toString('ascii');
+      const stderr = Buffer.concat(commandLine.stderr.data).toString('ascii');
+      const stdout = Buffer.concat(commandLine.stdout.data).toString('ascii');
 
       assert(error);
       assert.equal(stdout, '');
@@ -371,6 +363,8 @@ describe('CommandLine Generic:', () => {
   it('Should test the command-line fail render output (validation fail)', () => {
 
     const commandLine = Oca.createHandler('commandLine');
+    commandLine.stdout = new WriteStream();
+    commandLine.stderr = new WriteStream();
     commandLine.args = [
       'node',
       'file',
@@ -392,17 +386,15 @@ describe('CommandLine Generic:', () => {
       let error;
 
       try{
-        const action = new FullSpec();
-        await commandLine.loadToAction(action);
-        await action.execute();
+        await commandLine.execute('fullSpec');
       }
       catch(err){
         commandLine.output(err);
         error = err;
       }
 
-      const stderr = Buffer.concat(Settings.get('handler/commandLine/stderr').data).toString('ascii');
-      const stdout = Buffer.concat(Settings.get('handler/commandLine/stdout').data).toString('ascii');
+      const stderr = Buffer.concat(commandLine.stderr.data).toString('ascii');
+      const stdout = Buffer.concat(commandLine.stdout.data).toString('ascii');
 
       assert(error);
       assert.equal(stdout, '');
@@ -414,6 +406,8 @@ describe('CommandLine Generic:', () => {
   it('Should test passing an argument that receives multiple values', () => {
 
     const commandLine = Oca.createHandler('commandLine');
+    commandLine.stdout = new WriteStream();
+    commandLine.stderr = new WriteStream();
     commandLine.args = [
       'node',
       'file',
@@ -423,9 +417,7 @@ describe('CommandLine Generic:', () => {
     ];
 
     return (async () => {
-      const action = new MultipleArgs();
-      await commandLine.loadToAction(action);
-      const result = await action.execute();
+      const result = await commandLine.execute('multipleArgs');
 
       assert.equal(result[0], 'a');
       assert.equal(result[1], 'b');

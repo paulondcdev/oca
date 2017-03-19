@@ -1,27 +1,25 @@
 const assert = require('assert');
 const stream = require('stream');
 const TypeCheck = require('js-typecheck');
-const Action = require('../../Action');
 const Input = require('../../Input');
 const Handler = require('../../Handler');
-const Settings = require('../../Settings');
-const CommandLineArgs = require('../HandlerParsers/CommandLineArgs');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _args = Symbol('args');
-const _description = Symbol('description');
+const _stdout = Symbol('stdout');
+const _stderr = Symbol('stderr');
 
 
 /**
 * Handles the command-line integration using docopt specification.
 *
 * It enables the execution of actions that are triggered by command-line interfaces
-* by parsing ({@link CommandLineArgs}) the information that is passed to the action
-* ({@link CommandLine.loadToAction}) and taking care of the serialization of the output
+* by reading ({@link CommandLineArgs}) the information that is passed to the action
+* ({@link CommandLine.execute}) and taking care of the output by
 * ({@link CommandLine.output}).
 *
-* Using a command line parser:
+* Using the command-line handler:
 *
 * **Creating an action that is going be executed through the command-line**
 * ```
@@ -50,22 +48,14 @@ const _description = Symbol('description');
 * // making sure the script is called directly
 * if (require.main === module) {
 *
-*   // creating an instance of the action
-*   const action = Oca.createAction('MyAction');
-*
 *   // creating a command-line handler which is used to load the command-line
 *   // arguments to the action and to output the result back to the command-line
 *   const commandLine = Oca.createHandler('commandLine');
-*   commandLine.description = "A description about my command";
 *
 *   // loading the parsed information to the action
-*   commandLine.loadToAction(action).then(() => {
+*   commandLine.execute('myAction', {description: 'Welcome'}).then((result) => {
 *
-*     // executing action
-*     return action.execute();
-*
-*   // success output
-*   }).then((result) => {
+*     // success output
 *     commandLine.output(result);
 *
 *   // error output
@@ -79,7 +69,7 @@ const _description = Symbol('description');
 *
 * `node mycommand.js --help`
 * ```
-* A description about my command.
+* Welcome.
 *
 * Usage: mycommand.js [options] <my-argument>
 *
@@ -101,14 +91,13 @@ class CommandLine extends Handler{
    */
   constructor(session){
     super(session);
-
-    // default value
     this.args = process.argv;
-    this.description = '';
+    this.stdout = process.stdout;
+    this.stderr = process.stderr;
   }
 
   /**
-   * Sets a list of argument values used by the parser, it must follow
+   * Sets a list of argument values used by the reader, it must follow
    * the same pattern found at `process.argv`
    *
    * @param {Array<string>} value - argument list
@@ -121,7 +110,7 @@ class CommandLine extends Handler{
   }
 
   /**
-   * Returns a list of argument values used by the parser, by default it uses
+   * Returns a list of argument values used by the reader, by default it uses
    * `process.argv`.
    *
    * @type {Array<string>}
@@ -131,166 +120,86 @@ class CommandLine extends Handler{
   }
 
   /**
-   * Sets the description displayed on the top when help is invoked
+   * Sets the stdout stream
    *
-   * @param {string} value - text that should be used for the description
+   * @param {stream} value - stream used as stdout
    */
-  set description(value){
-    assert(TypeCheck.isString(value), 'value needs to be a string');
-    this[_description] = value;
+  set stdout(value){
+    assert(value instanceof stream, 'Invalid stream type');
+
+    this[_stdout] = value;
   }
 
   /**
-   * Returns the description displayed on the top when help is invoked
-   *
-   * @type {string}
-   */
-  get description(){
-    return this[_description];
-  }
-
-  /**
-   * Returns the stdout stream used to output the success result
-   * It looks for the value at `Settings.get('handler/commandLine/stdout')`
-   * (default: `process.stdout`)
+   * Returns the stream used as stdout
    *
    * @type {stream}
    */
-  static get stdout(){
-    return Settings.get('handler/commandLine/stdout');
+  get stdout(){
+    return this[_stdout];
   }
 
   /**
-   * Returns the stderr stream used to output an error.
-   * It looks for the value at `Settings.get('handler/commandLine/stderr')`
-   * (default: `process.stderr`)
+   * Sets the stderr stream
+   *
+   * @param {stream} value - stream used as stderr
+   */
+  set stderr(value){
+    assert(value instanceof stream, 'Invalid stream type');
+
+    this[_stderr] = value;
+  }
+
+  /**
+   * Returns the stream used as stderr
    *
    * @type {stream}
    */
-  static get stderr(){
-    return Settings.get('handler/commandLine/stderr');
+  get stderr(){
+    return this[_stderr];
   }
 
   /**
-   * Collects the parsed information from the request and loads it to the action using
-   * {@link Handler.loadToAction}
+   * Creates an instance of a reader for the current handler.
+   * This passes the {@link CommandLine.args} to the reader.
    *
-   * By the default it uses the {@link CommandLineArgs} parser if none parser is specified.
-   *
-   * Options assigned to the parser:
-   * - description - value of {@link CommandLine.description}
-   * - parsingErrorStatusCode - value of {@link CommandLine._parsingErrorStatusCode}
-   *
-   * @param {Action} action - action that should be used
-   * @param {HandlerParser} parser - parser that should be used to query the
-   * information which will be loaded to the action.
-   * @return {Promise<*>} returns the value of the action
-   */
-  loadToAction(action, parser=null){
-    assert(action instanceof Action, 'Invalid action type!');
-
-    // creating request parser if needed
-    const useParser = parser || new CommandLineArgs(action, this.args);
-
-    // setting the parsing options
-    useParser.options.description = this.description;
-    useParser.options.parsingErrorStatusCode = CommandLine._parsingErrorStatusCode;
-
-    return super.loadToAction(action, useParser);
-  }
-
-  /**
-   * Implements the response for an error value.
-   *
-   * *Output options*:
-   * Currently this output does not have any options in place, therefore any
-   * option passed to this output will be ignored.
-   *
-   * The error output gets automatically encoded using json. The only exception are
-   * parsing error messages that are identified by the status
-   * defined by {@link CommandLine._parsingErrorStatusCode} where they are outputted without
-   * any encoding.
-   *
-   * @param {Error} err - exception that should be outputted as error response
-   * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options
-   * @return {Promise<Object>} data that is going to be serialized
+   * @param {Action} action - action instance used by the reader to parse the values
+   * @param {Object} options - plain object containing the options passed to the reader
+   * @return {Reader}
    * @protected
    */
-  _errorOutput(err, outputOptions){
+  _createReader(action, options){
+    const reader = super._createReader(action, options);
 
-    process.exitCode = 1;
+    // setting args to the reader
+    reader.args = this.args;
 
-    if (err.status === CommandLine._parsingErrorStatusCode){
-      this.constructor.stderr.write(`${err.message}\n`);
-      return;
-    }
-
-    let output = super._errorOutput(err);
-
-    output = JSON.stringify(output, null, ' ');
-    output += '\n';
-
-    this.constructor.stderr.write(output);
-
-    return output;
+    return reader;
   }
 
   /**
-   * Implements the response for a success value.
+   * Creates an instance of a writer for the current handler
    *
-   * Readable streams are piped to {@link CommandLine.stdout} where
-   * Non-readable stream values get outputted using json encoding.
+   * This passes the {@link CommandLine.stdout} and {@link CommandLine.stderr}
+   * to the writer.
    *
-   * *Output options*:
-   * Currently this output does not have any options in place, therefore any
-   * option passed to this output will be ignored.
-   *
-   * @param {*} value - value to be outputted
-   * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options
-   * @return {Object} Object that is going to be serialized
+   * @param {*} value - arbitrary value passed to the writer
+   * @param {Object} options - plain object containing the options passed to the writer
+   * @return {Writer}
    * @protected
    */
-  _successOutput(value, outputOptions){
+  _createWriter(value, options){
+    const writer = super._createWriter(value, options);
 
-    /* istanbul ignore next */
-    if (value === undefined){
-      return;
-    }
+    // setting stdout & stderr to the writer
+    writer.stdout = this.stdout;
+    writer.stderr = this.stderr;
 
-    let output = super._successOutput(value);
-
-    // readable stream
-    if (output instanceof stream.Readable){
-      output.pipe(this.constructor.stdout);
-      return;
-    }
-
-    // json output
-    output = JSON.stringify(output, null, ' ');
-    output += '\n';
-
-    this.constructor.stdout.write(output);
-
-    return output;
+    return writer;
   }
-
-  /**
-   * Custom error status (`700`) code used to identify when the command-line args
-   * could not be parsed
-   *
-   * @type {number}
-   * @protected
-   */
-  static _parsingErrorStatusCode = 700;
 }
 
 Handler.registerHandler(CommandLine);
-
-// default settings
-Settings.set('handler/commandLine/stdout', process.stdout);
-Settings.set('handler/commandLine/stderr', process.stderr);
 
 // registering properties
 Input.registerProperty(Input, 'cliElementType', 'option');
