@@ -15,8 +15,8 @@ const _value = Symbol('value');
  * ({@link Writer._errorOutput}) otherwise the value is treated as success output
  * ({@link Writer._successOutput}).
  *
- * Custom options can be used to change behavior of a writer, they are passed by the
- * handler during the output ({@link Handler.output}).
+ * Custom options can be used to change the behavior of a writer, they are passed
+ * by the handler during the output process ({@link Handler.output}).
  *
  * ```
  * const myHandler = Oca.createHandler('someHandler');
