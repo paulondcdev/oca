@@ -4,7 +4,7 @@ const Oca = require('../../src');
 const ImmutableMap = Oca.Util.ImmutableMap;
 
 
-describe('ImmutableMap:', () => {
+describe('Util ImmutableMap:', () => {
 
   it('Should add a value to the map', () => {
     const map = new ImmutableMap();

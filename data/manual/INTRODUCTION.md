@@ -163,7 +163,7 @@ web requests, it's done by webfying them:
 Oca.webfyAction(MyAction, 'get');
 ```
 
-You can enable authorization prior to the execution of any action, this is done
+You can enable authentication prior to the execution of any action, this is done
 by webfying the action with the option ```auth=true```:
 
 ```javascript

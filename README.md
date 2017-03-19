@@ -29,7 +29,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 
 - **Reliable executions**. Oca enforces quality control over the data used by the executions by performing a wide range of verifications
 
-- **Agnostic execution platform**. Oca provides abstraction about the how the evaluations are executed, you write once and Oca takes care about it, either if it's web based or desktop ones
+- **Agnostic execution platform**. Oca provides abstraction about the how the evaluations are executed, you write once and Oca takes care about it
 
 - **Integrated caching system**. Oca provides out-the-box integrated caching system that can be easly enabled for any evaluation, speeding up your application
 
@@ -37,8 +37,7 @@ These evaluations can be triggered accross multiple domains you write once and O
 
 - **RESTful support**. Evaluations can be executed through REST automatically
 
-- **Console support**. By using Oca your evaluations can be executed through command-line interface
-
+- **Console support**. By using Oca your evaluations can be executed through command-line interfaces following docopt specifications.
 
 [<img src="https://node-oca.github.io/docs/data/intro.png"/>](data/manual/INTRODUCTION.md)
 
@@ -80,8 +79,8 @@ adding testutils, clarifying wording and fixing errors)
 
 ## Acknowledgements
 Oca was inspired by:
-- [Passport](https://github.com/jaredhanson/passport)
 - [Cortex](https://github.com/ImageEngine/cortex)
+- [Passport](https://github.com/jaredhanson/passport)
 - [Express](http://expressjs.com)
 - [Docopt](http://docopt.org)
 - [Nujabes](https://www.youtube.com/watch?v=WrO9PTpuSSs)

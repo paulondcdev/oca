@@ -4,7 +4,7 @@ const Oca = require('../../src');
 const LruCache = Oca.Util.LruCache;
 
 
-describe('LruCache:', () => {
+describe('Util LruCache:', () => {
 
   it('Should create a cache', () => {
     const cache = new LruCache(1024, 1000);

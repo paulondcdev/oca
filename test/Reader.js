@@ -2,13 +2,19 @@ const assert = require('assert');
 const Oca = require('../src');
 const testutils = require('../testutils');
 
-const HandlerParser = Oca.HandlerParser;
+const Reader = Oca.Reader;
 const Session = Oca.Session;
 
 
-describe('HandlerParser:', () => {
+describe('Reader:', () => {
 
-  class CustomParser extends HandlerParser{
+  class CustomReader extends Reader{
+    constructor(action){
+      super(action);
+
+      this.options.defaultOption = 'test';
+    }
+
     async _perform(inputList){
       const result = {};
 
@@ -20,6 +26,16 @@ describe('HandlerParser:', () => {
     }
   }
 
+  it('Should test custom options defined to the writer', () => {
+
+    const action = new testutils.Actions.Shared.PlainObjectResult();
+    action.session = new Session();
+
+    const reader = new CustomReader(action);
+    // default option
+    assert.equal(reader.options.defaultOption, 'test');
+  });
+
   it('Should parse the action input values', () => {
     return (async () => {
 
@@ -29,8 +45,8 @@ describe('HandlerParser:', () => {
       action.input('a').value = 'text';
       action.input('b').value = 20;
 
-      const parser = new CustomParser(action);
-      const inputValues = await parser.parseInputValues();
+      const reader = new CustomReader(action);
+      const inputValues = await reader.inputValues();
 
       // testing the result of the action
       assert.equal(inputValues.a, action.input('a').value);
@@ -51,9 +67,9 @@ describe('HandlerParser:', () => {
       action.input('a').value = 'text';
       action.input('b').value = 20;
 
-      const parser = new CustomParser(action);
+      const reader = new CustomReader(action);
 
-      const autofillValues = await parser.parseAutofillValues();
+      const autofillValues = await reader.autofillValues();
 
       // testing the result of the action
       assert(!('text' in autofillValues));
@@ -62,7 +78,7 @@ describe('HandlerParser:', () => {
     })();
   });
 
-  it('Should fail to execute a non implemented parser', (done) => {
+  it('Should fail to execute a non implemented reader', (done) => {
     (async () => {
 
       const action = new testutils.Actions.Shared.PlainObjectResult();
@@ -72,8 +88,8 @@ describe('HandlerParser:', () => {
       action.input('a').value = 'text';
       action.input('b').value = 20;
 
-      const parser = new HandlerParser(action);
-      await parser.parseAutofillValues();
+      const reader = new Reader(action);
+      await reader.autofillValues();
 
     })().then((result) => {
       done(new Error('Unexpected result'));

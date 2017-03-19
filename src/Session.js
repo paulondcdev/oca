@@ -4,7 +4,6 @@ const Tasks = require('./Tasks');
 const Settings = require('./Settings');
 const LruCache = require('./Util/LruCache');
 
-
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _arbitraryData = Symbol('_arbitraryData');
@@ -12,6 +11,7 @@ const _autofill = Symbol('autofill');
 const _wrapup = Symbol('wrapup');
 const _resultCache = Symbol('resultCache');
 const _terminated = Symbol('terminated');
+
 
 /**
  * A session is used to store the data that is shared between actions.

@@ -29,7 +29,6 @@
     "node": ">= 6.0.0"
   },
   "keywords": [
-    "oop",
     "cli",
     "console",
     "web",
@@ -40,38 +39,42 @@
     "es7"
   ],
   "dependencies": {
+    "babel-plugin-transform-object-assign": "^6.22.0",
     "compare-versions": "^3.0.0",
-    "debug": "^2.6.1",
+    "debug": "^2.6.3",
     "es6-promisify": "^5.0.0",
     "formidable": "^1.1.1",
     "ip": "^1.1.5",
     "js-typecheck": "^0.5.0",
-    "lru-cache": "^4.0.1",
+    "lru-cache": "^4.0.2",
     "minimatch": "^3.0.3",
     "neodoc": "^1.4.0",
-    "object-sizeof": "^1.0.10",
-    "uuid": "^3.0.0"
+    "object-sizeof": "^1.1.1",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.22.2",
+    "babel-cli": "^6.24.0",
     "babel-eslint": "^7.1.1",
-    "babel-plugin-transform-class-properties": "^6.22.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.22.0",
+    "babel-plugin-transform-class-properties": "^6.23.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-es2016": "^6.22.0",
     "babel-preset-es2017": "^6.22.0",
-    "codecov": "^1.0.1",
-    "esdoc": "0.5.2",
-    "eslint": "^3.17.0",
+    "codecov": "^2.1.0",
+    "esdoc": "^0.5.2",
+    "eslint": "^3.18.0",
     "eslint-config-airbnb-base": "^11.1.1",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-spellcheck": "0.0.8",
-    "express": "^4.15.0",
-    "mocha": "^3.1.2",
+    "express": "^4.15.2",
+    "mocha": "^3.2.0",
     "nyc": "^10.1.2",
     "passport": "^0.3.2",
     "passport-http": "^0.3.0",
-    "request": "^2.80.0"
+    "request": "^2.81.0"
+  },
+  "optionalDependencies": {
+    "xxhash": "^0.2.4"
   },
   "nyc": {
     "require": [

@@ -92,11 +92,15 @@ describe('Web Restful Auth:', () => {
 
   it('Should execute an action using through a custom action route name', (done) => {
 
-    request.patch(`http://localhost:${port}/A/customName?a=10&b=30`, {
+    request.patch(`http://localhost:${port}/A/customName`, {
       auth: {
         user: 'user',
         pass: '1234',
         sendImmediately: true,
+      },
+      formData: {
+        a: 10,
+        b: 30,
       },
     }, (err, response, body) => {
 
@@ -152,7 +156,11 @@ describe('Web Restful Auth:', () => {
 
   it('Should perform an action through PATH without requiring auth', (done) => {
 
-    request.patch(`http://localhost:${port}/B?a=10&b=30`, {
+    request.patch(`http://localhost:${port}/B`, {
+      formData: {
+        a: 10,
+        b: 30,
+      },
     }, (err, response, body) => {
 
       if (err){

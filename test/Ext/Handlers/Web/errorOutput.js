@@ -59,7 +59,7 @@ describe('Web Error Output:', () => {
 
       let error = null;
       try{
-        assert.equal(response.statusCode, 422);
+        assert.equal(response.statusCode, 400);
       }
       catch(errr){
         error = errr;

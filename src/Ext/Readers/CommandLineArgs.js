@@ -4,7 +4,8 @@ const assert = require('assert');
 const TypeCheck = require('js-typecheck');
 const Inputs = require('../Inputs');
 const Settings = require('../../Settings');
-const HandlerParser = require('../../HandlerParser');
+const Handler = require('../../Handler');
+const Reader = require('../../Reader');
 
 
 // symbols used for private instance variables to avoid any potential clashing
@@ -12,57 +13,80 @@ const HandlerParser = require('../../HandlerParser');
 const _args = Symbol('args');
 
 /**
- * Command-line arguments parser.
+ * Command-line arguments reader.
  *
- * This parser is used by the {@link CommandLine} handler, it supports most of
- * the docopt specification. Also, if the parser finds an error it's capable of
+ * This reader is used by the {@link CommandLine} handler, it supports most of
+ * the docopt specification. Also, if the reader finds an error it's capable of
  * reporting it in an user-friendly way, this is used to report `-h/--help` and
  * missing arguments.
  *
- * All serializable inputs are supported by this parser, they can be displayed
+ * All serializable inputs are supported by this reader, they can be displayed
  * as either `argument` or `option` element. This is done by setting the input
  * property `cliElementType` (option is the default one).
  *
- * You can define the description displayed in the help of element by
+ * You can define the description displayed in the help of the element by
  * setting the input property `description`.
  *
  * The `option` elements support `short option` by setting the input property
  * `cliShortOption`.
  *
  * In order to accommodate how vector values are represented in a command-line
- * interface, this parser expects vector elements to be separated by
+ * interface, this reader expects vector elements to be separated by
  * the space character.
  *
  * Additionally, the {@link Bool} input specified as an `option` element behaves in a
  * special mode, since it's thread as a toogle option in command-line.
- * Therefore if the Bool input is assigned with a `true` value then the option
+ * Therefore if the Bool input is assigned with a `true` then the option
  * gets the prefix `no-`.
+ *
+ * <h2>Options Summary</h2>
+ *
+ * Option Name | Description | Default Value
+ * --- | --- | :---:
+ * description | description about the program displayed at the header of the help \
+ * | ::none::
+ * parsingErrorStatusCode | Custom error status code used to identify when the \
+ * command-line args could not be parsed | `700`
  *
  * @see http://docopt.org
  */
-class CommandLineArgs extends HandlerParser{
+class CommandLineArgs extends Reader{
 
   /**
-   * Creates a parser
+   * Creates a reader
    *
-   * @param {Action} action - action that should be used by the parser
+   * @param {Action} action - action that should be used by the reader
    * @param {Array<string>} args - list of command-line arguments that should be used by
-   * the parser
+   * the reader
    */
-  constructor(action, args){
+  constructor(action){
     super(action);
 
-    // options available for the parser
-    this.options.description = null;
-    this.options.parsingErrorStatusCode = null;
-
-    this[_args] = args;
+    // options
+    Object.assign(this.options, {
+      description: '',
+      parsingErrorStatusCode: 700,
+    });
   }
 
   /**
-   * Returns the args defined at construction time
+   * Sets a list of argument values used by the reader, it must follow
+   * the same pattern found at `process.argv`
    *
-   * @return {Array<string>}
+   * @param {Array<string>} value - argument list
+   */
+  set args(value){
+    assert(TypeCheck.isList(value), 'value needs to be a list');
+    assert(value.length >= 2, 'missing first argument process.execPath and second argument javaScript file being executed');
+
+    this[_args] = value.slice(0);
+  }
+
+  /**
+   * Returns a list of argument values used by the reader, by default it uses
+   * `process.argv`.
+   *
+   * @type {Array<string>}
    */
   get args(){
     return this[_args];
@@ -78,7 +102,7 @@ class CommandLineArgs extends HandlerParser{
   }
 
   /**
-   * Implements the command-line parser
+   * Implements the command-line reader
    *
    * @param {Array<Input>} inputList - Valid list of inputs that should be used for
    * the parsing
@@ -625,5 +649,8 @@ class CommandLineArgs extends HandlerParser{
     return text.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
   }
 }
+
+// registering reader
+Handler.registerReader(CommandLineArgs, 'commandLine');
 
 module.exports = CommandLineArgs;

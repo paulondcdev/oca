@@ -1,47 +1,81 @@
 const assert = require('assert');
-const stream = require('stream');
 const EventEmitter = require('events');
 const TypeCheck = require('js-typecheck');
-const debug = require('debug')('Oca');
-const Session = require('./Session');
 const minimatch = require('minimatch');
+const Session = require('./Session');
 const Action = require('./Action');
-const HandlerParser = require('./HandlerParser');
+const Reader = require('./Reader');
+const Writer = require('./Writer');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _session = Symbol('session');
+const _metadata = Symbol('metadata');
 
 
 /**
  * A handler is used to bridge an execution method to Oca.
  *
- * The data received by the handler is parsed through a {@link HandlerParser}. The parsed
- * data is then loaded to the action via {@link Handler.loadToAction}.
+ * The data used by the handler is parsed through a {@link Reader}. This data
+ * is then loaded to the action during the execution time through
+ * {@link Handler.execute}.
  *
- * The output data of a handler is done via {@link Handler.output}. The way the data is serialized
- * is determined by a handler implementation ({@link Handler._successOutput}, {@link Handler._errorOutput}).
- * Handler implementations are recommended to serialize the output using json for a non readable stream or
- * buffer value, otherwise to stream them as output (it may vary per handler basis).
+ * The result of a handler is done through a {@link Writer}. Writers are designed
+ * to support reporting a success output and an error output as well. The way the
+ * result is serialized is determined by a writer implementation
+ * ({@link Writer._successOutput}, {@link Writer._errorOutput}). All writers
+ * shipped with Oca have support for streams where in case of any readable stream
+ * or buffer value they are piped to the output, otherwise the result is encoded
+ * using Json.
  *
- * Handlers are created by their registration name ({@link Handler.registerHandler}), the creation
- * is done by {@link Handler.create} or `Oca.createHandler`:
+ * Both reader and writer can be customized through options that can be either
+ * defined through the action's metadata or directly through the handler. To know
+ * about the available options check out the Reader & Writers implementations.
+ *
+ * Defining options through the action's metadata:
+ * ```
+ * class MyAction extends Oca.Action{
+ *    constructor(){
+ *      super();
+ *
+ *      // change 'name' for the registration name of the handler you
+ *      // want to define the read & write options
+ *      this.metadata.handler.name = {
+ *        readOptions: {
+ *          someReadOption: true,
+ *        },
+ *        writeOptions: {
+ *          someWriteOption: 10,
+ *        },
+ *      };
+ *    }
+ * }
+ * ```
+ *
+ * Defining options directly through the handler:
+ * ```
+ * // read options
+ * myHandler.execute('actionName', {
+ *  someReadOption: true,
+ * })
+ *
+ * // write options
+ * myHandler.output(value, {
+ *  someWriteOption: 10,
+ * })
+ * ```
+ *
+ * Handlers are created by their registration name ({@link Handler.registerHandler}),
+ * the creation is done by {@link Handler.create} or `Oca.createHandler`:
  *
  * ```
- * // creating an instance of an action
- * const action = Oca.createAction('...');
- *
  * // creating a handle based on the handler registration name
  * const handler = Oca.createHandler('myHandler');
  *
  * // loading the parsed information to the action
- * handler.loadToAction(action).then(() =>{
+ * handler.execute('actionName').then((result) => {
  *
- *    // executing action
- *    return action.execute();
- *
- * // success output
- * }).then((result) => {
+ *    // success output
  *    handler.output(result);
  *
  * // error output
@@ -50,8 +84,8 @@ const _session = Symbol('session');
  * });
  * ```
  *
- * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
- * included in the error output.
+ * **Tip:** You can set the env variable `NODE_ENV=development` to get the
+ * traceback information included in the error output.
  */
 class Handler{
 
@@ -63,112 +97,11 @@ class Handler{
     assert(session instanceof Session, 'Invalid session');
 
     this[_session] = session;
-  }
-
-  /**
-   * Results a value through the handler.
-   *
-   * In case the value is an exception then it's treated as {@link Handler._errorOutput}
-   * otherwise the value is treated as {@link Handler._successOutput}.
-   *
-   * The argument outputOptions can be used to change the output behavior of a handler
-   * implementation. It expects a plain object containing the options defined by each handler.
-   * To know the available options always check the documentation for {@link Handler._successOutput}
-   * and {@link Handler._errorOutput} in the handler implementation you are interested.
-   *
-   * ```
-   * // setting output options
-   * myHandler.output(value, {
-   *  someOutputOption: 10,
-   * });
-   * ```
-   *
-   * When executing a handler output you can use the action's result metadata to drive the
-   * output options:
-   *
-   * ```
-   * class MyAction extends Oca.Action{
-   *    _perform(data){
-   *
-   *      // defining a custom output option
-   *      this.metadata.result.handlerName = {
-   *        someOutputOption: 10,
-   *      };
-   *
-   *      // ...
-   *    }
-   * }
-   *
-   * // ...
-   * myHandler.output(value, myAction.metadata.result.handlerName);
-   * ```
-   *
-   * Since the result is shared among all handlers the result may change in the future to
-   * include a level name for the handler.
-   *
-   * If `finalizeSession` is enabled (default) the {@link Handler.session} gets finalized
-   * in the end of the output process. Any error raised during session finalization is emitted by
-   * the {@link Handler.onFinalizeError} event.
-   *
-   * @param {*} value - raw value that should be resulted by the handler
-   * @param {Object} [outputOptions] - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options.
-   * @param {boolean} [finalizeSession=true] - tells if it should finalize the session
-   * ({@link Session.finalize})
-   */
-  output(value, outputOptions={}, finalizeSession=true){
-
-    if (value instanceof Error){
-      this._errorOutput(value, outputOptions);
-    }
-    else{
-      this._successOutput(value, outputOptions);
-    }
-
-    // the session finalization runs in parallel, since it does secondary tasks
-    // (such as clean-up, logging, etc...) there is no need to await for that
-    if (finalizeSession){
-      this.session.finalize().then().catch((err) => {
-        process.nextTick(() => {
-          this.constructor._sessionEvent.emit('error', err);
-        });
-      });
-    }
-  }
-
-  /**
-   * Collects the handler information through a {@link HandlerParser} and loads it
-   * to the {@link Action}.
-   *
-   * Changes done by this method to the action:
-   * - Assigns the {@link Handler.session} to the action ({@link Action.session})
-   * - Modifies the action input values based on the information collected by the parser
-   * - May modify the {@link Session.autofill} based on the information collected by the parser
-   * ({@link HandlerParser.parseAutofillValues})
-   *
-   * @param {Action} action - action that should be used
-   * @param {HandlerParser} parser - parser that should be used to query the
-   * information which will be loaded to the action.
-   */
-  async loadToAction(action, parser){
-
-    assert(action instanceof Action, 'Invalid action!');
-    assert(parser instanceof HandlerParser, 'Invalid handler parser');
-
-    action.session = this.session;
-
-    const inputValues = await parser.parseInputValues();
-    const autofillValues = await parser.parseAutofillValues();
-
-    // setting inputs
-    for (const inputName in inputValues){
-      action.input(inputName).value = inputValues[inputName];
-    }
-
-    // setting autofill
-    for (const autofillName in autofillValues){
-      this.session.autofill[autofillName] = autofillValues[autofillName];
-    }
+    this[_metadata] = {
+      handler: {},
+      readOptions: {},
+      writeOptions: {},
+    };
   }
 
   /**
@@ -178,6 +111,106 @@ class Handler{
    */
   get session(){
     return this[_session];
+  }
+
+  /**
+   * Returns a plain object containing meta-data information about the handler.
+   *
+   * @return {Object}
+   */
+  get metadata(){
+    return this[_metadata];
+  }
+
+  /**
+   * Executes an action through the handler.
+   *
+   * This process is done by creating an action that loads the information
+   * parsed by the {@link Reader}.
+   *
+   * After the construction of the action it looks for reading options that can
+   * be defined as part of the action's metadata ({@link Action.metadata}). Therefore
+   * when found it passes them to the reader. After the execution of the action
+   * it looks again inside of the action's metadata for writing options which
+   * are later used during the output ({@link Handler.output}). To know how
+   * to define action's metadata for the handler take a look at the initial
+   * documentation about the {@link Handler}.
+   *
+   * @param {string} actionName - registered action name that should be executed
+   * @param {Object} options - plain object containing the options that is passed
+   * to the {@link Reader}.
+   * for the handler should be fetched.
+   * @return {*} result of the action
+   */
+  async execute(actionName, options={}){
+
+    const action = Action.create(actionName, this.session);
+    assert(action, `Action ${actionName} not found!`);
+
+    // collecting read options from the action
+    Object.assign(
+      this.metadata.readOptions,
+      this._actionHandlerOptions(action, 'readOptions'),
+    );
+
+    // executing action
+    let result;
+    await this._load(action, options);
+    try{
+      result = await action.execute();
+    }
+    finally{
+      // collecting write options from the action
+      Object.assign(
+        this.metadata.writeOptions,
+        this._actionHandlerOptions(action, 'writeOptions'),
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Results a value through the handler.
+   *
+   * In case the value is an exception then it's treated as {@link Writer._errorOutput}
+   * otherwise the value is treated as {@link Writer._successOutput}.
+   *
+   * When an action is executed through the handler ({@link Handler.execute})
+   * it can define writing options that are used by the output. These
+   * options are stored under the {@link Handler.metadata} where any options passed
+   * directly to the output method override them.
+   *
+   * If `finalizeSession` is enabled (default) the {@link Handler.session} gets finalized
+   * in the end of the output process. Any error raised during session finalization is emitted by
+   * the {@link Handler.onFinalizeError} event.
+   *
+   * @param {*} value - raw value that should be resulted by the handler
+   * @param {Object} [options] - plain object containing options that should be used
+   * by the output where each handler implementation contains their own set of options.
+   * @param {boolean} [finalizeSession=true] - tells if it should finalize the session
+   * ({@link Session.finalize})
+   */
+  output(value, options={}, finalizeSession=true){
+
+    const writeOptions = Object.assign({}, this.metadata.writeOptions, options);
+    const writer = this._createWriter(value, writeOptions);
+    writer.serialize();
+
+    // the session finalization runs in parallel, since it does secondary tasks
+    // (such as clean-up, logging, etc...) there is no need to await for that
+    if (finalizeSession){
+      this.session.finalize().then().catch((err) => {
+        process.nextTick(() => {
+          this.constructor._sessionEvent.emit(
+            'error',
+            err,
+            this.metadata.handler.name,
+            this.metadata.handler.mask,
+          );
+        });
+      });
+    }
   }
 
   /**
@@ -201,7 +234,13 @@ class Handler{
       throw new Error(`Execution Handler: ${handlerName}, is not registered!`);
     }
 
-    return new HandlerClass(session);
+    const handler = new HandlerClass(session);
+
+    // adding the action name used to create the action under the meta-data
+    handler.metadata.handler.name = handlerName.toLowerCase();
+    handler.metadata.handler.mask = mask.toLowerCase();
+
+    return handler;
   }
 
   /**
@@ -211,66 +250,81 @@ class Handler{
    * @param {string} [handlerName] - string containing the registration name for the
    * handler. In case of an empty string, the registration is done by using the name
    * of the type (this information is stored in lowercase)
-   * @param {string} [mask='*'] - optional mask that supports a glob syntax used
+   * @param {string} [handlerMask='*'] - optional mask that supports a glob syntax used
    * to match a custom registered handler (it allows to have
    * custom handler implementations for specific masks)
    */
-  static registerHandler(handlerClass, handlerName='', mask='*'){
+  static registerHandler(handlerClass, handlerName='', handlerMask='*'){
     assert(TypeCheck.isSubClassOf(handlerClass, Handler), 'Invalid handler type!');
-    assert(TypeCheck.isString(handlerName), 'Invalid handler registration name!');
-    assert(TypeCheck.isString(mask), 'mask needs to be defined as string');
-    assert(mask.length, 'mask cannot be empty');
+    const handlerNameFinal = ((handlerName === '') ? handlerClass.name : handlerName);
 
-    const normalizedMask = mask.toLowerCase();
-    const handlerNameFinal = ((handlerName === '') ? handlerClass.name : handlerName).toLowerCase();
+    this._register(this._registeredHandlers, handlerClass, handlerNameFinal, handlerMask);
+  }
 
-    // validating name
-    assert(handlerNameFinal.length, 'handler name cannot be empty');
-    assert((/^([\w_\.\-])+$/gi).test(handlerNameFinal), `Invalid handler name: ${handlerNameFinal}`); // eslint-disable-line no-useless-escape
+  /**
+   * Register a {@link Reader} for the handler
+   *
+   * @param {Reader} readerClass - reader class
+   * @param {string} handlerName - registered handler name
+   * @param {string} [handlerMask='*'] - optional mask that supports a glob syntax used
+   * to match a custom registered handler (it allows to have
+   * custom handler implementations for specific masks)
+   */
+  static registerReader(readerClass, handlerName, handlerMask='*'){
+    assert(TypeCheck.isSubClassOf(readerClass, Reader), 'Invalid reader type');
 
-    const handlers = new Map();
-    for (const key of Array.from(this._registeredHandlers.keys()).reverse()){
+    this._register(this._registeredReaders, readerClass, handlerName, handlerMask);
+  }
 
-      if (key[0] === handlerName && key[1] === normalizedMask){
-        continue;
-      }
+  /**
+   * Register a {@link Writer} for the handler
+   *
+   * @param {Writer} writerClass - writer class
+   * @param {string} handlerName - registered handler name
+   * @param {string} [handlerMask='*'] - optional mask that supports a glob syntax used
+   * to match a custom registered handler (it allows to have
+   * custom handler implementations for specific masks)
+   */
+  static registerWriter(writerClass, handlerName, handlerMask='*'){
+    assert(TypeCheck.isSubClassOf(writerClass, Writer), 'Invalid writer type');
 
-      handlers.set(key, this._registeredHandlers.get(key));
-    }
-
-    handlers.set([handlerNameFinal, normalizedMask], handlerClass);
-
-    // reversed map
-    const reversedMap = new Map();
-    for (const key of Array.from(handlers.keys()).reverse()){
-      reversedMap.set(key, handlers.get(key));
-    }
-
-    this._registeredHandlers = reversedMap;
+    this._register(this._registeredWriters, writerClass, handlerName, handlerMask);
   }
 
   /**
    * Returns the handler type based on the registration name
    *
    * @param {string} handlerName - name of the registered handler type
-   * @param {string} [mask='*'] - optional mask that supports a glob syntax used
+   * @param {string} [handlerMask='*'] - optional mask that supports a glob syntax used
    * to match a custom registered handler
    * @return {Handler|null}
    */
-  static registeredHandler(handlerName, mask='*'){
-    assert(TypeCheck.isString(handlerName), 'handlerName needs to be defined as string');
-    assert(TypeCheck.isString(mask), 'mask needs to be defined as string');
+  static registeredHandler(handlerName, handlerMask='*'){
+    return this._registered(this._registeredHandlers, handlerName, handlerMask);
+  }
 
-    const normalizedHandlerName = handlerName.toLowerCase();
-    const normalizedMask = mask.toLowerCase();
+  /**
+   * Returns the reader factory function based on the registration name
+   *
+   * @param {string} handlerName - name of the registered handler type
+   * @param {string} [handlerMask='*'] - optional mask that supports a glob syntax used
+   * to match a custom registered handler
+   * @return {function|null}
+   */
+  static registeredReader(handlerName, handlerMask='*'){
+    return this._registered(this._registeredReaders, handlerName, handlerMask);
+  }
 
-    for (const key of this._registeredHandlers.keys()){
-      if (key[0] === normalizedHandlerName && (key[1] === '*' || minimatch(normalizedMask, key[1]))){
-        return this._registeredHandlers.get(key);
-      }
-    }
-
-    return null;
+  /**
+   * Returns the writer factory function based on the registration name
+   *
+   * @param {string} handlerName - name of the registered handler type
+   * @param {string} [handlerMask='*'] - optional mask that supports a glob syntax used
+   * to match a custom registered handler
+   * @return {function|null}
+   */
+  static registeredWriter(handlerName, handlerMask='*'){
+    return this._registered(this._registeredWriters, handlerName, handlerMask);
   }
 
   /**
@@ -310,7 +364,8 @@ class Handler{
 
   /**
    * Adds a listener for the exception raised by the {@link Session.finalize} inside of
-   * {@link Handler.output}. This event passes the error as argument.
+   * {@link Handler.output}. This event passes the error, handlerName and handlerMask
+   * as argument.
    *
    * Currently this event is static to make easy for developers to hook it when
    * it occurs, if none listener is registered to it then the error is thrown,
@@ -318,7 +373,7 @@ class Handler{
    *
    * ```
    * // registering a listener to the session error
-   * Oca.Handler.onFinalizeError((err => {
+   * Oca.Handler.onFinalizeError((err, handlerName, handlerMask => {
    *    console.error(err.stack);
    * }));
    * ```
@@ -330,106 +385,197 @@ class Handler{
   }
 
   /**
-   * Translates an {@link Error} to a data structure that is later serialized by a handler implementation
-   * as output. The handler implementations are recommended to serialize the output using json. This method is
-   * called by the {@link Handler.output} when an exception is passed as output.
+   * Creates an instance of a reader for the current handler
    *
-   * Any error can carry a status code. It helps to identify the kind of error, by default it
-   * follows the HTTP status code, however you can assign any value you want that may help client to be
-   * aware about type of error.
-   *
-   * There are two kinds of status codes that can be assigned for any error:
-   *
-   * - status: used when an error is raised from inside of a top level action
-   * (an action that has not been created from another action).
-   *
-   * - nestedStatus: used when an error is raised inside of an action that has been
-   * created from another action ({@link Action.createAction}), in case nestedStatus is not defined
-   * then `status` code is going to be used instead.
-   *
-   * The `status` and `nestedStatus` can be done by adding them to any error (for instance ```err.status = 501;```).
-   * This practice can be found in all errors shipped with oca ({@link Conflict}, {@link NoContent},
-   * {@link NotFound} and {@link ValidationFail}). In case none status is found in the error then `500`
-   * is used automatically.
-   *
-   * By default the contents of the error output are driven by the `err.message`, however if an error
-   * contains `err.toJson` method ({@link ValidationFail.toJson}) then that's used instead of the message.
-   *
-   * **Tip:** You can set the env variable `NODE_ENV=development` to get the traceback information
-   * included in the error output
-   *
-   * @param {Error} err - exception that should be serialized as en error output
-   * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options
-   * @return {Object} serialized data
+   * @param {Action} action - action instance used by the reader to parse the values
+   * @param {Object} options - plain object containing the options passed to the reader
+   * @return {Reader}
    * @protected
    */
-  _errorOutput(err, outputOptions){
-    let status = err.status || 500;
+  _createReader(action, options){
+    const ReaderClass = Handler.registeredReader(
+      this.metadata.handler.name,
+      this.metadata.handler.mask,
+    );
 
-    // checking if the error has been raised from inside of another action, if so
-    // it uses the nestedStatus code defined as a member of the error
-    if (err.origin === 'nested' && err.nestedStatus){
-      status = err.nestedStatus;
+    assert(ReaderClass, 'Invalid registered reader!');
+    const reader = new ReaderClass(action);
+
+    Object.assign(reader.options, options);
+
+    return reader;
+  }
+
+  /**
+   * Creates an instance of a writer for the current handler
+   *
+   * @param {*} value - arbitrary value passed to the writer
+   * @param {Object} options - plain object containing the options passed to the writer
+   * @return {Writer}
+   * @protected
+   */
+  _createWriter(value, options){
+    const WriterClass = Handler.registeredWriter(
+      this.metadata.handler.name,
+      this.metadata.handler.mask,
+    );
+
+    assert(WriterClass, 'Invalid registered writer!');
+    const writer = new WriterClass(value);
+
+    Object.assign(writer.options, options);
+
+    return writer;
+  }
+
+  /**
+   * Loads the {@link Reader} information to the {@link Action} and {@link Session}. This
+   * process is called during the execution ({@link Handler.execute}).
+   *
+   * Changes done by this method to the action:
+   * - Assigns the {@link Handler.session} to the action ({@link Action.session})
+   * - Modifies the action input values based on the information collected by the reader
+   *
+   * Changes done by this method to the session:
+   * - Modifies the {@link Session.autofill} based on the information collected by the reader
+   * ({@link Reader.autofillValues})
+   *
+   * @param {Action} action - action that should be used
+   * @param {Object} options - options passed to the reader
+   * @private
+   */
+  async _load(action, options){
+
+    assert(action instanceof Action, 'Invalid action');
+
+    const readOptions = Object.assign({}, this.metadata.readOptions, options);
+    const reader = this._createReader(action, readOptions);
+
+    // collecting the reader values
+    const inputValues = await reader.inputValues();
+    const autofillValues = await reader.autofillValues();
+
+    // setting inputs
+    for (const inputName in inputValues){
+      action.input(inputName).value = inputValues[inputName];
     }
 
-    const result = Object.create(null);
-    result.error = Object.create(null);
-    result.error.code = status;
-    result.error.message = (TypeCheck.isCallable(err.toJson)) ? err.toJson() : err.message;
+    // setting autofill
+    for (const autofillName in autofillValues){
+      this.session.autofill[autofillName] = autofillValues[autofillName];
+    }
+  }
 
-    // adding the stack-trace information when running in development mode
-    /* istanbul ignore next */
-    if (process.env.NODE_ENV === 'development'){
-      process.stderr.write(`${err.stack}\n`);
-      result.error.stacktrace = err.stack.split('\n');
-      debug(err.stack);
+  /**
+   * Auxiliary method used to get the registration of writers, readers and handlers.
+   *
+   * @param {Map} where - map used to find the registration
+   * @param {string} handlerName - name of the registered handler type
+   * @param {string} handlerMask - mask that supports a glob syntax used
+   * to match a custom registered handler
+   * @return {Handler|function}
+   *
+   * @private
+   */
+  static _registered(where, handlerName, handlerMask){
+    assert(TypeCheck.isString(handlerName), 'handlerName needs to be defined as string');
+    assert(TypeCheck.isString(handlerMask), 'mask needs to be defined as string');
+
+    let result = null;
+    const normalizedHandlerName = handlerName.toLowerCase();
+    const normalizedHandlerMask = handlerMask.toLowerCase();
+
+    for (const key of where.keys()){
+      if (key[0] === normalizedHandlerName && (key[1] === '*' || minimatch(normalizedHandlerMask, key[1]))){
+        result = where.get(key);
+        break;
+      }
     }
 
     return result;
   }
 
   /**
-   * Translates the success value to a data structure that is later serialized
-   * by a handler implementation as output.
-   * The handler implementations are recommended to serialize the output using json
-   * for a non readable stream or buffer value, otherwise to stream them as output
-   * (if supported by the handler).
+   * Auxiliary method that returns handler options defined as metadata inside
+   * of the action
    *
-   * Note: any Buffer value passed to this method gets automatically converted to a
-   * readable stream.
-   *
-   * This method is called by {@link Handler.output}.
-   *
-   * @param {*} value - value to be outputted
-   * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options
-   * @return {Object} Object that is going to be serialized
-   * @protected
+   * @param {Action} action - action that should be used
+   * @param {string} optionsType - options type either 'readOptions' or 'writeOptions'
+   * @return {Object}
+   * @private
    */
-  _successOutput(value, outputOptions){
+  _actionHandlerOptions(action, optionsType){
+    let result = {};
 
-    // stream output
-    if (value instanceof Buffer){
-      const bufferStream = new stream.PassThrough();
-      bufferStream.end(value);
+    for (const handlerName of Object.keys(action.metadata.handler)){
 
-      return bufferStream;
+      // the searching for the handler name is case insensitive
+      if (handlerName.toLowerCase() === this.metadata.handler.name){
+        const options = action.metadata.handler[handlerName][optionsType];
+
+        // found options
+        if (options){
+          result = options;
+        }
+        break;
+      }
     }
-    else if (value instanceof stream.Readable){
-      return value;
-    }
-
-    // default result
-    const result = Object.create(null);
-    result.data = value;
 
     return result;
   }
 
+  /**
+   * Auxiliary method used for the registration of writers, readers and handlers
+   *
+   * @param {Map} where - map used to store the registration
+   * @param {Handler|function} what - data that should be stored
+   * @param {string} handlerName - name of the registered handler type
+   * @param {string} handlerMask - mask that supports a glob syntax used
+   * to match a custom registered handler
+   *
+   * @private
+   */
+  static _register(where, what, handlerName, handlerMask){
+    assert(TypeCheck.isString(handlerName), 'Invalid handler registration name!');
+    assert(TypeCheck.isString(handlerMask), 'handlerMask needs to be defined as string');
+    assert(handlerName.length, 'handlerName cannot be empty');
+    assert(handlerMask.length, 'handlerMask cannot be empty');
+
+    const normalilzeHandlerName = handlerName.toLowerCase();
+    const normalizedHandlerMask = handlerMask.toLowerCase();
+
+    // validating handler name
+    assert(normalilzeHandlerName.length, 'handler name cannot be empty');
+    assert((/^([\w_\.\-])+$/gi).test(normalilzeHandlerName), `Invalid handler name: ${normalilzeHandlerName}`); // eslint-disable-line no-useless-escape
+
+    // since when querying registrations the new ones precede to the old ones,
+    // therefore the new ones are stored on the top of the pile, for this reason creating
+    // a temporary reversed map that will be used to include the new one
+    const currentData = new Map();
+    for (const key of Array.from(where.keys()).reverse()){
+
+      // if there is already an existing registration for it, skipping it
+      if (key[0] === normalilzeHandlerName && key[1] === normalizedHandlerMask){
+        continue;
+      }
+
+      currentData.set(key, where.get(key));
+    }
+
+    // including the new registration
+    currentData.set([normalilzeHandlerName, normalizedHandlerMask], what);
+
+    // reversing back the final order
+    where.clear();
+    for (const key of Array.from(currentData.keys()).reverse()){
+      where.set(key, currentData.get(key));
+    }
+  }
+
   static _sessionEvent = new EventEmitter();
   static _registeredHandlers = new Map();
+  static _registeredWriters = new Map();
+  static _registeredReaders = new Map();
 }
-
 
 module.exports = Handler;

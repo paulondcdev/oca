@@ -5,21 +5,44 @@ const Oca = require('../src');
 const testutils = require('../testutils');
 
 const Handler = Oca.Handler;
-const HandlerParser = Oca.HandlerParser;
+const Reader = Oca.Reader;
+const Writer = Oca.Writer;
 const Session = Oca.Session;
 
 
 describe('Handler:', () => {
 
-  class CustomParser extends HandlerParser{
-    async _perform(inputList){
+  class CustomReader extends Reader{
+    constructor(action){
+      super(action);
+
+      this.data = {};
+    }
+
+    _perform(inputList){
       const result = {};
 
       for (const input of inputList){
-        result[input.name] = input.value;
+        result[input.name] = this.data[input.name];
       }
 
-      return result;
+      return Promise.resolve(result);
+    }
+  }
+
+  class CustomWriter extends Writer{
+    constructor(value){
+      super(value);
+
+      this.data = {};
+    }
+
+    _errorOutput(){
+      return Object.assign(this.data, super._errorOutput());
+    }
+
+    _successOutput(){
+      return Object.assign(this.data, super._successOutput());
     }
   }
 
@@ -28,32 +51,29 @@ describe('Handler:', () => {
     constructor(...args){
       super(...args);
 
-      this.inputData = {};
-      this.renderSuccessOutput = null;
-      this.renderErrorOutput = null;
+      this.testData = {};
+      this.result = {};
     }
 
-    async loadToAction(action){
-
-      // calling super class that sets the session to the action
-      await Handler.prototype.loadToAction.call(this, action, new CustomParser(action));
-
-      for (const inputName in this.inputData){
-        action.input(inputName).value = this.inputData[inputName];
-      }
+    _createReader(action, options){
+      const reader = super._createReader(action, options);
+      reader.data = this.testData;
+      return reader;
     }
 
-    _successOutput(value){
-      this.renderSuccessOutput = super._successOutput(value);
-      return this.renderSuccessOutput;
-    }
-
-    _errorOutput(err){
-      this.renderErrorOutput = super._errorOutput(err);
-      return this.renderErrorOutput;
+    _createWriter(value, options){
+      const writer = super._createWriter(value, options);
+      writer.data = this.result;
+      return writer;
     }
   }
-  Handler.registerHandler(CustomHandler);
+
+  before(() => {
+    Handler.registerHandler(CustomHandler);
+    Handler.registerReader(CustomReader, 'customHandler');
+    Handler.registerWriter(CustomWriter, 'customHandler');
+    Oca.registerAction(testutils.Actions.Shared.PlainObjectResult, 'plainObjectResult');
+  });
 
   it('Should check if the handler has been registered', () => {
     assert(Oca.createHandler('CustomHandler') instanceof CustomHandler);
@@ -74,12 +94,20 @@ describe('Handler:', () => {
     }
   });
 
-  it('Should register an handler with a custom name', () => {
+  it('Should test the registration of reader and writer for a handler with a custom name', () => {
     class CustomHandlerB extends CustomHandler{}
-    Handler.registerHandler(CustomHandlerB, 'CustomHandlerBName');
+    class CustomReaderB extends CustomReader{}
+    class CustomWriterB extends CustomWriter{}
 
-    assert(Handler.registeredHandler('CustomHandlerBName'));
-    assert(Oca.createHandler('CustomHandlerBName') instanceof CustomHandlerB);
+    Handler.registerHandler(CustomHandlerB, 'customHandlerBName');
+    Handler.registerReader(CustomReaderB, 'customHandlerBName');
+    Handler.registerWriter(CustomWriterB, 'customHandlerBName');
+
+    assert.equal(Handler.registeredHandler('customHandlerBName'), CustomHandlerB);
+    assert(Oca.createHandler('customHandlerBName') instanceof CustomHandlerB);
+
+    assert.equal(Handler.registeredReader('customHandlerBName'), CustomReaderB);
+    assert.equal(Handler.registeredWriter('customHandlerBName'), CustomWriterB);
   });
 
   it('Should check the registered handler names', () => {
@@ -139,17 +167,16 @@ describe('Handler:', () => {
     return (async () => {
       Handler.registerHandler(CustomHandler);
       const handler = Oca.createHandler('CustomHandler');
+      handler.testData = {
+        a: 'text',
+        b: 20,
+      };
 
-      const action = new testutils.Actions.Shared.PlainObjectResult();
-      action.input('a').value = 'text';
-      action.input('b').value = 20;
-
-      await handler.loadToAction(action);
-      const result = await action.execute();
+      const result = await handler.execute('plainObjectResult');
 
       // testing the result of the action
-      assert.equal(result.a, action.input('a').value);
-      assert.equal(result.b, action.input('b').value);
+      assert.equal(result.a, handler.testData.a);
+      assert.equal(result.b, handler.testData.b);
 
     })();
   });
@@ -158,22 +185,21 @@ describe('Handler:', () => {
     return (async () => {
       Handler.registerHandler(CustomHandler);
       const handler = Oca.createHandler('CustomHandler');
+      handler.testData = {
+        a: 'A value',
+        b: 30,
+      };
 
-      const action = new testutils.Actions.Shared.PlainObjectResult();
-      action.input('a').value = 'A value';
-      action.input('b').value = 30;
-
-      await handler.loadToAction(action);
-      const result = await action.execute();
+      const result = await handler.execute('plainObjectResult');
       handler.output(result);
 
       // testing the result of the action
-      assert.equal(result.a, action.input('a').value);
-      assert.equal(result.b, action.input('b').value);
+      assert.equal(result.a, handler.testData.a);
+      assert.equal(result.b, handler.testData.b);
 
       // testing what was rendered
-      assert.equal(handler.renderSuccessOutput.data.a, action.input('a').value);
-      assert.equal(handler.renderSuccessOutput.data.b, action.input('b').value);
+      assert.equal(handler.result.data.a, handler.testData.a);
+      assert.equal(handler.result.data.b, handler.testData.b);
 
     })();
   });
@@ -185,8 +211,13 @@ describe('Handler:', () => {
     }
 
     Handler.registerHandler(CustomSessionEventHandler);
-    CustomSessionEventHandler.onFinalizeError((err) => {
-      if (err.message === 'Should fail'){
+    Handler.registerReader(CustomReader, 'customSessionEventHandler');
+    Handler.registerWriter(CustomWriter, 'customSessionEventHandler');
+
+    CustomSessionEventHandler.onFinalizeError((err, name, mask) => {
+      if (err.message === 'Should fail'
+        && name === 'customSessionEventHandler'.toLowerCase()
+        && mask === '*'){
         done();
       }
       else{
@@ -197,13 +228,12 @@ describe('Handler:', () => {
     (async () => {
       const handler = Oca.createHandler('CustomSessionEventHandler');
       handler.session.wrapup.addWrappedPromise(() => Promise.reject(new Error('Should fail')));
+      handler.testData = {
+        a: 'A value',
+        b: 30,
+      };
 
-      const action = new testutils.Actions.Shared.PlainObjectResult();
-      action.input('a').value = 'A value';
-      action.input('b').value = 30;
-
-      await handler.loadToAction(action);
-      const result = await action.execute();
+      const result = await handler.execute('plainObjectResult');
       handler.output(result);
 
     })().then().catch(done);
@@ -214,30 +244,24 @@ describe('Handler:', () => {
       Handler.registerHandler(CustomHandler);
       const handler = Oca.createHandler('CustomHandler');
       handler.session.wrapup.addWrappedPromise(() => Promise.reject(new Error('Should fail')));
+      handler.testData = {
+        a: 'A value',
+        b: 30,
+      };
 
-      const action = new testutils.Actions.Shared.PlainObjectResult();
-      action.input('a').value = 'A value';
-      action.input('b').value = 30;
-
-      await handler.loadToAction(action);
-      const result = await action.execute();
-      handler.output(result, action.metadata.result, false);
+      const result = await handler.execute('plainObjectResult');
+      handler.output(result, {}, false);
     })();
   });
 
   it('Should test if the exception is being rendered by the handler', () => {
     return (async () => {
-      Handler.registerHandler(CustomHandler);
       const handler = Oca.createHandler('CustomHandler');
 
-      const action = new testutils.Actions.Shared.PlainObjectResult();
-
       // leaving the value empty on purpose
-      action.input('a').value = null;
       let failed = true;
       try{
-        await handler.loadToAction(action);
-        await action.execute();
+        await handler.execute('plainObjectResult');
         failed = false;
       }
       catch(err){
@@ -253,7 +277,7 @@ describe('Handler:', () => {
         throw new Error('Expected exception');
       }
 
-      assert.equal(handler.renderErrorOutput.error.code, Oca.Settings.get('error/validationFail/status'));
+      assert.equal(handler.result.error.code, Oca.Settings.get('error/validationFail/status'));
     })();
   });
 });

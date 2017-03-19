@@ -10,60 +10,69 @@ const _result = Symbol('result');
 
 
 /**
- * A parser used by the {@link Handler} to collect information based on
- * the {@link Action}.
+ * A reader is used by the handler during the execution ({@link Handler.execute}).
+ * to collect the information should be used by the action.
  *
- * In case you want to implement a new parser the only method that should be
- * re-implemented is {@link HandlerParser._perform} all the other members
- * in this classes don't need to be re-implemented. The options for the parsing
- * should be defined by via {@link HandlerParser.options}.
+ * In case of new implements the only method expected to be re-implemented is
+ * {@link Reader._perform} by implementing that you can provide support for
+ * custom options ({@link Reader.options}) that are passed by the handler
+ * ({@link Handler.execute}) to the reader.
  *
- * When a value is found for the input, it gets loaded via {@link Input.parseValue}
+ * When a value is found for an input the value is decoded through {@link Input.parseValue}
  * where each input implementation has its own way of parsing the serialized data,
  * to find out about how a value is serialized for an specific input type you could simply
- * set an arbitrary value to the input you are interessed then query it back through
- * {@link Input.serializeValue}. Also, you can take a look in the basic serialization
- * reference for the inputs blundled with Oca:
+ * set an arbitrary value to an input then query it back through
+ * {@link Input.serializeValue}. The reference bellow shows the basic serialization
+ * for the inputs blundled with Oca:
  *
- * Input Type | Scalar Serialization | Vector Serialization (it's compatible with JSON)
+ * Input Type | Scalar Serialization | Vector Serialization (compatible with JSON)
  * --- | --- | ---
- * {@link Text} | 'value' | '["valueA","valueB"]'
- * {@link FilePath} | '/tmp/a.txt' | '["/tmp/a.txt","/tmp/b.txt"]'
- * {@link Bool} | 'true' or '1' | '[true,false]' or '[1,0]'
- * {@link Numeric} | '20' | '[20,30]'
- * {@link Email} | 'test@email.com' | '["test@email.com","test2@email.com"]'
- * {@link Ip} | '192.168.0.1' | '["192.168.0.1","192.168.0.2"]'
- * {@link Timestamp} | '2017-02-02T22:26:30.431Z' | '["2017-02-02T22:26:30.431Z","2017-02-02T22:27:19.066Z"]'
- * {@link UUID} | '075054e0-810a-11e6-8c1d-e5fb28c699ca' | '["075054e0-810a-11e6-8c1d-e5fb28c699ca","98e631d3-6255-402a-88bd-66056e1ca9df"]'
- * {@link Url} | '#http#://www.google.com' | '["#http#://www.google.com","#http#://www.wikipedia.com"]'
- * {@link Version} | '10.1.1' | '["10.1.1","10.2"]'
- * {@link Buf} | 'aGVsbG8=' | '["aGVsbG8=","d29ybGQ="]'
+ * {@link Text} | `'value'` | `'["valueA","valueB"]'`
+ * {@link FilePath} | `'/tmp/a.txt'` | `'["/tmp/a.txt","/tmp/b.txt"]'`
+ * {@link Bool} | `'true`' or `'1'` | `'[true,false]'` or `'[1,0]'`
+ * {@link Numeric} | `'20'` | `'[20,30]'`
+ * {@link Email} | `'test@email.com'` | `'["test@email.com","test2@email.com"]'`
+ * {@link Ip} | `'192.168.0.1'` | `'["192.168.0.1","192.168.0.2"]'`
+ * {@link Timestamp} | `'2017-02-02T22:26:30.431Z'` | \
+ * `'["2017-02-02T22:26:30.431Z","2017-02-02T22:27:19.066Z"]'`
+ * {@link UUID} | `'075054e0-810a-11e6-8c1d-e5fb28c699ca'` | \
+ * `'["075054e0-810a-11e6-8c1d-e5fb28c699ca","98e631d3-6255-402a-88bd-66056e1ca9df"]'`
+ * {@link Url} | `'#http#://www.google.com'` | \
+ * `'["#http#://www.google.com","#http#://www.wikipedia.com"]'`
+ * {@link Version} | `'10.1.1'` | `'["10.1.1","10.2"]'`
+ * {@link Buf} | `'aGVsbG8='` | `'["aGVsbG8=","d29ybGQ="]'`
  *
- * <br/>**Hidding inputs from parsers:**
- * A parser only sees inputs that are capable of serialization
- * ({@link Input.isSerializable}) and visible inputs. Therefore, any input assigned
- * with the property `hidden` is going to be visible by the parser, use this property
- * to hide any input you don't want to expose, for instance:
+ * <br/>**Hidding inputs from readers:**
+ * A reader only sees inputs that are capable of serialization
+ * ({@link Input.isSerializable}) or visible inputs. Therefore, any input assigned
+ * with the property `hidden` is not visible by readers, for instance:
  *
  * ```
  * class Example extends Oca.Action{
  *   constructor(){
  *     super();
- *     this.createInput('parserCantSeeMe: numeric', {hidden: true});
- *     this.createInput('parserSeeMe: numeric');
+ *     this.createInput('readerCantSeeMe: numeric', {hidden: true});
+ *     this.createInput('readerSeeMe: numeric');
  *   }
  * ```
  */
-class HandlerParser{
+class Reader{
+
+  /**
+   * Creates a reader.
+   *
+   * @param {Action} action - action used for the querying of the value
+   */
   constructor(action){
     assert(action instanceof Action, 'Invalid action instance');
+
     this[_action] = action;
     this[_result] = null;
-    this[_options] = Object.create(null);
+    this[_options] = {};
   }
 
   /**
-   * Returns the action that is associated with the parsing
+   * Returns the action that is associated with the reader.
    *
    * @type {Action}
    */
@@ -72,7 +81,8 @@ class HandlerParser{
   }
 
   /**
-   * Returns a plain object that contains parsing options defined by the {@link Handler}
+   * Returns a plain object that contains reader options.
+   *
    * @type {Object}
    */
   get options(){
@@ -99,11 +109,11 @@ class HandlerParser{
   }
 
   /**
-   * Parses the input values and returns it through a plain object.
+   * Reads the input values and returns it through a plain object.
    *
    * @return {Promise<object>}
    */
-  async parseInputValues(){
+  async inputValues(){
 
     if (!this[_result]){
       await this._parse();
@@ -113,14 +123,14 @@ class HandlerParser{
   }
 
   /**
-   * Parses the autofill information and returns it through a plain object.
+   * Reads the autofill information and returns it through a plain object.
    *
-   * If the parsed autofill information is already assigned under autofill ({@link Action.session})
+   * If the autofill information is already assigned under autofill ({@link Action.session})
    * then that information is skipped otherwise it adds the parsed information the result.
    *
    * @return {Promise<Object>}
    */
-  async parseAutofillValues(){
+  async autofillValues(){
     if (!this[_result]){
       await this._parse();
     }
@@ -149,7 +159,7 @@ class HandlerParser{
    *
    * It should return a plain object containing the input name and the value for that.
    * Where any input value from either String or Array types are considered valid values that
-   * are later ({@link HandlerParser.parseInputValues}, {@link HandlerParser.parseAutofillValues})
+   * are later ({@link Reader.inputValues}, {@link Reader.autofillValues})
    * used to parse the value of the input ({@link Input.parseValue}), otherwise the value
    * is ignored.
    *
@@ -168,10 +178,9 @@ class HandlerParser{
 
   /**
    * Auxiliary method that triggers the parsing if needed (in case it has not been
-   * triggered yet)
+   * triggered yet).
    *
    * @return {Promise}
-   *
    * @private
    */
   async _parse(){
@@ -199,4 +208,4 @@ class HandlerParser{
   }
 }
 
-module.exports = HandlerParser;
+module.exports = Reader;

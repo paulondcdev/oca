@@ -7,7 +7,7 @@ const Oca = require('../../src');
 const mkdirs = Oca.Util.mkdirs;
 
 
-describe('mkdirs:', () => {
+describe('Util mkdirs:', () => {
 
   const temporaryFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'UtilMkdirs'));
   const filePath = path.join(temporaryFolder, 'b1');
@@ -31,7 +31,9 @@ describe('mkdirs:', () => {
   it('Should create the path levels (a/b/c) with the default permission (0777)', () => {
 
     return (async () => {
-      await mkdirs(pathLevelsA);
+      // adding intentionally a separator at end of the path (used to test
+      // the path creation routine)
+      await mkdirs(`${pathLevelsA}${path.sep}`);
 
       if (!fs.existsSync(pathLevelsA)){
         throw new Error(`Could not create path levels: ${pathLevelsA}`);
@@ -63,14 +65,14 @@ describe('mkdirs:', () => {
     return mkdirs(temporaryFolder);
   });
 
-  it('Should fail to create the path levels when there is a file named and in the same location as the required directories', (done) => {
+  it('Should fail to create the path levels when there is a file named with the name of the level that needs to be created', (done) => {
 
     (async () => {
       await mkdirs(invalidPathLevelsA);
     })().then((result) => {
       done(new Error('Unexpected result'));
     }).catch((err) => {
-      done(err.code === 'ENOTDIR' ? null : err);
+      done(['ENOENT', 'ENOTDIR'].includes(err.code) ? null : err);
     });
   });
 });
