@@ -105,6 +105,7 @@
           "utf",
           "cli",
           "mkdirs",
+          "br",
           "dev",
           "neodoc",
           "parallelization",
@@ -117,6 +118,7 @@
           "expressjs",
           "revalidate",
           "metadata",
+          "cryptographic",
 
           // modules
           "promisify",
@@ -125,7 +127,8 @@
           "os",
           "fs",
           "uuid",
-          "sizeof"
+          "sizeof",
+          "xxhash"
         ],
         "skipIfMatch": [
           "http?.://[^s]*",
