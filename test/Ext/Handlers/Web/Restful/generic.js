@@ -182,7 +182,7 @@ describe('Web Restful Generic:', () => {
 
   it('Should perform an action through rest specifying custom parameters', (done) => {
 
-    request.patch(`http://localhost:${port}/A/20/test?b=10`, (err, response, body) => {
+    request.patch(`http://localhost:${port}/A/20/test`, {formData: {b: 10}}, (err, response, body) => {
 
       if (err){
         return done(err);
@@ -247,7 +247,7 @@ describe('Web Restful Generic:', () => {
 
   it('Should fail to perform an action through PATCH when the action is webfied with a different method', (done) => {
 
-    request.patch(`http://localhost:${port}/A?a=10&b=30`, (err, response, body) => {
+    request.patch(`http://localhost:${port}/A?a=10&b=30`, {formData: {a: 10, b: 30}}, (err, response, body) => {
 
       if (err){
         return done(err);
@@ -286,39 +286,12 @@ describe('Web Restful Generic:', () => {
     });
   });
 
-  it('Should perform an action with the context set', (done) => {
-
-    request.get(`http://localhost:${port}/A?a=10&b=30&context=test`, {
-    }, (err, response, body) => {
-      if (err){
-        return done(err);
-      }
-
-      let error = null;
-
-      try{
-        assert.equal(response.statusCode, 200);
-
-        const result = JSON.parse(body);
-        assert.equal(result.context, 'test');
-      }
-      catch(errr){
-        error = errr;
-      }
-
-      done(error);
-    });
-  });
-
   it('Should test the defaults of the web handler', (done) => {
-    class WebCustomParser extends Oca.Ext.Handlers.Web{
-      loadToAction(action){
-        return super.loadToAction(action);
-      }
+    class WebCustom extends Oca.Ext.Handlers.Web{
     }
 
     Oca.registerAction(testutils.Actions.Shared.Sum, 'sum.testDefault');
-    Oca.registerHandler(WebCustomParser, 'web', 'sum.testDefault');
+    Oca.registerHandler(WebCustom, 'web', 'sum.testDefault');
     Oca.webfyAction('sum.testDefault', 'get', {auth: false, restRoute: '/testDefault'});
     Oca.restful(app);
 

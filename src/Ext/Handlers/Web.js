@@ -1,13 +1,9 @@
-const path = require('path');
-const os = require('os');
 const assert = require('assert');
-const stream = require('stream');
 const TypeCheck = require('js-typecheck');
 const Settings = require('../../Settings');
 const Action = require('../../Action');
 const Input = require('../../Input');
 const Handler = require('../../Handler');
-const WebRequest = require('../HandlerParsers/WebRequest');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
@@ -18,27 +14,22 @@ const _response = Symbol('response');
 /**
  * Handles the web integration through expressjs and passportjs.
  *
- * It enables the execution of actions that are triggered by web requests by parsing
+ * It enables the execution of actions that are triggered by web requests by reading
  * ({@link WebRequest}) the information that is passed to the action
- * ({@link Web.loadToAction}) and taking care of the serialization of the response
+ * ({@link Web.execute}) and taking care of the output of the response
  * ({@link Web.output}).
  *
  * In order to tell which actions are visible by this handler, they are required to
- * be registered via a webfication process that describes their route, request method
- * and if it requires authentication.
- *
- * Actions can become webfied through a process that describes the request method
- * that should be used to access the {@link Action}. Also, this process supports
- * additional options such as if the action requires authentication and the
- * rest route: {@link Web.webfyAction}
+ * be registered via a webfication process that describes their request method,
+ * route and if it requires authentication.
  *
  * ```
- * Oca.webfyAction('myRegisteredAction', 'get', {auth: true, restRoute: '/myApi/action'});
+ * Oca.webfyAction('myRegisteredAction', 'get', {restRoute: '/myApi/action', auth: true});
  * ```
  *
  * In case of actions that require authentication (`auth: true`) Oca checks if
- * the authentication has ben executed. A passport authentication middleware can be
- * defined via {@link addBeforeAuthAction}:
+ * the authentication has ben executed. Therefore a passport authentication middleware
+ * can be defined via {@link addBeforeAuthAction}:
  *
  * ```
  * Oca.addBeforeAuthAction(passport);
@@ -106,38 +97,6 @@ class Web extends Handler{
   }
 
   /**
-   * Collects the parsed information from the request and loads it to the action using
-   * {@link Handler.loadToAction}.
-   *
-   * By the default it uses the {@link WebRequest} parser if none parser is specified.
-   *
-   * Options assigned to the parser:
-   * - uploadDirectory - value of {@link Web.uploadDirectory}
-   * - uploadMaxFileSize - value of {@link Web.uploadMaxFileSize}
-   * - uploadPreserveFileName - value of {@link Web.uploadPreserveFileName}
-   *
-   * @param {Action} action - action that should be used
-   * @param {HandlerParser} parser - parser that should be used to query the
-   * information which will be loaded to the action.
-   * @return {Promise<*>} returns the value of the action
-   */
-  loadToAction(action, parser=null){
-    assert(this.request, 'request not defined!');
-    assert(this.response, 'response not defined!');
-    assert(action instanceof Action, 'Invalid action type!');
-
-    // creating request parser if needed
-    const useParser = parser || new WebRequest(action, this.request);
-
-    // setting the parsing options
-    useParser.options.uploadDirectory = this.constructor.uploadDirectory;
-    useParser.options.uploadMaxFileSize = this.constructor.uploadMaxFileSize;
-    useParser.options.uploadPreserveFileName = this.constructor.uploadPreserveFileName;
-
-    return super.loadToAction(action, useParser);
-  }
-
-  /**
    * Sets the request object created by the express server.
    *
    * It also includes the request as part of the session: `session.get('request')`
@@ -198,39 +157,6 @@ class Web extends Handler{
   }
 
   /**
-   * Returns the upload directory. By default it looks for the value at
-   * `Settings.get('handler/web/uploadDirectory')` (default: `TMPDIR/upload`)
-   *
-   * @type {string}
-   */
-  static get uploadDirectory(){
-    return Settings.get('handler/web/uploadDirectory');
-  }
-
-  /**
-   * Returns the maximum upload size in bytes supported by requests.
-   * By default it looks for the value at `Settings.get('handler/web/uploadMaxFileSize')`
-   * (default: 10485760)
-   *
-   * @type {number}
-   */
-  static get uploadMaxFileSize(){
-    return Settings.get('handler/web/uploadMaxFileSize');
-  }
-
-  /**
-   * Returns if the uploaded files should keep their original names, otherwise they
-   * are renamed to random unique names.
-   * By default it looks for the value at `Settings.get('handler/web/uploadPreserveFileName')`
-   * (default: true)
-   *
-   * @type {boolean}
-   */
-  static get uploadPreserveFileName(){
-    return Settings.get('handler/web/uploadPreserveFileName');
-  }
-
-  /**
    * Makes an action available for requests.
    *
    * By doing that the action gets visible for the {@link restful} and {@link middleware} support.
@@ -242,7 +168,7 @@ class Web extends Handler{
    * be available, for instance: `get`, `post`, `put`, `delete` (...). Multiples methods
    * can be defined through an array of method names.
    * @param {Object} options - custom options
-   * @param {boolean} [options.auth=null] - boolean telling if the action requires authorization
+   * @param {boolean} [options.auth=null] - boolean telling if the action requires authentication
    * when set to `null` (default) this information is driven by the setting
    * ⚠ `handler/web/requireAuthByDefault` (default: `false`).
    * @param {string} [options.restRoute] - the rest route from which the action should be executed from
@@ -409,8 +335,8 @@ class Web extends Handler{
    * class MyAction extends Oca.action{
    *   constructor(){
    *      super();
-   *      // gets assigned with `something` value
-   *      this.createInput('a: text', {autofill: 'customValue'})
+   *      // gets assigned with `something`
+   *      this.createInput('a: text', {autofill: 'customValue'});
    *   }
    * }
    * ```
@@ -482,146 +408,47 @@ class Web extends Handler{
   }
 
   /**
-   * Implements the response for an error value.
+   * Creates an instance of a reader for the current handler
    *
-   * The error response gets automatically encoded using json, following the basics
-   * of google's json style guide. In case of an error status `500` the standard
-   * result is ignored and a message `Internal Server Error` is used instead.
+   * This passes the {@link Web.request} to the reader.
    *
-   * *Output options*:
-   * Currently this output does not have any options in place, therefore any
-   * option passed to this output will be ignored.
-   *
-   * @param {Error} err - exception that should be outputted as error response
-   * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options
-   * @return {Promise<Object>} data that is going to be serialized
+   * @param {Action} action - action instance used by the reader to parse the values
+   * @param {Object} options - plain object containing the options passed to the reader
+   * @return {Reader}
    * @protected
    */
-  _errorOutput(err, outputOptions){
+  _createReader(action, options){
+    const reader = super._createReader(action, options);
 
-    let result = super._errorOutput(err);
-    const status = result.error.code;
-    this._addTopLevelProperties(result);
+    // setting request to the reader
+    reader.request = this.request;
 
-    // should not leak any error message for the status code 500
-    if (status === 500){
-      result = 'Internal Server Error';
-    }
-
-    this.response.status(status).json(result);
-
-    return result;
+    return reader;
   }
 
   /**
-   * Implements the response for a success value.
+   * Creates an instance of a writer for the current handler.
    *
-   * *Output options*: It can be used to defined custom headers to the response, by adding the 'header'
-   * entry under the options where the children should represent a header type & value. Make
-   * sure that the children are defined the using the camelCase convention, for
-   * instance:
+   * This passes the {@link Web.response} to the reader and
+   * the request.query.context as an option to the writer.
    *
-   * ```
-   * // defining 'Content-Type' header through the output options
-   * options.header.contentType = 'application/octet-stream'
-   *
-   * // defining 'Content-Type' header through an action (used in the restful support)
-   * class MyAction extends Oca.Action{
-   *    _perform(data){
-   *
-   *      // 'Content-Type' header
-   *      this.metadata.result.web = {
-   *        header: {
-   *          contentType: 'application/octet-stream',
-   *        }
-   *      };
-   *
-   *      // ...
-   *    }
-   * }
-   * ```
-   *
-   * Also, headers can be defined through 'before action middlewares'
-   * ({@link Web.addBeforeAction} and {@link Web.addBeforeAuthAction})
-   *
-   * Readable streams are piped using 'application/octet-stream' by default
-   * (if it has not been defined).
-   *
-   * Non readable stream values are automatically encoded using json, following the
-   * basics of google's json style guide.
-   *
-   * @param {*} value - value to be outputted
-   * @param {Object} outputOptions - plain object containing custom options that should be used
-   * by the output where each handler implementation contains their own set of options
-   * @return {Object} Object that is going to be serialized
-   * @see https://google.github.io/styleguide/jsoncstyleguide.xml
+   * @param {*} value - arbitrary value passed to the writer
+   * @param {Object} options - plain object containing the options passed to the writer
+   * @return {Writer}
    * @protected
    */
-  _successOutput(value, outputOptions){
+  _createWriter(value, options){
+    const writer = super._createWriter(value, options);
 
-    const result = super._successOutput(value);
+    // setting response to the writer
+    writer.response = this.response;
 
-    // setting header
-    this._setResponseHeaders(outputOptions);
-
-    // readable stream
-    if (result instanceof stream.Readable){
-
-      // setting a default content-type for readable stream in case
-      // it has not been set previously
-      if (!(outputOptions.header && outputOptions.header.contentType)){
-        this.response.setHeader('Content-Type', 'application/octet-stream');
-      }
-
-      result.pipe(this.response);
-      return;
-    }
-
-    // json output
-    this._addTopLevelProperties(result);
-    this.response.status(200).json(result);
-
-    return result;
-  }
-
-  /**
-   * Looks for any header member defined as part of the options and sets them
-   * to the response header. It expects a camelCase name convention for the header name
-   *  where it gets translated to the header name convention, for instance:
-   * 'options.header.contentType' translates to 'Content-Type'.
-   *
-   * @param {*} options - options passed to the output
-   * @private
-   */
-  _setResponseHeaders(options){
-
-    if (options.header){
-      for (const headerName in options.header){
-        const convertedHeaderName = headerName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-        // assigning a header value to the response
-        this.response.setHeader(convertedHeaderName, options.header[headerName]);
-      }
-    }
-  }
-
-  /**
-  * Appends common properties to the output
-  *
-  * @param {Object} result - input result object
-  * @see https://google.github.io/styleguide/jsoncstyleguide.xml
-  * @private
-  */
-  _addTopLevelProperties(result){
-
-    // api version
-    result.apiVersion = Settings.get('apiVersion');
-
-    // context
+    // adding context as part of the result
     if ('context' in this.request.query){
-      result.context = this.request.query.context;
+      writer.options.context = this.request.query.context;
     }
+
+    return writer;
   }
 
   /**
@@ -685,15 +512,12 @@ class Web extends Handler{
 
       // creates the action
       const web = res.locals.web;
-      const action = Action.create(actionName, web.session);
       const render = (!TypeCheck.isCallable(responseCallback));
 
       // executing the action middleware
-      web.loadToAction(action).then(() => {
-        return action.execute();
-      }).then((result) => {
+      web.execute(actionName).then((result) => {
         if (render){
-          web.output(result, action.metadata.result.web);
+          web.output(result);
         }
         // callback that handles the response (Oca.middleware)
         else{
@@ -729,9 +553,6 @@ class Web extends Handler{
 }
 
 // default settings
-Settings.set('handler/web/uploadDirectory', path.join(os.tmpdir(), 'upload'));
-Settings.set('handler/web/uploadMaxFileSize', 10 * 1024 * 1024);
-Settings.set('handler/web/uploadPreserveFileName', true);
 Settings.set('handler/web/requireAuthByDefault', false); // ⚠ BE CAREFUL
 
 // registering input properties

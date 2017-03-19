@@ -1,9 +1,12 @@
-const formidable = require('formidable');
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const formidable = require('formidable');
 const promisify = require('es6-promisify');
 const TypeCheck = require('js-typecheck');
-const HandlerParser = require('../../HandlerParser');
+const Settings = require('../../Settings');
+const Handler = require('../../Handler');
+const Reader = require('../../Reader');
 const Util = require('../../Util');
 
 // promisifying
@@ -16,12 +19,13 @@ const stat = promisify(fs.stat);
 const _temporaryFolders = Symbol('temporaryFolders');
 const _request = Symbol('request');
 
+
 /**
- * Web request parser.
+ * Web request reader.
  *
- * This parser is used by the {@link Web} handler to query values from a request.
+ * This reader is used by the {@link Web} handler to query values from a request.
  *
- * All serializable inputs are supported by this parser. Also, it deals with
+ * All serializable inputs are supported by this reader. Also, it deals with
  * file uploads automatically, therefore any {@link FilePath} input becomes a potential
  * upload field, when that is the case the input gets assigned with the file path
  * about where the file has been uploaded to. By default it tries to keep the original
@@ -29,7 +33,7 @@ const _request = Symbol('request');
  * control this behavior via `uploadPreserveFileName` (if disabled each uploaded file
  * gets named with an unique name).
  *
- * This parser works by looking for the input names in the request, for instance:
+ * This reader works by looking for the input names in the request, for instance:
  *
  * `http://.../?myInput=10&myOtherInput=20`
  *
@@ -48,11 +52,11 @@ const _request = Symbol('request');
  * to find out about how a value is serialized for an specific input type you could simply
  * set an arbitrary value to the input you are interessed then query it back through
  * {@link Input.serializeValue}. Also, Oca provides a reference datasheet
- * about the serialization forms for the inputs bundled with it, found at {@link HandlerParser}.
+ * about the serialization forms for the inputs bundled with it, found at {@link Reader}.
  *
  * **Route parameters:**
  * If an webfied action contains route parameters defined (`/users/:userId/books/:bookId`)
- * this parser is going to try to find them under the action input names.
+ * this reader is going to try to find them under the action input names.
  * Therefore when a route parameter matches to the name of an input then the value of
  * the parameter is loaded to the input.
  *
@@ -74,41 +78,93 @@ const _request = Symbol('request');
  * ```
  *
  * **Input value associating in request methods**:
- * `Post` and `Put` methods are expected to send the value of the inputs using a form,
- * other methods should do that through the query string.
+ * `Post`, `Patch` and `Put` methods are expected to send the value of the inputs
+ * through a form-data, other methods should use the query string.
+ *
+ * <h2>Options Summary</h2>
+ *
+ * Option Name | Description
+ * --- | ---
+ * uploadDirectory | directory used for placing file uploads in, default value\
+ * (`TMP_DIR/upload`) driven by:\
+ * <br>`Settings.get('reader/webRequest/uploadDirectory')`
+ * uploadPreserveFileName | enabled by default it tries to keep the original final name of \
+ * uploads, any illegal character is replaced by underscore, otherwise if disabled \
+ * it gives a random name to the upload, default value driven by: \
+ * <br>`Settings.get('reader/webRequest/uploadPreserveFileName')`
+ * uploadMaxFileSize | total maximum file size about all uploads in bytes, \
+ * default value (`4 mb`) driven by: \
+ * <br>`Settings.get('reader/webRequest/uploadMaxFileSize')`
+ * maxFields | Limits the number of fields that the querystring parser will decode, \
+ * default value (`1000`) driven by: \
+ * <br>`Settings.get('reader/webRequest/maxFields')`
+ * maxFieldsSize | Limits the amount of memory all fields together (except files) can\
+ * allocate in bytes, default value (`2 mb`) driven by:\
+ * <br>`Settings.get('reader/webRequest/maxFieldsSize')` [`2 mb`]
+ *
+ * <br/>Example about defining a custom `uploadMaxFileSize` option from inside of an
+ * action through the metadata support:
+ *
+ * ```
+ * class MyAction extends Oca.Action{
+ *    constructor(){
+ *      super();
+ *
+ *      // 'uploadMaxFileSize' option
+ *      this.metadata.handler.web = {
+ *        readOptions: {
+ *          uploadMaxFileSize: 10 * 1024 * 1024,
+ *        },
+ *      };
+ *    }
+ * }
+ * ```
  */
-class WebRequest extends HandlerParser{
+class WebRequest extends Reader{
 
   /**
    * Creates a web request
    *
-   * @param {Action} action - action that should be used by the parser
+   * @param {Action} action - action that should be used by the reader
    * @param {Object} request - request object created by express-js
    */
-  constructor(action, request){
+  constructor(action){
     super(action);
 
-    // options available for the parser
-    this.options.uploadDirectory = null;
-    this.options.uploadPreserveFileName = null;
-    this.options.uploadMaxFileSize = null;
+    this[_request] = null;
+
+    // default options
+    this.options.uploadDirectory = Settings.get('reader/webRequest/uploadDirectory');
+    this.options.uploadPreserveFileName = Settings.get('reader/webRequest/uploadPreserveFileName');
+    this.options.uploadMaxFileSize = Settings.get('reader/webRequest/uploadMaxFileSize');
+    this.options.maxFields = Settings.get('reader/webRequest/maxFields');
+    this.options.maxFieldsSize = Settings.get('reader/webRequest/maxFieldsSize');
 
     this[_temporaryFolders] = [];
-    this[_request] = request;
+  }
+
+  /**
+   * Sets the request object created by express
+   *
+   * @param {Object} value - req object
+   * @see http://expressjs.com/en/api.html#req
+   */
+  set request(value){
+    this[_request] = value;
   }
 
   /**
    * Returns the request object created by express
    *
    * @type {Object}
-   * @see http://expressjs.com/en/api.html#res
+   * @see http://expressjs.com/en/api.html#req
    */
   get request(){
     return this[_request];
   }
 
   /**
-   * Implements the web request parser
+   * Implements the web request reader
    *
    * @param {Array<Input>} inputList - Valid list of inputs that should be used for
    * the parsing
@@ -116,13 +172,12 @@ class WebRequest extends HandlerParser{
    * @protected
    */
   async _perform(inputList){
-
     const result = Object.create(null);
 
     // handling body fields
     let bodyFields = null;
-    if (this.request.method === 'POST' || this.request.method === 'PUT'){
-      bodyFields = await this._bodyFields();
+    if (['POST', 'PUT', 'PATCH'].includes(this.request.method)){
+      bodyFields = await this._bodyFields(inputList);
     }
 
     // setting the action inputs based on the request parameters
@@ -315,10 +370,12 @@ class WebRequest extends HandlerParser{
     return new Promise((resolve, reject) => {
       const form = new formidable.IncomingForm();
       form.uploadDir = this.options.uploadDirectory;
+      form.maxFileSize = this.options.uploadMaxFileSize;
       form.keepExtensions = true;
       form.multiples = true;
       form.encoding = 'utf-8';
-      form.maxFieldsSize = this.options.uploadMaxFileSize;
+      form.maxFields = this.options.maxFields;
+      form.maxFieldsSize = this.options.maxFieldsSize;
 
       form.parse(this.request, (err, formFields, formFiles) => {
 
@@ -371,8 +428,8 @@ class WebRequest extends HandlerParser{
       /* jshint loopfunc:true */
       fs.rmdir(folder, (err) => {
 
-        // theoretically this method can be called multiple times by loadToAction multiple
-        // times for the same request
+        // theoretically this method can be called multiple times by handler.execute
+        // multiple times for the same request
         delete this[_temporaryFolders][folder];
 
         /* istanbul ignore next */
@@ -385,5 +442,15 @@ class WebRequest extends HandlerParser{
 
   static _checkedUploadDirectories = [];
 }
+
+// default settings
+Settings.set('reader/webRequest/uploadDirectory', path.join(os.tmpdir(), 'upload'));
+Settings.set('reader/webRequest/uploadMaxFileSize', 4 * 1024 * 1024);
+Settings.set('reader/webRequest/uploadPreserveFileName', true);
+Settings.set('reader/webRequest/maxFields', 1000);
+Settings.set('reader/webRequest/maxFieldsSize', 2 * 1024 * 1024);
+
+// registering reader
+Handler.registerReader(WebRequest, 'web');
 
 module.exports = WebRequest;

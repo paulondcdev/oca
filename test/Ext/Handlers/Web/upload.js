@@ -1,9 +1,6 @@
 const assert = require('assert');
 const Oca = require('../../../../src');
 const testutils = require('../../../../testutils');
-const uuid = require('uuid');
-const path = require('path');
-const fs = require('fs');
 
 const Action = Oca.Action;
 const Settings = Oca.Settings;
@@ -21,14 +18,6 @@ describe('Web Upload:', () => {
   let server = null;
   let app = null;
   let port = null;
-  const uploadPreserveFileNameDefault = Settings.get('handler/web/uploadPreserveFileName');
-  const customUploadDirectory = path.join(Settings.get('handler/web/uploadDirectory'), uuid.v1());
-
-  class WebCustomUploadDir extends Oca.Ext.Handlers.Web{
-    static get uploadDirectory(){
-      return customUploadDirectory;
-    }
-  }
 
   class DisableRestrictWebAccessAction1 extends Action{
     constructor(){
@@ -52,29 +41,19 @@ describe('Web Upload:', () => {
     }
   }
 
-  class UploadActionKeepFile extends testutils.Actions.Shared.UploadAction{
-    _finalize(err, value){
-      return (err) ? Promise.reject(err) : Promise.resolve(value);
-    }
-  }
-
   before((done) => {
-
-    Oca.Handler.registerHandler(WebCustomUploadDir, 'web', 'uploadActionKeepFile');
 
     // registrations
     Oca.registerAction(testutils.Actions.Shared.UploadAction, 'uploadAction');
-    Oca.registerAction(UploadActionKeepFile, 'uploadActionKeepFile');
     Oca.registerAction(testutils.Actions.Shared.VectorUploadAction, 'vectorUploadAction');
     Oca.registerAction(DisableRestrictWebAccessAction1);
     Oca.registerAction(DisableRestrictWebAccessAction2);
 
     // webfying actions
     Oca.webfyAction(testutils.Actions.Shared.UploadAction, 'post', {restRoute: '/E'});
-    Oca.webfyAction('uploadActionKeepFile', 'put', {restRoute: '/E'});
+    Oca.webfyAction(testutils.Actions.Shared.VectorUploadAction, 'post', {restRoute: '/E/VectorUploadAction'});
     Oca.webfyAction(DisableRestrictWebAccessAction1, 'post', {auth: false, restRoute: '/E/DisableRestrictWebAccessAction1'});
     Oca.webfyAction(DisableRestrictWebAccessAction2, 'post', {auth: false, restRoute: '/E/DisableRestrictWebAccessAction2'});
-    Oca.webfyAction('vectorUploadAction', 'post', {restRoute: '/E/VectorUploadAction'});
 
     // auth
     passport.use(new BasicStrategy(
@@ -99,8 +78,6 @@ describe('Web Upload:', () => {
   });
 
   after(() => {
-    fs.rmdirSync(customUploadDirectory);
-
     if (server){
       server.close();
     }
@@ -236,51 +213,7 @@ describe('Web Upload:', () => {
     });
   });
 
-  it('Should perform an action through POST with single file upload (not keeping the original name)', (done) => {
-
-    Settings.set('handler/web/uploadPreserveFileName', false);
-
-    const postFormData = {
-      a: 'A value',
-
-      file: {
-        value: new Buffer([1, 2, 3]),
-        options: {
-          filename: 'foo.bin',
-          contentType: 'application/bin',
-        },
-      },
-    };
-
-    request.post({url: `http://localhost:${port}/E`, formData: postFormData}, (err, response, body) => {
-
-      // restoring the default value
-      Settings.set('handler/web/uploadPreserveFileName', uploadPreserveFileNameDefault);
-
-      if (err){
-        return done(err);
-      }
-
-      let error = null;
-
-      try{
-        assert.equal(response.statusCode, 200);
-
-        const result = JSON.parse(body);
-
-        assert.equal(result.data.fileHash, '039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81');
-        assert(result.data.fileName.startsWith('upload_'));
-        assert.equal(result.data.a, postFormData.a);
-      }
-      catch(errr){
-        error = errr;
-      }
-
-      done(error);
-    });
-  });
-
-  it('Should perform an action through POST with multiple files upload for the same input (vector) keeping the file names', (done) => {
+  it('Should perform an action through POST by uploading multiple files for the same input (vector) keeping the file names', (done) => {
 
     const postFormData = {
       // Pass a simple key-value pair
@@ -312,9 +245,6 @@ describe('Web Upload:', () => {
     };
 
     request.post({url: `http://localhost:${port}/E/VectorUploadAction`, formData: postFormData}, (err, response, body) => {
-
-      // restoring the default value
-      Settings.set('handler/web/uploadPreserveFileName', uploadPreserveFileNameDefault);
 
       if (err){
         return done(err);
@@ -330,119 +260,6 @@ describe('Web Upload:', () => {
         assert.equal(result.data['foo.bin'], '039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81');
         assert.equal(result.data['foo1.bin'], 'a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222');
         assert.equal(result.data['foo2.bin'], 'a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222');
-      }
-      catch(errr){
-        error = errr;
-      }
-
-      done(error);
-    });
-  });
-
-  it('Should perform an action through POST with multiple files upload for the same input (vector) and not keeping the original names', (done) => {
-
-    Settings.set('handler/web/uploadPreserveFileName', false);
-
-    const postFormData = {
-      // Pass a simple key-value pair
-      a: 'A value',
-      file: [
-        {
-          value: new Buffer([1, 2, 3]),
-          options: {
-            filename: 'foo.bin',
-            contentType: 'application/bin',
-          },
-        },
-        {
-          value: new Buffer([1, 2]),
-          options: {
-            filename: 'foo1.bin',
-            contentType: 'application/bin',
-          },
-        },
-        {
-          value: new Buffer([1, 2, 4]),
-          options: {
-            filename: 'foo2.bin',
-            contentType: 'application/bin',
-          },
-        },
-      ],
-    };
-
-    request.post({url: `http://localhost:${port}/E/VectorUploadAction`, formData: postFormData}, (err, response, body) => {
-
-      if (err){
-        return done(err);
-      }
-
-      let error = null;
-
-      try{
-        assert.equal(response.statusCode, 200);
-
-        const result = JSON.parse(body);
-        assert.equal(result.data.a, postFormData.a);
-
-        // can't guarantee the order of the uploaded files
-        const hashes = [
-          '039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81',
-          'a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222',
-          'd4b29a968c40173638ded8d174c86957afa211be479cee020dba5dfe127d91ca',
-        ];
-
-        let foundCount = 0;
-        for (const baseName in result.data){
-          if (baseName !== 'a'){
-            foundCount++;
-            assert(baseName.startsWith('upload_'), `Wrong prefix: ${baseName} (expected: upload_)!`);
-            assert(hashes.includes(result.data[baseName]), `Wrong hash: ${result.data[baseName]}`);
-          }
-        }
-        assert.equal(foundCount, 3);
-      }
-      catch(errr){
-        error = errr;
-      }
-
-      done(error);
-    });
-  });
-
-  it('Should perform an action using a custom upload folder through PUT', (done) => {
-
-    const postFormData = {
-      // Pass a simple key-value pair
-      a: 'A value',
-
-      file: {
-        value: new Buffer([1, 2]),
-        options: {
-          filename: 'foo.bin',
-          contentType: 'application/bin',
-        },
-      },
-    };
-
-    request.put({url: `http://localhost:${port}/E`, formData: postFormData}, (err, response, body) => {
-
-      if (err){
-        return done(err);
-      }
-
-      let error = null;
-
-      try{
-        assert.equal(response.statusCode, 200);
-
-        const result = JSON.parse(body);
-        assert.equal(result.data.fileHash, 'a12871fee210fb8619291eaea194581cbd2531e4b23759d225f6806923f63222');
-        assert.equal(result.data.a, postFormData.a);
-
-        const fileFullPath = path.join(customUploadDirectory, result.data.fileName);
-        assert(fs.existsSync(fileFullPath));
-        fs.unlinkSync(fileFullPath);
       }
       catch(errr){
         error = errr;
