@@ -80,6 +80,7 @@ class Copy extends Action{
       const wr = fs.createWriteStream(this.input('targetFile').value);
 
       wr.on('error', (err) => {
+        rd.close();
         reject(err);
       });
 
