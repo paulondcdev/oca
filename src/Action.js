@@ -1,15 +1,15 @@
-const crypto = require('crypto');
 const assert = require('assert');
 const TypeCheck = require('js-typecheck');
+const Util = require('./Util');
 const Input = require('./Input');
 const Session = require('./Session');
-
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _inputs = Symbol('inputs');
 const _metadata = Symbol('metadata');
 const _session = Symbol('session');
+
 
 /**
  * An action is used to perform an evaluation.
@@ -53,22 +53,22 @@ const _session = Symbol('session');
  * which is the method that should be used to implement the evaluation of the action.
  *
  * Actions are registered via {@link Action.registerAction}, in case you want to use a compound name
- * with a prefix common across some group of actions for that use '.' as separator.
+ * with a prefix common across some group of actions you can use '.' as separator.
  * Also, there are two ways to create actions:
  *
  * - {@link Action.createAction} - allows actions to be created inside of another action
  * by doing that it creates actions that share the same {@link Session}.
  *
  * - {@link Action.create} - factory an action (also available as `Oca.createAction`) with
- * a new session or custom session.
+ * custom session when supplied otherwise it creates a new session.
  *
  * An action can be serialized ({@link Action.toJson}) to postpone their execution where it can be
- * recreated later through {@link Action.createActionFromJson} or in case of a non registered action
- * then the serialized data can loaded through {@link Action.fromJson}.
+ * recreated later through {@link Action.createActionFromJson} or in case of a non registered actions
+ * the serialized data can loaded through {@link Action.fromJson}.
  *
  * Also, actions can take advantage of the caching mechanism designed to improve the performance
- * by avoiding re-evaluations in actions that might be executed multiple times using the same input
- * data, it can enabled through {@link Action.isCacheable}.
+ * by avoiding re-evaluations in actions that might be executed multiple times, it can enabled
+ * through {@link Action.isCacheable}.
  */
 class Action{
 
@@ -79,9 +79,10 @@ class Action{
 
     this[_inputs] = new Map();
     this[_session] = null;
-    this[_metadata] = Object.create(null);
-    this[_metadata].action = Object.create(null);
-    this[_metadata].result = Object.create(null);
+    this[_metadata] = {
+      action: {},
+      handler: {},
+    };
 
     // Adding the api input, all actions will inherit this input.
     // This input is used to make sure that the version requested
@@ -332,8 +333,8 @@ class Action{
   /**
    * Returns a plain object containing meta-data information about the action.
    *
-   * It can be used to include additional meta-data information that later
-   * can be used by a handler during the output process ({@link Handler.output}).
+   * It can be used to include additional meta-data information
+   * used by a {@link Handler}.
    *
    * @return {Object}
    */
@@ -354,22 +355,26 @@ class Action{
     let actionSignature = '';
     const separator = ';\n';
 
+    // header
     if (this.metadata.action.registeredName){
       actionSignature = this.metadata.action.registeredName;
     }
     // using the class name can be very flawed, make sure to always creating actions
     // via their registration name
     else{
-      actionSignature = this.constructor.name;
+      actionSignature = `!${this.constructor.name}`;
     }
-
     actionSignature += separator;
+    actionSignature += this[_inputs].size;
+    actionSignature += separator;
+
+    // contents
     const actionInputs = await this._serializeInputs();
     for (const inputName in actionInputs){
       actionSignature += `${inputName}: ${actionInputs[inputName]}${separator}`;
     }
 
-    return crypto.createHash('sha256').update(actionSignature).digest('hex');
+    return Util.hash(Buffer.from(actionSignature));
   }
 
   /**
@@ -437,7 +442,7 @@ class Action{
       action.session = session || new Session();
 
       // adding the action name used to create the action under the meta-data
-      action.metadata.action.registeredName = actionName;
+      action.metadata.action.registeredName = actionName.toLowerCase();
 
       // adding a meta-data information telling the action is a top level one
       // it has not being created inside of another action through the
@@ -514,10 +519,11 @@ class Action{
    *
    * *Result through a {@link Handler}:*
    *
-   * The {@link Handler.output} is responsible for the result serialization. Therefore
-   * when using a handler the result is rendered based on the data type.
-   * Both Readable Stream and Buffer are resulted as stream where everything else
-   * is automatically serialized using json (this may vary per {@link Handler} bases).
+   * The {@link Handler.output} is used for the serialization of a result. Therefore
+   * actions should not serialize the result by themselves, instead it should be
+   * done by a handler. The handlers shipped with Oca have support for streams
+   * where in case of any readable stream or buffer value they are piped to the
+   * output, otherwise the result is encoded using Json.
    *
    * @param {Object} data - plain object containing the value of the inputs, this is just to
    * provide a more convenient way to query the value of the inputs inside of the
