@@ -10,15 +10,15 @@ const _result = Symbol('result');
 
 
 /**
- * A reader is used by the handler during the execution ({@link Handler.execute}).
- * to collect the information should be used by the action.
+ * A reader is used by the handler during the execution ({@link Handler.execute})
+ * to query the input and session information that should be used by the action.
  *
  * In case of new implements the only method expected to be re-implemented is
  * {@link Reader._perform} by implementing that you can provide support for
- * custom options ({@link Reader.options}) that are passed by the handler
+ * custom options ({@link Reader.options}) which are passed by the handler
  * ({@link Handler.execute}) to the reader.
  *
- * When a value is found for an input the value is decoded through {@link Input.parseValue}
+ * When a value is found for an input it's decoded using {@link Input.parseValue}
  * where each input implementation has its own way of parsing the serialized data,
  * to find out about how a value is serialized for an specific input type you could simply
  * set an arbitrary value to an input then query it back through
