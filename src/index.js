@@ -10,7 +10,8 @@ modules.Action = require('./Action');
 modules.Tasks = require('./Tasks');
 modules.Session = require('./Session');
 modules.Handler = require('./Handler');
-modules.HandlerParser = require('./HandlerParser');
+modules.Reader = require('./Reader');
+modules.Writer = require('./Writer');
 modules.Ext = require('./Ext');
 
 // handler shortcuts
