@@ -33,6 +33,18 @@ describe('Input Generic:', () => {
     assert.equal(c.value, a.value);
   });
 
+  it('Should not transfer a cache through setupFrom when either source or target input is not immutable', () => {
+
+    class CustomInput extends Input{}
+
+    const a = new CustomInput('inputA', {defaultValue: 10});
+    a.cache.set('value', 20);
+
+    const b = new CustomInput('inputB', {immutable: false});
+    b.setupFrom(a);
+    assert.equal(b.cache.get('value'), undefined);
+  });
+
   it('Value assigned to the input should be set as immutable by default', () => {
 
     const inputA = new Input('input', {vector: true});

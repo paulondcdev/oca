@@ -68,10 +68,21 @@ describe('Handler:', () => {
     }
   }
 
+  class HiddenInput extends Oca.Action{
+    constructor(){
+      super();
+      this.createInput('someHiddenInput: text', {hidden: true});
+    }
+  }
+
   before(() => {
+    // registering handler
     Handler.registerHandler(CustomHandler);
     Handler.registerReader(CustomReader, 'customHandler');
     Handler.registerWriter(CustomWriter, 'customHandler');
+
+    // registering actions
+    Oca.registerAction(HiddenInput);
     Oca.registerAction(testutils.Actions.Shared.PlainObjectResult, 'plainObjectResult');
   });
 
@@ -206,17 +217,17 @@ describe('Handler:', () => {
 
   it('Should throw an exception when trying to finalize the session with a broken task inside of the handler output', (done) => {
 
-    class CustomSessionEventHandler extends CustomHandler{
-      static _sessionEvent = new EventEmitter();
+    class SessionErrorHandler extends CustomHandler{
+      static _output = new EventEmitter();
     }
 
-    Handler.registerHandler(CustomSessionEventHandler);
-    Handler.registerReader(CustomReader, 'customSessionEventHandler');
-    Handler.registerWriter(CustomWriter, 'customSessionEventHandler');
+    Handler.registerHandler(SessionErrorHandler);
+    Handler.registerReader(CustomReader, 'sessionErrorHandler');
+    Handler.registerWriter(CustomWriter, 'sessionErrorHandler');
 
-    CustomSessionEventHandler.onFinalizeError((err, name, mask) => {
+    SessionErrorHandler.onErrorDuringOutput((err, name, mask) => {
       if (err.message === 'Should fail'
-        && name === 'customSessionEventHandler'.toLowerCase()
+        && name === 'sessionErrorHandler'.toLowerCase()
         && mask === '*'){
         done();
       }
@@ -226,7 +237,7 @@ describe('Handler:', () => {
     });
 
     (async () => {
-      const handler = Oca.createHandler('CustomSessionEventHandler');
+      const handler = Oca.createHandler('sessionErrorHandler');
       handler.session.wrapup.addWrappedPromise(() => Promise.reject(new Error('Should fail')));
       handler.testData = {
         a: 'A value',
@@ -235,6 +246,43 @@ describe('Handler:', () => {
 
       const result = await handler.execute('plainObjectResult');
       handler.output(result);
+
+    })().then().catch(done);
+  });
+
+  it('Should throw an exception when trying to serialize the error that  has been set as output=false inside of the handler output', (done) => {
+
+    class OutputErrorHandler extends CustomHandler{
+      static _output = new EventEmitter();
+    }
+
+    Handler.registerHandler(OutputErrorHandler);
+    Handler.registerReader(CustomReader, 'outputErrorHandler');
+    Handler.registerWriter(CustomWriter, 'outputErrorHandler');
+
+    OutputErrorHandler.onErrorDuringOutput((err, name, mask) => {
+      if (err.message === 'someHiddenInput: Input is required, it cannot be empty!'
+        && name === 'outputErrorHandler'.toLowerCase()
+        && mask === '*'){
+        done();
+      }
+      else{
+        done(err);
+      }
+    });
+
+    (async () => {
+      let failed = true;
+      const handler = Oca.createHandler('outputErrorHandler');
+      try{
+        await handler.execute('hiddenInput');
+        failed = false;
+      }
+      catch(err){
+        handler.output(err);
+      }
+
+      assert(failed, 'It should have failed');
 
     })().then().catch(done);
   });
@@ -254,7 +302,7 @@ describe('Handler:', () => {
     })();
   });
 
-  it('Should test if the exception is being rendered by the handler', () => {
+  it('Should test if the exception is being emitted by the Handler during a session finalize error', () => {
     return (async () => {
       const handler = Oca.createHandler('CustomHandler');
 

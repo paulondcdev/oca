@@ -22,7 +22,7 @@ describe('Action Serialization:', () => {
 
       const actionB = Action.createActionFromJson(await actionA.toJson());
 
-      assert.equal(actionA.metadata.action.registeredName, actionB.metadata.action.registeredName);
+      assert.equal(actionA.metadata.action.name, actionB.metadata.action.name);
       assert.equal(actionA.input('a').value, actionB.input('a').value);
       assert.equal(actionA.input('b').value, actionB.input('b').value);
       assert.equal(await actionA.id(), await actionB.id());

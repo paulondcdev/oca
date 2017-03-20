@@ -21,7 +21,7 @@ const _args = Symbol('args');
  * missing arguments.
  *
  * All serializable inputs are supported by this reader, they can be displayed
- * as either `argument` or `option` element. This is done by setting the input
+ * either as `argument` or `option` element. This is done by setting the input
  * property `cliElementType` (option is the default one).
  *
  * You can define the description displayed in the help of the element by

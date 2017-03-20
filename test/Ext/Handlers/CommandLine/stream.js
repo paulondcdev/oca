@@ -20,7 +20,7 @@ describe('CommandLine Stream:', () => {
     }
   }
 
-  const testDataImagePath = path.join(__dirname, '../../../data/image.png');
+  const testDataImagePath = path.join(__dirname, '../../../../testutils/data/image.png');
 
   before(() => {
     Oca.registerAction(testutils.Actions.Shared.StreamOutput, 'streamOutput');

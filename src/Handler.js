@@ -50,12 +50,13 @@ const _metadata = Symbol('metadata');
  *      };
  *    }
  * }
+ * Oca.registerAction(MyAction);
  * ```
  *
  * Defining options directly through the handler:
  * ```
  * // read options
- * myHandler.execute('actionName', {
+ * myHandler.execute('myAction', {
  *  someReadOption: true,
  * })
  *
@@ -182,8 +183,12 @@ class Handler{
    * directly to the output method override them.
    *
    * If `finalizeSession` is enabled (default) the {@link Handler.session} gets finalized
-   * in the end of the output process. Any error raised during session finalization is emitted by
-   * the {@link Handler.onFinalizeError} event.
+   * in the end of the output process.
+   *
+   * In case of any error raised inside of the output process the handler emits the signal
+   * {@link Handler.onErrorDuringOutput} where errors passed as output are able to drive
+   * that behavior by having the member `output` defined, further information
+   * can be found at the write error output documentation ({@link Writer._errorOutput}).
    *
    * @param {*} value - raw value that should be resulted by the handler
    * @param {Object} [options] - plain object containing options that should be used
@@ -195,20 +200,18 @@ class Handler{
 
     const writeOptions = Object.assign({}, this.metadata.writeOptions, options);
     const writer = this._createWriter(value, writeOptions);
-    writer.serialize();
+    try{
+      writer.serialize();
+    }
+    catch(err){
+      this._emitOutputError(err);
+    }
 
     // the session finalization runs in parallel, since it does secondary tasks
     // (such as clean-up, logging, etc...) there is no need to await for that
     if (finalizeSession){
       this.session.finalize().then().catch((err) => {
-        process.nextTick(() => {
-          this.constructor._sessionEvent.emit(
-            'error',
-            err,
-            this.metadata.handler.name,
-            this.metadata.handler.mask,
-          );
-        });
+        this._emitOutputError(err);
       });
     }
   }
@@ -363,25 +366,26 @@ class Handler{
   }
 
   /**
-   * Adds a listener for the exception raised by the {@link Session.finalize} inside of
-   * {@link Handler.output}. This event passes the error, handlerName and handlerMask
-   * as argument.
+   * Adds a listener to an exception raised during the {@link Handler.output} process.
+   * It can happen by either during the serialization process ({@link Writer.serialize})
+   * or during the finalization of the session ({@link Session.finalize}).
+   * This event passes as argument: error, handlerName and handlerMask.
    *
    * Currently this event is static to make easy for developers to hook it when
    * it occurs, if none listener is registered to it then the error is thrown,
    * a stack trace is printed, and the Node.js process exits.
    *
    * ```
-   * // registering a listener to the session error
-   * Oca.Handler.onFinalizeError((err, handlerName, handlerMask => {
+   * // registering a listener for the error
+   * Oca.Handler.onErrorDuringOutput((err, handlerName, handlerMask => {
    *    console.error(err.stack);
    * }));
    * ```
    *
    * @param {function} listener - listener function
    */
-  static onFinalizeError(listener){
-    this._sessionEvent.on('error', listener);
+  static onErrorDuringOutput(listener){
+    this._output.on('error', listener);
   }
 
   /**
@@ -572,7 +576,24 @@ class Handler{
     }
   }
 
-  static _sessionEvent = new EventEmitter();
+  /**
+   * Emits the output error signal, it passes as argument: error, handler name
+   * and handler mask.
+   *
+   * @param {Error} err - exception used as critical error
+   */
+  _emitOutputError(err){
+    process.nextTick(() => {
+      this.constructor._output.emit(
+        'error',
+        err,
+        this.metadata.handler.name,
+        this.metadata.handler.mask,
+      );
+    });
+  }
+
+  static _output = new EventEmitter();
   static _registeredHandlers = new Map();
   static _registeredWriters = new Map();
   static _registeredReaders = new Map();

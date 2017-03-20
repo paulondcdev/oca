@@ -30,21 +30,22 @@ class NotFound extends Error{
     this.status = Settings.get('error/notFound/status');
 
     /**
-     * Status code used by the {@link Handler} when this error is raised inside of an action
-     * that has been created from another action ({@link Action.createAction}).
+     * Boolean telling if this error is not allowed as output ({@link Handler.output})
+     * when it has been raised from a nested action (an action created from another
+     * action ({@link Action.createAction})).
      *
      * Value driven by:
-     * `Settings.get('error/notFound/nestedStatus')`
-     * (default: `404`)
+     * `Settings.get('error/notFound/disableOutputAsNested')`
+     * (default: `false`)
      *
-     * @type {number}
+     * @type {boolean}
      */
-    this.nestedStatus = Settings.get('error/notFound/nestedStatus');
+    this.disableOutputAsNested = Settings.get('error/notFound/disableOutputAsNested');
   }
 }
 
 // default settings
 Settings.set('error/notFound/status', 404);
-Settings.set('error/notFound/nestedStatus', 404);
+Settings.set('error/notFound/disableOutputAsNested', false);
 
 module.exports = NotFound;

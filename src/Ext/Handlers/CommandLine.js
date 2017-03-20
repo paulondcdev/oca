@@ -15,8 +15,8 @@ const _stderr = Symbol('stderr');
 * Handles the command-line integration using docopt specification.
 *
 * It enables the execution of actions that are triggered by command-line interfaces
-* by reading ({@link CommandLineArgs}) the information that is passed to the action
-* ({@link CommandLine.execute}) and taking care of the output by
+* by reading the data ({@link CommandLineArgs}) that is passed to the action
+* ({@link CommandLine.execute}) and taking care of the output process
 * ({@link CommandLine.output}).
 *
 * Using the command-line handler:

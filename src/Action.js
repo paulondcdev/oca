@@ -356,8 +356,8 @@ class Action{
     const separator = ';\n';
 
     // header
-    if (this.metadata.action.registeredName){
-      actionSignature = this.metadata.action.registeredName;
+    if (this.metadata.action.name){
+      actionSignature = this.metadata.action.name;
     }
     // using the class name can be very flawed, make sure to always creating actions
     // via their registration name
@@ -408,12 +408,12 @@ class Action{
     assert(TypeCheck.isString(serializedAction), 'serializedAction needs to be defined as string!');
 
     const actionContents = JSON.parse(serializedAction);
-    const registeredName = actionContents.metadata.action.registeredName;
+    const name = actionContents.metadata.action.name;
 
-    assert(TypeCheck.isString(registeredName), 'Could not find the action information');
-    const action = this.create(registeredName);
+    assert(TypeCheck.isString(name), 'Could not find the action information');
+    const action = this.create(name);
 
-    assert(action, `Action not found: ${registeredName}`);
+    assert(action, `Action not found: ${name}`);
 
     action._loadContents(actionContents, autofill);
 
@@ -442,7 +442,7 @@ class Action{
       action.session = session || new Session();
 
       // adding the action name used to create the action under the meta-data
-      action.metadata.action.registeredName = actionName.toLowerCase();
+      action.metadata.action.name = actionName.toLowerCase();
 
       // adding a meta-data information telling the action is a top level one
       // it has not being created inside of another action through the
@@ -618,13 +618,18 @@ class Action{
     if (!err.origin){
       err.origin = this.metadata.action.origin;
       topLevel = true;
+
+      // disabling output
+      if (err.disableOutputAsNested && err.origin === 'nested'){
+        err.output = false;
+      }
     }
 
     // adding the action class name and the registered name to the stack information, for
     // debugging purposes
     let actionName = this.constructor.name;
-    if (this.metadata.action.registeredName){
-      actionName += ` (${this.metadata.action.registeredName})`;
+    if (this.metadata.action.name){
+      actionName += ` (${this.metadata.action.name})`;
     }
 
     // including the action name information in a way that includes all action levels

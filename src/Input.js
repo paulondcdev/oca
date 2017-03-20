@@ -164,7 +164,7 @@ class Input{
    * @example
    * // full
    * Input.create('inputName: numeric', {min: 1, max: 5}, function(at){
-   *  return new Promise((resolve, reject) =>{
+   *  return new Promise((resolve, reject) => {
    *    if (this.valueAt(at) === 3)
    *      reject(new ValidationFail('Failed for some reason'));
    *    else
@@ -249,7 +249,9 @@ class Input{
    * Sets the input value by avoiding the overhead that may occur when the
    * same value is used across actions that have the input type, therefore
    * this method avoids the re-computation by copying the caches and value
-   * associated with the source input to the current input.
+   * associated with the source input to the current input. The cache will be
+   * only copied if both source and target inputs have the `immutable` property
+   * enabled (default true).
    *
    * @param {Input} sourceInput - input used as source to setup the current input
    * @param {null|number} [at] - index used when the target input is defined as vector to
@@ -281,7 +283,7 @@ class Input{
     }
 
     // transferring the cache to the current input
-    if (cache){
+    if (cache && sourceInput.property('immutable') && this.property('immutable')){
       assert(sourceInput.cache instanceof Util.ImmutableMap);
 
       if (at === null){
@@ -313,8 +315,7 @@ class Input{
   }
 
   /**
-   * Flushes the input cache {@link setupFrom}
-   *
+   * Forces to flush the internal input cache
    */
   clearCache(){
     this.cache.clear();
@@ -327,46 +328,51 @@ class Input{
    * @return {Promise<*>} Returns the value of the input
    */
   async validate(){
-    // required check
-    if (this.isEmpty){
-      if (this.isRequired !== false){
-        throw new ValidationFail('Input is required, it cannot be empty!', Input.errorCodes[0], this.name);
-      }
-    }
 
-    // vector check
-    else if (this.isVector && !TypeCheck.isList(this.value)){
-      throw new ValidationFail('Input needs to be a vector!', Input.errorCodes[1], this.name);
-    }
-
-    // otherwise perform the asynchronous validations
-    else{
-      const validationPromises = [];
-      const length = this.isVector ? this.value.length : 1;
-      for (let i=0; i < length; ++i){
-        // setting the context index
-        const at = this.isVector ? i : null;
-        validationPromises.push(this._validation(at));
-
-        // running extended validations
-        if (TypeCheck.isCallback(this._extendedValidation)){
-          validationPromises.push(this._extendedValidation.call(this, at));
+    try{
+      // required check
+      if (this.isEmpty){
+        if (this.isRequired !== false){
+          throw new ValidationFail('Input is required, it cannot be empty!', Input.errorCodes[0]);
         }
       }
 
-      // running generic validations
-      try{
+      // vector check
+      else if (this.isVector && !TypeCheck.isList(this.value)){
+        throw new ValidationFail('Input needs to be a vector!', Input.errorCodes[1]);
+      }
+
+      // otherwise perform the asynchronous validations
+      else{
+        const validationPromises = [];
+        const length = this.isVector ? this.value.length : 1;
+        for (let i=0; i < length; ++i){
+          // setting the context index
+          const at = this.isVector ? i : null;
+          validationPromises.push(this._validation(at));
+
+          // running extended validations
+          if (TypeCheck.isCallback(this._extendedValidation)){
+            validationPromises.push(this._extendedValidation.call(this, at));
+          }
+        }
+
+        // running generic validations
         await Promise.all(validationPromises);
       }
-      catch(err){
+    }
+    catch(err){
+      // including the input name to the validation fail
+      if (err instanceof ValidationFail){
+        err.inputName = this.name;
 
-        // including the input name to the validation fail
-        if (err instanceof ValidationFail){
-          err.inputName = this.name;
+        // disabling the output when input is marked as hidden
+        if (this.property('hidden')){
+          err.output = false;
         }
-
-        throw err;
       }
+
+      throw err;
     }
 
     return true;

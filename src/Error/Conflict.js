@@ -30,21 +30,22 @@ class Conflict extends Error{
     this.status = Settings.get('error/conflict/status');
 
     /**
-     * Status code used by the {@link Handler} when this error is raised inside of an action
-     * that has been created from another action ({@link Action.createAction}).
+     * Boolean telling if this error is not allowed as output ({@link Handler.output})
+     * when it has been raised from a nested action (an action created from another
+     * action ({@link Action.createAction})).
      *
      * Value driven by:
-     * `Settings.get('error/conflict/nestedStatus')`
-     * (default: `409`)
+     * `Settings.get('error/conflict/disableOutputAsNested')`
+     * (default: `false`)
      *
-     * @type {number}
+     * @type {boolean}
      */
-    this.nestedStatus = Settings.get('error/conflict/nestedStatus');
+    this.disableOutputAsNested = Settings.get('error/conflict/disableOutputAsNested');
   }
 }
 
 // default settings
 Settings.set('error/conflict/status', 409);
-Settings.set('error/conflict/nestedStatus', 409);
+Settings.set('error/conflict/disableOutputAsNested', false);
 
 module.exports = Conflict;

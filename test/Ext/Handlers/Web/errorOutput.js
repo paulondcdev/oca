@@ -1,4 +1,5 @@
 const assert = require('assert');
+const EventEmitter = require('events');
 const Oca = require('../../../../src');
 const testutils = require('../../../../testutils');
 
@@ -22,11 +23,17 @@ describe('Web Error Output:', () => {
     }
   }
 
-  before((done) => {
+  class NestedActionHandler extends Oca.Ext.Handlers.Web{
+    static _output = new EventEmitter();
+  }
 
+  before((done) => {
     // registrations
     Oca.registerAction(testutils.Actions.Shared.Sum, 'sum');
     Oca.registerAction(NestedActionFail);
+
+    // registering a custom handler for the nested action fail
+    Oca.registerHandler(NestedActionHandler, 'web', 'nestedActionFail');
 
     // webfying actions
     Oca.webfyAction('sum', ['get'], {restRoute: '/topLevelValidationFail'});
@@ -71,24 +78,19 @@ describe('Web Error Output:', () => {
 
   it('Should not response with the validation fail code raised by a nested action', (done) => {
 
+    NestedActionHandler.onErrorDuringOutput((err, name, mask) => {
+      if (err.message === 'a: Input is required, it cannot be empty!'
+        && name === 'web'
+        && mask === 'nestedActionFail'.toLowerCase()){
+        done();
+      }
+      else{
+        done(err);
+      }
+    });
+
     request(`http://localhost:${port}/nestedActionFail`, (err, response, body) => {
-
-      if (err){
-        return done(err);
-      }
-
-      let error = null;
-      try{
-        assert.equal(response.statusCode, 500);
-
-        const result = JSON.parse(body);
-        assert.equal(result, 'Internal Server Error');
-      }
-      catch(errr){
-        error = errr;
-      }
-
-      done(error);
+      done(new Error('Should not have be able to response!'));
     });
   });
 });
