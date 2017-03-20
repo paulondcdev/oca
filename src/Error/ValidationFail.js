@@ -19,7 +19,7 @@ const _message = Symbol('message');
  * ```javascript
  * throw new ValidationFail('File does not exit!')
  * ```
- * @see {@link Handler._errorOutput}
+ * @see {@link Writer._errorOutput}
  */
 class ValidationFail extends Error{
 
