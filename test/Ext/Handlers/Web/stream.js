@@ -17,7 +17,7 @@ describe('Web Stream:', () => {
   let server = null;
   let app = null;
   let port = null;
-  const testDataImagePath = path.join(__dirname, '../../../data/image.png');
+  const testDataImagePath = path.join(__dirname, '../../../../testutils/data/image.png');
 
   before((done) => {
 
