@@ -376,7 +376,7 @@ class Handler{
    * a stack trace is printed, and the Node.js process exits.
    *
    * ```
-   * // registering a listener to the session error
+   * // registering a listener for the error
    * Oca.Handler.onErrorDuringOutput((err, handlerName, handlerMask => {
    *    console.error(err.stack);
    * }));
