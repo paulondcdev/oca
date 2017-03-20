@@ -10,7 +10,7 @@ const Settings = require('../Settings');
  * through a different handler since it defines a custom exception type that can be
  * used to identify the error.
  *
- * @see {@link Handler._errorOutput}
+ * @see {@link Writer._errorOutput}
  */
 class NotFound extends Error{
 
