@@ -30,21 +30,22 @@ class NoContent extends Error{
     this.status = Settings.get('error/noContent/status');
 
     /**
-     * Status code used by the {@link Handler} when this error is raised inside of an action
-     * that has been created from another action ({@link Action.createAction}).
+     * Boolean telling if this error is not allowed as output ({@link Handler.output})
+     * when it has been raised from a nested action (an action created from another
+     * action ({@link Action.createAction})).
      *
      * Value driven by:
-     * `Settings.get('error/noContent/nestedStatus')`
-     * (default: `204`)
+     * `Settings.get('error/noContent/disableOutputAsNested')`
+     * (default: `false`)
      *
-     * @type {number}
+     * @type {boolean}
      */
-    this.nestedStatus = Settings.get('error/noContent/nestedStatus');
+    this.disableOutputAsNested = Settings.get('error/noContent/disableOutputAsNested');
   }
 }
 
 // default settings
 Settings.set('error/noContent/status', 204);
-Settings.set('error/noContent/nestedStatus', 204);
+Settings.set('error/noContent/disableOutputAsNested', false);
 
 module.exports = NoContent;

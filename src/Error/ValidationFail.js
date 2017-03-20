@@ -52,16 +52,17 @@ class ValidationFail extends Error{
     this.status = Settings.get('error/validationFail/status');
 
     /**
-     * Status code used by the {@link Handler} when this error is raised inside of an action
-     * that has been created from another action ({@link Action.createAction}).
+     * Boolean telling if this error is not allowed as output ({@link Handler.output})
+     * when it has been raised from a nested action (an action created from another
+     * action ({@link Action.createAction})).
      *
      * Value driven by:
-     * `Settings.get('error/validationFail/nestedStatus')`
-     * (default: `500`)
+     * `Settings.get('error/validationFail/disableOutputAsNested')`
+     * (default: `true`)
      *
-     * @type {number}
+     * @type {boolean}
      */
-    this.nestedStatus = Settings.get('error/validationFail/nestedStatus');
+    this.disableOutputAsNested = Settings.get('error/validationFail/disableOutputAsNested');
 
     // storing the original message
     this[_message] = message;
@@ -92,8 +93,9 @@ class ValidationFail extends Error{
   }
 
   /**
-   * Sets an unique error code specifically related with the validation itself, this can be used
-   * to identify the failed validation.
+   * Sets an unique error code specifically related with that has failed validation, this
+   * information can be used later to identify the origin of the error, instead of trying
+   * to parse the message to figure out that information.
    *
    * @param {string} [errorCode] - unique code based on uuid v4 that can be used to identify the error
    */
@@ -154,6 +156,6 @@ class ValidationFail extends Error{
 
 // default settings
 Settings.set('error/validationFail/status', 400);
-Settings.set('error/validationFail/nestedStatus', 500);
+Settings.set('error/validationFail/disableOutputAsNested', true);
 
 module.exports = ValidationFail;
