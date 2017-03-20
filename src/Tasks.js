@@ -16,7 +16,7 @@ const _executionOrder = Symbol('executionOrder');
 class Tasks{
 
   /**
-   * Creates tasks
+   * Creates a new instance
    */
   constructor(){
     this[_executionOrder] = [];
