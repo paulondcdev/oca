@@ -14,11 +14,13 @@ describe('Writer:', () => {
     }
 
     _errorOutput(){
-      return Object.assign(this.result, super._errorOutput());
+      this.result = super._errorOutput();
+      return this.result;
     }
 
     _successOutput(){
-      return Object.assign(this.result, super._successOutput());
+      this.result = super._successOutput();
+      return this.result;
     }
   }
 
@@ -36,17 +38,31 @@ describe('Writer:', () => {
     const writer = new CustomWriter(value);
     writer.serialize();
 
-    assert.equal(writer.result.data, value);
+    assert.equal(writer.result, value);
+  });
+
+  it('Should test serialize a vector value as output', () => {
+
+    const value = [
+      {a: 1},
+      {a: 2},
+    ];
+
+    const writer = new CustomWriter(value);
+    writer.serialize();
+
+    assert(writer.result);
+    assert.equal(writer.result.length, value.length);
+    assert.equal(writer.result[0].a, value[0].a);
+    assert.equal(writer.result[1].a, value[1].a);
   });
 
   it('Should test serialize an error as output', () => {
 
-    const err = new Error('Some Error');
+    const err = new Oca.Error.ValidationFail('Some Error');
 
     const writer = new CustomWriter(err);
     writer.serialize();
-
-    assert.equal(writer.result.error.code, 500);
-    assert.equal(writer.result.error.message, err.message);
+    assert.equal(writer.result, err.toJson());
   });
 });

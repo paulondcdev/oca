@@ -523,7 +523,7 @@ class Action{
    * actions should not serialize the result by themselves, instead it should be
    * done by a handler. The handlers shipped with Oca have support for streams
    * where in case of any readable stream or buffer value they are piped to the
-   * output, otherwise the result is encoded using Json.
+   * output, otherwise the result is serialized using Json.
    *
    * @param {Object} data - plain object containing the value of the inputs, this is just to
    * provide a more convenient way to query the value of the inputs inside of the

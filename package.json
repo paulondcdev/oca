@@ -44,7 +44,7 @@
     "es6-promisify": "^5.0.0",
     "formidable": "^1.1.1",
     "ip": "^1.1.5",
-    "js-typecheck": "^0.5.0",
+    "js-typecheck": "^0.6.0",
     "lru-cache": "^4.0.2",
     "minimatch": "^3.0.3",
     "neodoc": "^1.4.0",
@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",
-    "babel-eslint": "^7.1.1",
+    "babel-eslint": "^7.2.1",
     "babel-preset-es2015-node6": "^0.4.0",
     "babel-preset-stage-0": "^6.22.0",
     "codecov": "^2.1.0",

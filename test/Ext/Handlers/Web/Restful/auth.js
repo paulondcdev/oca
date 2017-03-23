@@ -114,7 +114,7 @@ describe('Web Restful Auth:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 40);
+        assert.equal(result.data.value, 40);
       }
       catch(errr){
         error = errr;
@@ -144,7 +144,7 @@ describe('Web Restful Auth:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 40);
+        assert.equal(result.data.value, 40);
       }
       catch(errr){
         error = errr;
@@ -173,7 +173,7 @@ describe('Web Restful Auth:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 40);
+        assert.equal(result.data.value, 40);
       }
       catch(errr){
         error = errr;
@@ -204,7 +204,7 @@ describe('Web Restful Auth:', () => {
       try{
         assert.equal(response.statusCode, 200);
         const result = JSON.parse(body);
-        assert.equal(result.data, 40);
+        assert.equal(result.data.value, 40);
       }
       catch(errr){
         error = errr;
@@ -237,7 +237,7 @@ describe('Web Restful Auth:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 40);
+        assert.equal(result.data.value, 40);
       }
       catch(errr){
         error = errr;
@@ -340,7 +340,7 @@ describe('Web Restful Auth:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 50);
+        assert.equal(result.data.value, 50);
       }
       catch(errr){
         error = errr;

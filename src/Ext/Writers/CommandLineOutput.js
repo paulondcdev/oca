@@ -80,40 +80,30 @@ class CommandLineOutput extends Writer{
   /**
    * Implements the response for an error value.
    *
-   * The error output gets automatically encoded using json. The only exception are
+   * The error output writes the error message under the stderr. The only exception are
    * parsing error messages that are identified by the status
    * defined by {@link CommandLine._parsingErrorStatusCode} where they are outputted without
    * any encoding.
    *
-   * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
   _errorOutput(){
 
     process.exitCode = 1;
+    const message = super._errorOutput();
+    this.stderr.write(message);
 
     if (this.value.status === this.options.parsingErrorStatusCode){
-      this.stderr.write(`${this.value.message}\n`);
-      return;
+      this.stderr.write('\n');
     }
-
-    let output = super._errorOutput();
-
-    output = JSON.stringify(output, null, ' ');
-    output += '\n';
-
-    this.stderr.write(output);
-
-    return output;
   }
 
   /**
    * Implements the response for a success value.
    *
-   * Readable streams are piped to {@link CommandLine.stdout} where
-   * Non-readable stream values get outputted using json encoding.
+   * Readable streams are piped to {@link CommandLine.stdout}, otherwise
+   * the value is serialized using json.
    *
-   * @return {Object} Object that is going to be serialized
    * @protected
    */
   _successOutput(){
@@ -136,8 +126,6 @@ class CommandLineOutput extends Writer{
     output += '\n';
 
     this.stdout.write(output);
-
-    return output;
   }
 }
 

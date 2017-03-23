@@ -76,7 +76,7 @@ describe('Web Restful Generic:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, '::ffff:127.0.0.1');
+        assert.equal(result.data.value, '::ffff:127.0.0.1');
       }
       catch(errr){
         error = errr;
@@ -170,7 +170,7 @@ describe('Web Restful Generic:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 20);
+        assert.equal(result.data.value, 20);
       }
       catch(errr){
         error = errr;
@@ -193,7 +193,7 @@ describe('Web Restful Generic:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 30);
+        assert.equal(result.data.value, 30);
       }
       catch(errr){
         error = errr;
@@ -307,7 +307,7 @@ describe('Web Restful Generic:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 10);
+        assert.equal(result.data.value, 10);
       }
       catch(errr){
         error = errr;
@@ -335,7 +335,7 @@ describe('Web Restful Generic:', () => {
         assert.equal(response.statusCode, 200);
 
         const result = JSON.parse(body);
-        assert.equal(result.data, 20);
+        assert.equal(result.data.value, 20);
       }
       catch(errr){
         error = errr;
