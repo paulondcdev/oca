@@ -38,11 +38,13 @@ describe('Handler:', () => {
     }
 
     _errorOutput(){
-      return Object.assign(this.data, super._errorOutput());
+      this.data.value = super._errorOutput();
+      return this.data.value;
     }
 
     _successOutput(){
-      return Object.assign(this.data, super._successOutput());
+      this.data.value = super._successOutput();
+      return this.data.value;
     }
   }
 
@@ -209,8 +211,8 @@ describe('Handler:', () => {
       assert.equal(result.b, handler.testData.b);
 
       // testing what was rendered
-      assert.equal(handler.result.data.a, handler.testData.a);
-      assert.equal(handler.result.data.b, handler.testData.b);
+      assert.equal(handler.result.value.a, handler.testData.a);
+      assert.equal(handler.result.value.b, handler.testData.b);
 
     })();
   });
@@ -308,11 +310,13 @@ describe('Handler:', () => {
 
       // leaving the value empty on purpose
       let failed = true;
+      let error;
       try{
         await handler.execute('plainObjectResult');
         failed = false;
       }
       catch(err){
+        error = err;
         if (!(err instanceof Oca.Error.ValidationFail)){
           throw err;
         }
@@ -325,7 +329,7 @@ describe('Handler:', () => {
         throw new Error('Expected exception');
       }
 
-      assert.equal(handler.result.error.code, Oca.Settings.get('error/validationFail/status'));
+      assert.equal(handler.result.value, error.toJson());
     })();
   });
 });

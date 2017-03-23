@@ -311,20 +311,20 @@ describe('CommandLine Generic:', () => {
       assert.equal(stderr, '');
       const parsedResult = JSON.parse(stdout);
 
-      assert.equal(result.argumentA, parsedResult.data.argumentA);
-      assert.equal(result.argumentB, parsedResult.data.argumentB);
-      assert.equal(result.argumentOptionalA[0], parsedResult.data.argumentOptionalA[0]);
-      assert.equal(result.argumentOptionalA[1], parsedResult.data.argumentOptionalA[1]);
-      assert.equal(result.optionA[0], parsedResult.data.optionA[0]);
-      assert.equal(result.optionB, parsedResult.data.optionB);
-      assert.equal(result.optionC, parsedResult.data.optionC);
-      assert.equal(result.optionD, parsedResult.data.optionD);
-      assert.equal(result.optionE[0], parsedResult.data.optionE[0]);
-      assert.equal(result.optionE[1], parsedResult.data.optionE[1]);
-      assert.equal(result.optionF, parsedResult.data.optionF);
-      assert.equal(result.optionG[0], parsedResult.data.optionG[0]);
-      assert.equal(result.optionG[1], parsedResult.data.optionG[1]);
-      assert.equal(result.optionG[2], parsedResult.data.optionG[2]);
+      assert.equal(result.argumentA, parsedResult.argumentA);
+      assert.equal(result.argumentB, parsedResult.argumentB);
+      assert.equal(result.argumentOptionalA[0], parsedResult.argumentOptionalA[0]);
+      assert.equal(result.argumentOptionalA[1], parsedResult.argumentOptionalA[1]);
+      assert.equal(result.optionA[0], parsedResult.optionA[0]);
+      assert.equal(result.optionB, parsedResult.optionB);
+      assert.equal(result.optionC, parsedResult.optionC);
+      assert.equal(result.optionD, parsedResult.optionD);
+      assert.equal(result.optionE[0], parsedResult.optionE[0]);
+      assert.equal(result.optionE[1], parsedResult.optionE[1]);
+      assert.equal(result.optionF, parsedResult.optionF);
+      assert.equal(result.optionG[0], parsedResult.optionG[0]);
+      assert.equal(result.optionG[1], parsedResult.optionG[1]);
+      assert.equal(result.optionG[2], parsedResult.optionG[2]);
 
     })();
   });
@@ -398,7 +398,7 @@ describe('CommandLine Generic:', () => {
 
       assert(error);
       assert.equal(stdout, '');
-      assert.equal(JSON.parse(stderr).error.message, error.toJson());
+      assert.equal(stderr, error.toJson());
 
     })();
   });
