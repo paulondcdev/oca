@@ -15,12 +15,12 @@ const _args = Symbol('args');
 /**
  * Command-line arguments reader.
  *
- * This reader is used by the {@link CommandLine} handler, it supports most of
+ * This reader is used by the {@link CommandLine} handler. It supports most of
  * the docopt specification. Also, if the reader finds an error it's capable of
- * reporting it in an user-friendly way, this is used to report `-h/--help` and
+ * reporting it in user-friendly way. This is used to report `-h/--help` and
  * missing arguments.
  *
- * All serializable inputs are supported by this reader, they can be displayed
+ * This reader supports all serializable inputs, they can be displayed
  * either as `argument` or `option` element. This is done by setting the input
  * property `cliElementType` (option is the default one).
  *
@@ -34,10 +34,17 @@ const _args = Symbol('args');
  * interface, this reader expects vector elements to be separated by
  * the space character.
  *
- * Additionally, the {@link Bool} input specified as an `option` element behaves in a
+ * Any {@link Bool} input specified as an `option` element behaves in a
  * special mode, since it's thread as a toogle option in command-line.
  * Therefore if the Bool input is assigned with a `true` then the option
  * gets the prefix `no-`.
+ *
+ * When a value is found for the input, it gets loaded via {@link Input.parseValue}
+ * where each input implementation has its own way of parsing the serialized data,
+ * to find out about how a value is serialized for an specific input type you could simply
+ * set an arbitrary value to the input you are interested then query it back through
+ * {@link Input.serializeValue}. Also, Oca provides a reference datasheet
+ * about the serialization forms for the inputs bundled with it, found at {@link Reader}.
  *
  * <h2>Options Summary</h2>
  *
@@ -70,7 +77,7 @@ class CommandLineArgs extends Reader{
   }
 
   /**
-   * Sets a list of argument values used by the reader, it must follow
+   * Sets a list of argument values used by the reader. It must follow
    * the same pattern found at `process.argv`
    *
    * @param {Array<string>} value - argument list
@@ -83,7 +90,7 @@ class CommandLineArgs extends Reader{
   }
 
   /**
-   * Returns a list of argument values used by the reader, by default it uses
+   * Returns a list of args used by the reader, by default it uses
    * `process.argv`.
    *
    * @type {Array<string>}

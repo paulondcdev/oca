@@ -7,7 +7,7 @@ const TypeCheck = require('js-typecheck');
 const _executionOrder = Symbol('executionOrder');
 
 /**
- * Object that holds actions and promises which are executed at specific events.
+ * Object that holds actions and promises, which are executed at specific events.
  *
  * Inside Oca tasks are used by the {@link Session.wrapup} to hold actions and
  * promises that are triggered when a {@link Session} is about to be terminated

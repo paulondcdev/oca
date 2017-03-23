@@ -15,7 +15,7 @@ const _value = Symbol('value');
  * ({@link Writer._errorOutput}) otherwise the value is treated as success output
  * ({@link Writer._successOutput}).
  *
- * Custom options can be used to change the behavior of a writer, they can be passed
+ * Custom options can be used to change the behavior of a writer. They can be passed
  * to the handler during the output process ({@link Handler.output}).
  *
  * ```

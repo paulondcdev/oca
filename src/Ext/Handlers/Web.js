@@ -60,8 +60,8 @@ const _response = Symbol('response');
  * ({@link Web._successOutput}, {@link Web._errorOutput}).
  *
  * - *Middleware support* ({@link Web.middleware}):
- * Executing through an arbitrary route. Actions can be executed as expressjs middlewares,
- * it's done by using a `Oca.middleware` where you tell what is action registration name that
+ * Executing through an arbitrary route. Actions can be executed as expressjs middlewares.
+ * It's done by using `Oca.middleware` where you tell what is action's registration name that
  * should be executed for the express route (make sure the action has
  * been webfied before hand). By using this feature you control the response
  * of the request, since the result of the action flows to the middleware:
@@ -242,7 +242,7 @@ class Web extends Handler{
    * Returns a middleware designed to execute a webfied {@link Web.webfyAction}
    * based on an arbitrary express route. Differently from {@link Web.restful} this method
    * does not response the request, instead it's done through the responseCallback
-   * which passes the action error, result and the default middleware express
+   * which passes the action `error`, `result` and the default middleware express
    * arguments, for instance:
    *
    * ```javascript
@@ -269,7 +269,7 @@ class Web extends Handler{
    * Adds a middleware that is executed before an action.
    *
    * Use this feature when you want to execute a custom middleware before the
-   * execution of an action. If you want to add a middleware for an specific
+   * execution of an action. If you want to add a middleware for a specific
    * web handler implementation then take a look at {@link Web.beforeAction}. All middlewares
    * registered by this method are executed after {@link addBeforeAuthAction}.
    *
@@ -312,7 +312,7 @@ class Web extends Handler{
    *
    * Use this feature when you want to execute a custom middleware before the
    * execution of an action that requires authentication. If you want to add a
-   * middleware for an specific web handler implementation then take a look at
+   * middleware for a specific web handler implementation then take a look at
    * {@link Web.beforeAuthAction}. All middlewares registered by this method are
    * executed before {@link addBeforeAction}.
    *
@@ -353,7 +353,7 @@ class Web extends Handler{
   }
 
   /**
-   * Returns a list middlewares which are executed before an action.
+   * Returns a list middlewares that are executed before an action.
    *
    * This method can be re-implemented by subclasses to include custom middlewares
    * that are tied with a specific web handler implementation. By default it returns
@@ -366,7 +366,7 @@ class Web extends Handler{
   }
 
   /**
-   * Returns a list middlewares which are executed before an action that requires auth
+   * Returns a list middlewares that are executed before an action that requires auth
    *
    * This method can be re-implemented by subclasses to include custom middlewares
    * that are tied with a specific web handler implementation. By default it returns
