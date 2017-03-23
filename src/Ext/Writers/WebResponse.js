@@ -1,4 +1,6 @@
+const assert = require('assert');
 const stream = require('stream');
+const TypeCheck = require('js-typecheck');
 const Settings = require('../../Settings');
 const Handler = require('../../Handler');
 const Writer = require('../../Writer');
@@ -26,8 +28,17 @@ const _response = Symbol('response');
  * header | plain object containing the header names (in camel case convention) \
  * that should be used by the response | `{}`
  * headerOnly | if enabled ends the response without any data | ::false::
- * context | it can be used by clients to pass a value that echos in the data \
- * of the response | ::none::
+ * extendRoot | if specified a plain object that gets injected to the root of \
+ * the result | ::none::
+ * extendData | if specified a plain object that gets injected to the result \
+ * under data | ::none::
+ * resultLabel | custom label used to hold the result under data. In case of \
+ * undefined (default) it uses a fallback label based on the value type: \
+ * <br><br>- primitive values are held under 'value' \
+ * <br>- array value is held under 'items' \
+ * <br>- object is assigned with `null` \
+ * <br>* when a `null` label is used, the value is merged to the \
+ * result.data | ::none::
  *
  * <br/>Example of defining the `header` option from inside of an action through
  * the metadata support:
@@ -65,7 +76,11 @@ class WebResponse extends Writer{
       successStatus: 200,
       headerOnly: false,
       header: {},
-      context: null,
+      extendRoot: {
+        apiVersion: Settings.get('apiVersion'),
+      },
+      extendData: {},
+      resultLabel: undefined,
     });
   }
 
@@ -92,6 +107,12 @@ class WebResponse extends Writer{
   /**
    * Implements the response for an error value.
    *
+   * Any error can carry a HTTP status code. It is done by defining `status` to any error
+   * (for instance ```err.status = 501;```).
+   * This practice can be found in all errors shipped with oca ({@link Conflict}, {@link NoContent},
+   * {@link NotFound} and {@link ValidationFail}). In case none status is found in the error then `500`
+   * is used automatically.
+   *
    * The error response gets automatically encoded using json, following the basics
    * of google's json style guide. In case of an error status `500` the standard
    * result is ignored and a message `Internal Server Error` is used instead.
@@ -99,28 +120,34 @@ class WebResponse extends Writer{
    * Further information can be found at base class documentation
    * {@link Writer._errorOutput}.
    *
-   * @return {Promise<Object>} data that is going to be serialized
    * @protected
    */
   _errorOutput(){
 
-    let result = super._errorOutput();
-    const status = result.error.code;
+    const status = this.value.status || 500;
 
     // setting the status code for the response
     this.response.status(status);
 
+    const result = {
+      error: {
+        code: status,
+        message: super._errorOutput(),
+      },
+    };
+
+    // adding the stack-trace information when running in development mode
+    /* istanbul ignore next */
+    if (process.env.NODE_ENV === 'development'){
+      result.error.stacktrace = this.value.stack.split('\n');
+    }
+
     // should not leak any error message for the status code 500
     if (status === 500){
-      result = 'Internal Server Error';
-    }
-    else{
-      this._addTopLevelProperties(result);
+      result.error.message = 'Internal Server Error';
     }
 
     this._genericOutput(result);
-
-    return result;
   }
 
   /**
@@ -134,13 +161,12 @@ class WebResponse extends Writer{
    * Further information can be found at base class documentation
    * {@link Writer._successOutput}.
    *
-   * @return {Object} Object that is going to be serialized
    * @see https://google.github.io/styleguide/jsoncstyleguide.xml
    * @protected
    */
   _successOutput(){
 
-    const result = super._successOutput();
+    const value = super._successOutput();
 
     // setting the status code for the response
     this.response.status(this.options.successStatus);
@@ -149,22 +175,58 @@ class WebResponse extends Writer{
     this._setResponseHeaders();
 
     // readable stream
-    if (result instanceof stream.Readable){
-
-      // setting a default content-type for readable stream in case
-      // it has not been set previously
-      if (!(this.options.header && this.options.header.contentType)){
-        this.response.setHeader('Content-Type', 'application/octet-stream');
-      }
-
-      result.pipe(this.response);
+    if (value instanceof stream.Readable){
+      this._successStreamOutput(value);
       return;
     }
 
-    this._addTopLevelProperties(result);
-    this._genericOutput(result);
+    this._successJsonOutput(value);
+  }
 
-    return result;
+  /**
+   * Results a stream through the success output
+   *
+   * @param {stream} value - output value
+   * @private
+   */
+  _successStreamOutput(value){
+    // setting a default content-type for readable stream in case
+    // it has not been set previously
+    if (!(this.options.header && this.options.header.contentType)){
+      this.response.setHeader('Content-Type', 'application/octet-stream');
+    }
+
+    value.pipe(this.response);
+  }
+
+  /**
+   * Results the default success output through google's json style guide
+   *
+   * @param {*} value - output value
+   * @private
+   */
+  _successJsonOutput(value){
+    const result = {
+      data: {},
+    };
+
+    // resolving the result label
+    const resultLabel = this._resultLabel(value);
+    if (resultLabel){
+      result.data[resultLabel] = value;
+    }
+    else{
+      assert(!TypeCheck.isPrimitive(value), "Can't output a primitive value without 'resultLabel'");
+      Object.assign(result.data, value);
+    }
+
+    // including extend data as part of the result
+    const extendData = this.options.extendData;
+    if (extendData){
+      Object.assign(result.data, extendData);
+    }
+
+    this._genericOutput(result);
   }
 
   /**
@@ -181,8 +243,43 @@ class WebResponse extends Writer{
       return;
     }
 
+    // extending root options
+    assert.equal(this.options.extendRoot.data, undefined, "Can't define data under extendRoot");
+    Object.assign(data, this.options.extendRoot);
+
     // json output
     this.response.json(data);
+  }
+
+  /**
+   * Returns the label used to hold the result under data based on the option
+   * `extendData`. In case of undefined (default) it uses a fallback label
+   * based on the value type:
+   *
+   * - primitive values are held under 'value'
+   * - array value is held under 'items'
+   * - object is assigned with `null`
+   * * when a `null` label is used, the value is merged to the result.data
+   *
+   * @param {*} value - value that should be used by the result entry
+   * @return {string|null}
+   * @private
+   */
+  _resultLabel(value){
+    let resultLabel = this.options.resultLabel;
+    if (resultLabel === undefined){
+      if (TypeCheck.isPrimitive(value)){
+        resultLabel = 'value';
+      }
+      else if (TypeCheck.isList(value)){
+        resultLabel = 'items';
+      }
+      else{
+        resultLabel = null;
+      }
+    }
+
+    return resultLabel;
   }
 
   /**
@@ -203,24 +300,6 @@ class WebResponse extends Writer{
         // assigning a header value to the response
         this.response.setHeader(convertedHeaderName, this.options.header[headerName]);
       }
-    }
-  }
-
-  /**
-  * Appends common properties to the output
-  *
-  * @param {Object} result - input result object
-  * @see https://google.github.io/styleguide/jsoncstyleguide.xml
-  * @private
-  */
-  _addTopLevelProperties(result){
-
-    // api version
-    result.apiVersion = Settings.get('apiVersion');
-
-    // context
-    if (this.options.context){
-      result.context = this.options.context;
     }
   }
 }

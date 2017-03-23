@@ -55,7 +55,7 @@ const _response = Symbol('response');
  * Oca.restful(app);
  * ```
  * The result of webfied actions through the restful support is automatically
- * encoded using google's json style guide. The only exceptions are readable stream
+ * serialized using google's json style guide. The only exceptions are readable stream
  * and buffer that are piped to the response
  * ({@link Web._successOutput}, {@link Web._errorOutput}).
  *
@@ -444,8 +444,8 @@ class Web extends Handler{
     writer.response = this.response;
 
     // adding context as part of the result
-    if ('context' in this.request.query){
-      writer.options.context = this.request.query.context;
+    if ('context' in this.request.query && writer.options.extendRoot){
+      writer.options.extendRoot.context = this.request.query.context;
     }
 
     return writer;
