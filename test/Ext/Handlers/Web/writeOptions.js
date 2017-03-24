@@ -67,7 +67,7 @@ describe('Web Write Options:', () => {
       if (data.resultLabel){
         this.metadata.handler.web = {
           writeOptions: {
-            resultLabel: data.resultLabel,
+            successResultLabel: data.resultLabel,
           },
         };
       }
@@ -88,9 +88,11 @@ describe('Web Write Options:', () => {
     _perform(data){
       this.metadata.handler.web = {
         writeOptions: {
-          extendData: {
-            test: 1,
-            test2: 2,
+          extendOutput: {
+            data: {
+              test: 1,
+              test2: 2,
+            },
           },
         },
       };
@@ -115,7 +117,7 @@ describe('Web Write Options:', () => {
     Oca.webfyAction(SuccessStatus, 'get', {restRoute: '/successStatus'});
     Oca.webfyAction(CustomHeader, 'get', {restRoute: '/customHeader'});
     Oca.webfyAction(ForceResultLabel, 'get', {restRoute: '/forceResultLabel'});
-    Oca.webfyAction(ExtendResult, 'get', {restRoute: '/extendResult'});
+    Oca.webfyAction(ExtendResult, 'get', {restRoute: '/extendOutput'});
 
     // express server
     app = express();
@@ -383,9 +385,9 @@ describe('Web Write Options:', () => {
     });
   });
 
-  it('Should test extendData option', (done) => {
+  it('Should test extendOutput option by extending the data', (done) => {
 
-    request(`http://localhost:${port}/extendResult`, (err, response, body) => {
+    request(`http://localhost:${port}/extendOutput`, (err, response, body) => {
 
       if (err){
         return done(err);
