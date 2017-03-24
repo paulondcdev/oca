@@ -67,7 +67,7 @@ describe('Web Write Options:', () => {
       if (data.resultLabel){
         this.metadata.handler.web = {
           writeOptions: {
-            resultLabel: data.resultLabel,
+            successResultLabel: data.resultLabel,
           },
         };
       }

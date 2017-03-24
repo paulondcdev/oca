@@ -24,15 +24,16 @@ const _response = Symbol('response');
  *
  * Option Name | Description | Default Value
  * --- | --- | :---:
- * successStatus | success status code (error status code is driven by the \
- * status defined as a member of the exception) | `200`
  * header | plain object containing the header names (in camel case convention) \
  * that should be used by the response | `{}`
  * extendOutput | plain object that gets deep merged with the \
  * final output | `{}`
  * headerOnly | if enabled ends the response without any data | ::false::
- * resultLabel | custom label used to hold the result under data. In case of \
- * undefined (default) it uses a fallback label based on the value type: \
+ * successStatus | success status code (error status code is driven by the \
+ * status defined as a member of the exception) | `200`
+ * successResultLabel | custom label used by the success output to hold the result \
+ * under data. In case of undefined (default) it uses a fallback label based \
+ * on the value type: \
  * <br><br>- primitive values are held under 'value' \
  * <br>- array value is held under 'items' \
  * <br>- object is assigned with `null` \
@@ -72,13 +73,13 @@ class WebResponse extends Writer{
 
     // options
     Object.assign(this.options, {
-      successStatus: 200,
       headerOnly: false,
       header: {},
       extendOutput: {
         apiVersion: Settings.get('apiVersion'),
       },
-      resultLabel: undefined,
+      successStatus: 200,
+      successResultLabel: undefined,
     });
   }
 
@@ -256,7 +257,7 @@ class WebResponse extends Writer{
    * @private
    */
   _resultLabel(value){
-    let resultLabel = this.options.resultLabel;
+    let resultLabel = this.options.successResultLabel;
     if (resultLabel === undefined){
       if (TypeCheck.isPrimitive(value)){
         resultLabel = 'value';
