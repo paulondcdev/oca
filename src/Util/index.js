@@ -3,6 +3,7 @@ const debug = require('debug')('Oca');
 const assert = require('assert');
 const path = require('path');
 const crypto = require('crypto');
+const TypeCheck = require('js-typecheck');
 const promisify = require('es6-promisify');
 
 // promisifying
@@ -108,6 +109,36 @@ module.exports.mkdirs = async (fullPath, mode=0o777) => {
     }
   }
 };
+
+/**
+ * Merges two plain objects recursively and returns and returns a new one
+ *
+ * @param {Object} objectA - plain object a
+ * @param {Object} objectB - plain object b
+ * @return {Object}
+ */
+module.exports.deepMerge = (objectA, objectB) => {
+
+  assert(TypeCheck.isPlainObject(objectA), 'objectA needs to be a plain object');
+  assert(TypeCheck.isPlainObject(objectB), 'objectB needs to be a plain object');
+
+  const result = Object.assign({}, objectA);
+
+  for (const key in objectB){
+
+    // merging objects
+    if (TypeCheck.isPlainObject(objectB[key]) && key in objectA){
+      result[key] = module.exports.deepMerge(objectA[key], objectB[key]);
+    }
+    // overriding / assigning
+    else{
+      result[key] = objectB[key];
+    }
+  }
+
+  return result;
+};
+
 
 module.exports.ImmutableMap = require('./ImmutableMap');
 module.exports.LruCache = require('./LruCache');
