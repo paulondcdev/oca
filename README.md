@@ -11,14 +11,14 @@
 
 ### What is it ?
 
-Oca is a framework designed to help building apps accross multiple domains. You can
+Oca is a framework designed to help building apps across multiple domains. You can
 use it to build any kind of application whether web based or desktop ones.
 
 ### How does it work ?
 
-It works by providing an interface focused to describe evaluations in a way that is fairly extendable and comprehensible. Although a process that minimize repetitive tedeus routines  ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) and produces a more versatile code base.
+It works by providing an interface focused to describe evaluations in a way that is fairly extendable and comprehensible through a process that minimize repetitive thedeus routines  ([DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)) and produces a more versatile code base.
 
-These evaluations can be triggered accross multiple domains you write once and Oca takes care about the specifics that are necessary to run the evaluation.
+These evaluations can be triggered across multiple domains you write once and Oca takes care about the specifics that are necessary to run the evaluation.
 
 <p align="center">
   <img src="https://node-oca.github.io/docs/data/ocaHi.png"/>
@@ -27,11 +27,11 @@ These evaluations can be triggered accross multiple domains you write once and O
 ## Key features
 - **Flexible architeture**. Oca can be integrated to any existing application. Also, it's designed from ground up to be customizable and extendable
 
-- **Reliable executions**. Oca enforces quality control over the data used by the executions by performing a wide range of verifications
+- **Reliable executions**. Oca enforces quality control over the data used in the evaluations by performing a wide range of verifications
 
-- **Agnostic execution platform**. Oca provides abstraction about the how the evaluations are executed, you write once and Oca takes care about it
+- **Agnostic execution platform**. Evaluations in Oca can be executed across multiple domains
 
-- **Integrated caching system**. Oca provides out-the-box integrated caching system that can be easly enabled for any evaluation, speeding up your application
+- **Integrated caching system**. Oca provides out-the-box integrated caching system that can be easily enabled for any evaluation, speeding up your application
 
 - **Express integration**. The web support from Oca is done using express, embracing the most popular web framework for Node.js
 
@@ -63,7 +63,7 @@ npm install oca --save
 ```
 
 ## Getting help
-Use the GitHub issues for tracking bugs and feature requests Also, feel free to talk about Oca at:
+Use the GitHub issues for tracking bugs and feature requests. Also, feel free to talk about Oca at:
 - Gitter [node-oca](https://gitter.im/node-oca)
 
 ## Issues

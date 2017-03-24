@@ -134,7 +134,7 @@ class FilePath extends BaseText{
   }
 
   /**
-   * Implements the file path validations
+   * Implements input's validations
    *
    * @param {null|number} at - index used when input has been created as a vector that
    * tells which value should be used

@@ -16,13 +16,13 @@ const _cache = Symbol('cache');
  * An input holds a value that is used for the execution of the {@link Action}.
  *
  * The value carried by the input gets checked through a wide range of validations
- * which make sure that the value meets the necessary requirements for
- * the execution of the {@link Action}.
+ * that makes sure the value meets the necessary requirements for  the execution
+ * of the {@link Action}.
  *
  * The validations are performed asynchronously which enables an implementation
  * that can go far beyond checking the data type or matching the value through
- * a regex. In most cases these validations are driven by `properties` which usually
- * are defined at construction time. Also, non-generic validations can be
+ * a regex. In most cases these validations are driven by `properties`. They are
+ * usually defined at construction time. Also, non-generic validations can be
  * implemented through `extendedValidation`, making possible to define validations
  * that are tied with an action itself.
  *
@@ -54,7 +54,7 @@ const _cache = Symbol('cache');
  * ```
  *
  * Since inputs are used by actions they can be created directly inside of an {@link Action} via
- * {@link Action.createInput} which internally triggers {@link Input.create} factory method:
+ * {@link Action.createInput} that internally triggers {@link Input.create} factory method:
  *
  * ```
  * class HelloWorld extends Oca.Action{
@@ -69,7 +69,7 @@ const _cache = Symbol('cache');
  * }
  * ```
  *
- * To register a new input type take a look at {@link Input.registerInput}
+ * To register a new input type, take a look at {@link Input.registerInput}
  *
  * <h2>Property Summary</h2>
  *
@@ -402,13 +402,13 @@ class Input{
   }
 
   /**
-   * Sets a property to the input, in case the property already exists then the value
+   * Sets a property to the input. In case the property already exists then the value
    * is going to be overridden. By default the only properties that can be modified are
    * the ones found under {@link Input.registeredInputNames}. However you can
    * assign a non-registered property by enabling `loose` parameter.
    *
-   * Property values can be locked. Therefore preventing modifications via
-   * {@link Input.lockProperty}.
+   * Property values can be locked, therefore preventing modifications
+   * ({@link Input.lockProperty}).
    *
    * @param {string} name - name of the property
    * @param {*} value - value for the property
@@ -540,7 +540,7 @@ class Input{
    * This method should be re-implemented by derived classes to tell if the input can be
    * serialized (default true).
    *
-   * In case of a serializable input the methods {@link Input._encode} and {@link Input._decode}
+   * In case of a serializable input, the methods {@link Input._encode} and {@link Input._decode}
    * are expected to be implemented.
    *
    * @type {boolean}
@@ -551,7 +551,7 @@ class Input{
 
   /**
    * Changes the read-only state of the input. A read-only input cannot have its
-   * value and properties modified. It's is mainly used during the execution of the {@link Action}
+   * value and properties modified. It's mainly used during the execution of the {@link Action}
    * where all inputs are assigned as read-only, therefore when the execution is completed
    * the inputs are restored with the original read-only value assigned before
    * the execution of the action
@@ -756,7 +756,7 @@ class Input{
 
   /**
    * This method enforces the consistence of the value that is being queried.
-   * Since the input can behave as vector as well, it makes sure that when it'is
+   * Since the input can behave as vector as well, it makes sure that when it's
    * the case the index is being supplied otherwise it raises an exception.
    * Use this method when you need to query the value through validations where
    * the index (at) is always passed to them, either if the input is vector

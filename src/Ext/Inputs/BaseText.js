@@ -26,7 +26,7 @@ class BaseText extends Input{
   }
 
   /**
-   * Implements the string validations
+   * Implements input's validations
    *
    * @param {null|number} at - index used when input has been created as a vector that
    * tells which value should be used

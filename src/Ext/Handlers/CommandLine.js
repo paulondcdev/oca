@@ -97,7 +97,7 @@ class CommandLine extends Handler{
   }
 
   /**
-   * Sets a list of argument values used by the reader, it must follow
+   * Sets a list of argument values used by the reader. It must follow
    * the same pattern found at `process.argv`
    *
    * @param {Array<string>} value - argument list

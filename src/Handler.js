@@ -29,8 +29,10 @@ const _metadata = Symbol('metadata');
  * using Json.
  *
  * Both reader and writer can be customized through options that can be either
- * defined through the action's metadata or directly through the handler. To know
- * about the available options check out the Reader & Writers implementations.
+ * defined through the action's metadata or directly through the handler. If you would
+ * like to know more about the available options check out the respective
+ * {@link Reader} & {@link Writer} documentation for the handler implementation
+ * you are interested.
  *
  * Defining options through the action's metadata:
  * ```
@@ -130,9 +132,9 @@ class Handler{
    * parsed by the {@link Reader}.
    *
    * After the construction of the action it looks for reading options that can
-   * be defined as part of the action's metadata ({@link Action.metadata}). Therefore
-   * when found it passes them to the reader. After the execution of the action
-   * it looks again inside of the action's metadata for writing options which
+   * be defined as part of the action's metadata ({@link Action.metadata}) and
+   * when found they are passed to the reader. After the execution of the action
+   * it looks again inside of the action's metadata for writing options, which
    * are later used during the output ({@link Handler.output}). To know how
    * to define action's metadata for the handler take a look at the initial
    * documentation about the {@link Handler}.
@@ -186,8 +188,8 @@ class Handler{
    * in the end of the output process.
    *
    * In case of any error raised inside of the output process the handler emits the signal
-   * {@link Handler.onErrorDuringOutput} where errors passed as output are able to drive
-   * that behavior by having the member `output` defined, further information
+   * {@link Handler.onErrorDuringOutput}. Errors passed as output are able to drive
+   * the output behavior by having the member `output` defined, further information
    * can be found at the write error output documentation ({@link Writer._errorOutput}).
    *
    * @param {*} value - raw value that should be resulted by the handler

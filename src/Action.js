@@ -29,8 +29,8 @@ const _session = Symbol('session');
  * ```
  *
  * The data used to perform an evaluation is held by inputs ({@link Action.createInput}).
- * These inputs can be widely configured to enforce quality control via properties,
- * the available properties can be found under the documentation for each input type.
+ * These inputs can be widely configured to enforce quality control via properties.
+ * The available properties can be found under the documentation for each input type.
  *
  * ```
  * class HelloWorld extends Oca.Action{
@@ -56,8 +56,8 @@ const _session = Symbol('session');
  * with a prefix common across some group of actions you can use '.' as separator.
  * Also, there are two ways to create actions:
  *
- * - {@link Action.createAction} - allows actions to be created inside of another action
- * by doing that it creates actions that share the same {@link Session}.
+ * - {@link Action.createAction} - allows actions to be created inside of another action.
+ * By doing that it creates actions that share the same {@link Session}.
  *
  * - {@link Action.create} - factory an action (also available as `Oca.createAction`) with
  * custom session when supplied otherwise it creates a new session.
@@ -67,7 +67,7 @@ const _session = Symbol('session');
  * the serialized data can loaded through {@link Action.fromJson}.
  *
  * Also, actions can take advantage of the caching mechanism designed to improve the performance
- * by avoiding re-evaluations in actions that might be executed multiple times, it can enabled
+ * by avoiding re-evaluations in actions that might be executed multiple times. This can enabled
  * through {@link Action.isCacheable}.
  */
 class Action{
@@ -94,7 +94,7 @@ class Action{
   }
 
   /**
-   * Associates an {@link Session} with the action, by doing this all inputs that
+   * Associates a {@link Session} with the action. By doing this all inputs that
    * are flagged with 'autofill' property will be initialized with the
    * session value
    *
@@ -130,7 +130,7 @@ class Action{
   /**
   * Returns a boolean telling if the action is cacheable (`false` by default).
   *
-  * This method should be re-implement by derived classes to tell if the action
+  * This method should be overridden by derived classes to tell if the action
   * is cacheable. This information is used by {@link Action.execute}.
   *
   * The configuration about the LRU cache can be found under the {@link Session}.
@@ -343,7 +343,7 @@ class Action{
   }
 
   /**
-   * Returns an unique signature based on the action current state which is based
+   * Returns an unique signature based on the action's current state. It's based
    * on the input types, input values and meta data information about the action.
    *
    * For a more reliable signature make sure that the action has been created through
@@ -378,8 +378,8 @@ class Action{
   }
 
   /**
-   * Allows the creation of an action based on the current action, by doing this it passes
-   * the current {@link Action.session} to the static create method {@link Action.create} method.
+   * Allows the creation of an action based on the current action. By doing this it passes
+   * the current {@link Action.session} to the static create method ({@link Action.create}).
    * Therefore creating an action that shares the same session.
    *
    * @param {string} actionName - registered action name (case-insensitive)
@@ -508,7 +508,7 @@ class Action{
   }
 
   /**
-   * This method should be used to implement the evaluation of the action, it's called
+   * This method should be used to implement the evaluation of the action. It's called
    * by {@link Action.execute} after all inputs have been validated. It's expected to return
    * a Promise containing the result of the evaluation.
    *
@@ -519,8 +519,8 @@ class Action{
    *
    * *Result through a {@link Handler}:*
    *
-   * The {@link Handler.output} is used for the serialization of a result. Therefore
-   * actions should not serialize the result by themselves, instead it should be
+   * The {@link Handler.output} is used for the serialization of a result. Therefore,
+   * actions should not serialize the result by themselves; instead it should be
    * done by a handler. The handlers shipped with Oca have support for streams
    * where in case of any readable stream or buffer value they are piped to the
    * output, otherwise the result is serialized using Json.

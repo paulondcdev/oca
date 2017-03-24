@@ -77,7 +77,7 @@ class Ip extends BaseText{
   }
 
   /**
-   * Implements the ip address validations
+   * Implements input's validations
    *
    * @param {null|number} at - index used when input has been created as a vector that
    * tells which value should be used

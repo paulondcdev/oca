@@ -25,9 +25,9 @@ const _request = Symbol('request');
  *
  * This reader is used by the {@link Web} handler to query values from a request.
  *
- * All serializable inputs are supported by this reader. Also, it deals with
- * file uploads automatically, therefore any {@link FilePath} input becomes a potential
- * upload field, when that is the case the input gets assigned with the file path
+ * This reader supports all serializable inputs. It deals with file uploads
+ * automatically; therefore any {@link FilePath} input becomes a potential
+ * upload field. When that is the case the input gets assigned with the file path
  * about where the file has been uploaded to. By default it tries to keep the original
  * uploaded file name by replacing any illegal character with underscore, however you can
  * control this behavior via `uploadPreserveFileName` (if disabled each uploaded file
@@ -50,7 +50,7 @@ const _request = Symbol('request');
  * When a value is found for the input, it gets loaded via {@link Input.parseValue}
  * where each input implementation has its own way of parsing the serialized data,
  * to find out about how a value is serialized for an specific input type you could simply
- * set an arbitrary value to the input you are interessed then query it back through
+ * set an arbitrary value to the input you are interested then query it back through
  * {@link Input.serializeValue}. Also, Oca provides a reference datasheet
  * about the serialization forms for the inputs bundled with it, found at {@link Reader}.
  *
@@ -76,10 +76,6 @@ const _request = Symbol('request');
  * ```
  * http://.../?vectorInput=a&vectorInput=b&vectorInput=c
  * ```
- *
- * **Input value associating in request methods**:
- * `Post`, `Patch` and `Put` methods are expected to send the value of the inputs
- * through a form-data, other methods should use the query string.
  *
  * <h2>Options Summary</h2>
  *

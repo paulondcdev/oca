@@ -13,7 +13,7 @@ const _result = Symbol('result');
  * A reader is used by the handler during the execution ({@link Handler.execute})
  * to query the input and session information that should be used by the action.
  *
- * In case of new implements the only method expected to be re-implemented is
+ * In case of new implements the only method expected to be overridden is
  * {@link Reader._perform} by implementing that you can provide support for
  * custom options ({@link Reader.options}) which are passed by the handler
  * ({@link Handler.execute}) to the reader.

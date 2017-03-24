@@ -5,7 +5,7 @@ const path = require('path');
 
 
 /**
- * Provides access to the general configuration which is used by the features
+ * Provides access to the general configuration, which is used by the features
  * provided by Oca.
  *
  * ```javascript
@@ -18,7 +18,7 @@ const path = require('path');
 class Settings{
 
   /**
-   * Sets a config value based on key & value
+   * Sets a value based on key & value under the settings
    *
    * @param {string} key - name of the key
    * @param {*} value - value for the key
