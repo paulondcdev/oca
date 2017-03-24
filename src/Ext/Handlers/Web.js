@@ -444,8 +444,8 @@ class Web extends Handler{
     writer.response = this.response;
 
     // adding context as part of the result
-    if ('context' in this.request.query && writer.options.extendRoot){
-      writer.options.extendRoot.context = this.request.query.context;
+    if ('context' in this.request.query && writer.options.extendOutput){
+      writer.options.extendOutput.context = this.request.query.context;
     }
 
     return writer;

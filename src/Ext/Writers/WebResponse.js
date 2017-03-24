@@ -1,6 +1,7 @@
 const assert = require('assert');
 const stream = require('stream');
 const TypeCheck = require('js-typecheck');
+const Util = require('../../Util');
 const Settings = require('../../Settings');
 const Handler = require('../../Handler');
 const Writer = require('../../Writer');
@@ -27,11 +28,9 @@ const _response = Symbol('response');
  * status defined as a member of the exception) | `200`
  * header | plain object containing the header names (in camel case convention) \
  * that should be used by the response | `{}`
+ * extendOutput | plain object that gets deep merged with the \
+ * final output | `{}`
  * headerOnly | if enabled ends the response without any data | ::false::
- * extendRoot | if specified a plain object that gets injected to the root of \
- * the result | ::none::
- * extendData | if specified a plain object that gets injected to the result \
- * under data | ::none::
  * resultLabel | custom label used to hold the result under data. In case of \
  * undefined (default) it uses a fallback label based on the value type: \
  * <br><br>- primitive values are held under 'value' \
@@ -76,10 +75,9 @@ class WebResponse extends Writer{
       successStatus: 200,
       headerOnly: false,
       header: {},
-      extendRoot: {
+      extendOutput: {
         apiVersion: Settings.get('apiVersion'),
       },
-      extendData: {},
       resultLabel: undefined,
     });
   }
@@ -220,12 +218,6 @@ class WebResponse extends Writer{
       Object.assign(result.data, value);
     }
 
-    // including extend data as part of the result
-    const extendData = this.options.extendData;
-    if (extendData){
-      Object.assign(result.data, extendData);
-    }
-
     this._genericOutput(result);
   }
 
@@ -243,18 +235,16 @@ class WebResponse extends Writer{
       return;
     }
 
-    // extending root options
-    assert.equal(this.options.extendRoot.data, undefined, "Can't define data under extendRoot");
-    Object.assign(data, this.options.extendRoot);
+    // extending output
+    const result = Util.deepMerge(data, this.options.extendOutput);
 
     // json output
-    this.response.json(data);
+    this.response.json(result);
   }
 
   /**
-   * Returns the label used to hold the result under data based on the option
-   * `extendData`. In case of undefined (default) it uses a fallback label
-   * based on the value type:
+   * Returns the label used to hold the result under data. In case of undefined
+   * (default) it uses a fallback label based on the value type:
    *
    * - primitive values are held under 'value'
    * - array value is held under 'items'
