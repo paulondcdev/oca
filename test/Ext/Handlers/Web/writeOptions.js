@@ -17,22 +17,18 @@ describe('Web Write Options:', () => {
   class HeaderOnly extends testutils.Actions.Shared.Sum{
     constructor(){
       super();
-      this.metadata.handler.web = {
-        writeOptions: {
-          headerOnly: true,
-        },
-      };
+      this.setMetadata('handler.web.writeOptions', {
+        headerOnly: true,
+      });
     }
   }
 
   class SuccessStatus extends testutils.Actions.Shared.Sum{
     constructor(){
       super();
-      this.metadata.handler.web = {
-        writeOptions: {
-          successStatus: 201,
-        },
-      };
+      this.setMetadata('handler.web.writeOptions', {
+        successStatus: 201,
+      });
     }
   }
 
@@ -43,13 +39,11 @@ describe('Web Write Options:', () => {
     }
 
     _perform(data){
-      this.metadata.handler.web = {
-        writeOptions: {
-          header: {
-            date: data.customDate,
-          },
+      this.setMetadata('handler.web.writeOptions', {
+        header: {
+          date: data.customDate,
         },
-      };
+      });
 
       return Promise.resolve(data.customDate);
     }
@@ -65,11 +59,9 @@ describe('Web Write Options:', () => {
     _perform(data){
 
       if (data.resultLabel){
-        this.metadata.handler.web = {
-          writeOptions: {
-            successResultLabel: data.resultLabel,
-          },
-        };
+        this.setMetadata('handler.web.writeOptions', {
+          successResultLabel: data.resultLabel,
+        });
       }
 
       let result = 'a';
@@ -86,16 +78,14 @@ describe('Web Write Options:', () => {
 
   class ExtendResult extends Oca.Action{
     _perform(data){
-      this.metadata.handler.web = {
-        writeOptions: {
-          extendOutput: {
-            data: {
-              test: 1,
-              test2: 2,
-            },
+      this.setMetadata('handler.web.writeOptions', {
+        extendOutput: {
+          data: {
+            test: 1,
+            test2: 2,
           },
         },
-      };
+      });
 
       return Promise.resolve(true);
     }
