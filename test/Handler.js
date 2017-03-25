@@ -332,4 +332,13 @@ describe('Handler:', () => {
       assert.equal(handler.result.value, error.toJson());
     })();
   });
+
+  it('Handler name should be included inside of the session arbitrary data', () => {
+    return (async () => {
+      Handler.registerHandler(CustomHandler);
+      const handler = Oca.createHandler('customHandler');
+
+      assert.equal(handler.session.get('handler'), 'customHandler'.toLowerCase());
+    })();
+  });
 });
