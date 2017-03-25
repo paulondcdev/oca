@@ -13,7 +13,7 @@ const _stderr = Symbol('stderr');
  * Command-line output writer.
  *
  * This writer is used by the output of the command-line handler
- * ({@link CommandLine.output}).
+ * ({@link CommandLine}).
  *
  * In case the value is an exception then it's treated as
  * {@link CommandLineOutput._errorOutput} otherwise the value is treated as
