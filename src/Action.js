@@ -79,10 +79,7 @@ class Action{
 
     this[_inputs] = new Map();
     this[_session] = null;
-    this[_metadata] = {
-      action: {},
-      handler: {},
-    };
+    this[_metadata] = new Util.HierarchicalCollection();
 
     // Adding the api input, all actions will inherit this input.
     // This input is used to make sure that the version requested
@@ -306,7 +303,7 @@ class Action{
       id: this.id(),
       inputs: actionInputs,
       metadata: {
-        action: this.metadata.action,
+        action: this.metadata('action'),
       },
       session: {
         autofill: (autofill && this.session) ? this.session.autofill : {},
@@ -331,15 +328,35 @@ class Action{
   }
 
   /**
-   * Returns a plain object containing meta-data information about the action.
+   * Returns a value under the meta-data
    *
-   * It can be used to include additional meta-data information
-   * used by a {@link Handler}.
-   *
-   * @return {Object}
+   * @param {string} path - path about where the value is localized (the levels
+   * must be separated by '.'). In case of an empty string it returns the
+   * entire meta-data
+   * @param {*} [defaultValue] - default value returned in case a value was
+   * not found for the path
+   * @return {*}
    */
-  get metadata(){
-    return this[_metadata];
+  metadata(path, defaultValue=undefined){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+
+    return this[_metadata].query(path, defaultValue);
+  }
+
+  /**
+   * Sets a value to the meta-data
+   *
+   * @param {string} path - path about where the value should be stored under the metadata
+   * (the levels must be separated by '.')
+   * @param {*} value - value that is going to be stored under the collection
+   * @param {boolean} [merge=true] - this option is used to decide in case of the
+   * last level is already existing under the collection, if the value should be
+   * either merged (default) or overridden.
+   */
+  setMetadata(path, value, merge=true){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+
+    this[_metadata].insert(path, value, merge);
   }
 
   /**
@@ -356,8 +373,8 @@ class Action{
     const separator = ';\n';
 
     // header
-    if (this.metadata.action.name){
-      actionSignature = this.metadata.action.name;
+    if (this.metadata('action.name')){
+      actionSignature = this.metadata('action.name');
     }
     // using the class name can be very flawed, make sure to always creating actions
     // via their registration name
@@ -390,7 +407,7 @@ class Action{
 
     // overriding the meta-data information about the origin of the action, by telling
     // it has been created from inside of another action
-    action.metadata.action.origin = 'nested';
+    action.setMetadata('action.origin', 'nested');
 
     return action;
   }
@@ -442,12 +459,12 @@ class Action{
       action.session = session || new Session();
 
       // adding the action name used to create the action under the meta-data
-      action.metadata.action.name = actionName.toLowerCase();
+      action.setMetadata('action.name', actionName.toLowerCase());
 
       // adding a meta-data information telling the action is a top level one
       // it has not being created inside of another action through the
       // Action.createAction
-      action.metadata.action.origin = 'topLevel';
+      action.setMetadata('action.origin', 'topLevel');
 
       return action;
     }
@@ -616,7 +633,7 @@ class Action{
     // adding a member that tells the origin of the error
     let topLevel = false;
     if (!err.origin){
-      err.origin = this.metadata.action.origin;
+      err.origin = this.metadata('action.origin');
       topLevel = true;
 
       // disabling output
@@ -628,8 +645,9 @@ class Action{
     // adding the action class name and the registered name to the stack information, for
     // debugging purposes
     let actionName = this.constructor.name;
-    if (this.metadata.action.name){
-      actionName += ` (${this.metadata.action.name})`;
+    const registeredName = this.metadata('action.name');
+    if (registeredName){
+      actionName += ` (${registeredName})`;
     }
 
     // including the action name information in a way that includes all action levels

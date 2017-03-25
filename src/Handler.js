@@ -6,6 +6,7 @@ const Session = require('./Session');
 const Action = require('./Action');
 const Reader = require('./Reader');
 const Writer = require('./Writer');
+const Util = require('./Util');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
@@ -42,14 +43,14 @@ const _metadata = Symbol('metadata');
  *
  *      // change 'name' for the registration name of the handler you
  *      // want to define the read & write options
- *      this.metadata.handler.name = {
+ *      this.setMetadata('handler.name', {
  *        readOptions: {
  *          someReadOption: true,
  *        },
  *        writeOptions: {
  *          someWriteOption: 10,
  *        },
- *      };
+ *      });
  *    }
  * }
  * Oca.registerAction(MyAction);
@@ -100,11 +101,7 @@ class Handler{
     assert(session instanceof Session, 'Invalid session');
 
     this[_session] = session;
-    this[_metadata] = {
-      handler: {},
-      readOptions: {},
-      writeOptions: {},
-    };
+    this[_metadata] = new Util.HierarchicalCollection();
   }
 
   /**
@@ -117,12 +114,35 @@ class Handler{
   }
 
   /**
-   * Returns a plain object containing meta-data information about the handler.
+   * Returns a value under the meta-data
    *
-   * @return {Object}
+   * @param {string} path - path about where the value is localized (the levels
+   * must be separated by '.'). In case of an empty string it returns the
+   * entire meta-data
+   * @param {*} [defaultValue] - default value returned in case a value was
+   * not found for the path
+   * @return {*}
    */
-  get metadata(){
-    return this[_metadata];
+  metadata(path, defaultValue=undefined){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+
+    return this[_metadata].query(path, defaultValue);
+  }
+
+  /**
+   * Sets a value to the meta-data
+   *
+   * @param {string} path - path about where the value should be stored under the metadata
+   * (the levels must be separated by '.')
+   * @param {*} value - value that is going to be stored under the collection
+   * @param {boolean} [merge=true] - this option is used to decide in case of the
+   * last level is already existing under the collection, if the value should be
+   * either merged (default) or overridden.
+   */
+  setMetadata(path, value, merge=true){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+
+    this[_metadata].insert(path, value, merge);
   }
 
   /**
@@ -151,10 +171,14 @@ class Handler{
     assert(action, `Action ${actionName} not found!`);
 
     // collecting read options from the action
-    Object.assign(
-      this.metadata.readOptions,
-      this._actionHandlerOptions(action, 'readOptions'),
-    );
+    let actionHandlerName = this._actionHandlerName(action);
+
+    if (actionHandlerName){
+      this.setMetadata(
+        'readOptions',
+        action.metadata(`handler.${actionHandlerName}.readOptions`, {}),
+      );
+    }
 
     // executing action
     let result;
@@ -163,11 +187,20 @@ class Handler{
       result = await action.execute();
     }
     finally{
+
+      // handler metadata can be defined later during
+      // for this reason querying it again if it was not defined previously
+      if (!actionHandlerName){
+        actionHandlerName = this._actionHandlerName(action);
+      }
+
       // collecting write options from the action
-      Object.assign(
-        this.metadata.writeOptions,
-        this._actionHandlerOptions(action, 'writeOptions'),
-      );
+      if (actionHandlerName){
+        this.setMetadata(
+          'writeOptions',
+          action.metadata(`handler.${actionHandlerName}.writeOptions`, {}),
+        );
+      }
     }
 
     return result;
@@ -200,7 +233,7 @@ class Handler{
    */
   output(value, options={}, finalizeSession=true){
 
-    const writeOptions = Object.assign({}, this.metadata.writeOptions, options);
+    const writeOptions = Util.deepMerge(this.metadata('writeOptions', {}), options);
     const writer = this._createWriter(value, writeOptions);
     try{
       writer.serialize();
@@ -242,8 +275,8 @@ class Handler{
     const handler = new HandlerClass(session);
 
     // adding the action name used to create the action under the meta-data
-    handler.metadata.handler.name = handlerName.toLowerCase();
-    handler.metadata.handler.mask = mask.toLowerCase();
+    handler.setMetadata('handler.name', handlerName.toLowerCase());
+    handler.setMetadata('handler.mask', mask.toLowerCase());
 
     return handler;
   }
@@ -400,8 +433,8 @@ class Handler{
    */
   _createReader(action, options){
     const ReaderClass = Handler.registeredReader(
-      this.metadata.handler.name,
-      this.metadata.handler.mask,
+      this.metadata('handler.name'),
+      this.metadata('handler.mask'),
     );
 
     assert(ReaderClass, 'Invalid registered reader!');
@@ -422,8 +455,8 @@ class Handler{
    */
   _createWriter(value, options){
     const WriterClass = Handler.registeredWriter(
-      this.metadata.handler.name,
-      this.metadata.handler.mask,
+      this.metadata('handler.name'),
+      this.metadata('handler.mask'),
     );
 
     assert(WriterClass, 'Invalid registered writer!');
@@ -454,7 +487,7 @@ class Handler{
 
     assert(action instanceof Action, 'Invalid action');
 
-    const readOptions = Object.assign({}, this.metadata.readOptions, options);
+    const readOptions = Util.deepMerge(this.metadata('readOptions', {}), options);
     const reader = this._createReader(action, readOptions);
 
     // collecting the reader values
@@ -502,27 +535,22 @@ class Handler{
   }
 
   /**
-   * Auxiliary method that returns handler options defined as metadata inside
-   * of the action
-   *
-   * @param {Action} action - action that should be used
-   * @param {string} optionsType - options type either 'readOptions' or 'writeOptions'
-   * @return {Object}
-   * @private
-   */
-  _actionHandlerOptions(action, optionsType){
-    let result = {};
+  * Auxiliary method that returns the handler name defined as metadata inside
+  * of the action
+  *
+  * @param {Action} action - action that should be used
+  * @return {string|null}
+  * @private
+  */
+  _actionHandlerName(action){
+    let result = null;
 
-    for (const handlerName of Object.keys(action.metadata.handler)){
+    const registeredHandlerName = this.metadata('handler.name');
+    for (const handlerName in action.metadata('handler', {})){
 
-      // the searching for the handler name is case insensitive
-      if (handlerName.toLowerCase() === this.metadata.handler.name){
-        const options = action.metadata.handler[handlerName][optionsType];
-
-        // found options
-        if (options){
-          result = options;
-        }
+      // the searching for the handler name (case insensitive)
+      if (handlerName.toLowerCase() === registeredHandlerName){
+        result = handlerName;
         break;
       }
     }
@@ -589,8 +617,8 @@ class Handler{
       this.constructor._output.emit(
         'error',
         err,
-        this.metadata.handler.name,
-        this.metadata.handler.mask,
+        this.metadata('handler.name'),
+        this.metadata('handler.mask'),
       );
     });
   }
