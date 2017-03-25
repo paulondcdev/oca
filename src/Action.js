@@ -56,14 +56,14 @@ const _session = Symbol('session');
  * with a prefix common across some group of actions you can use '.' as separator.
  * Also, there are two ways to create actions:
  *
- * - {@link Action.createAction} - allows actions to be created inside of another action.
+ * - {@link Action.createAction} - allows actions to be created from inside of another action.
  * By doing that it creates actions that share the same {@link Session}.
  *
  * - {@link Action.create} - factory an action (also available as `Oca.createAction`) with
  * custom session when supplied otherwise it creates a new session.
  *
  * An action can be serialized ({@link Action.toJson}) to postpone their execution where it can be
- * recreated later through {@link Action.createActionFromJson} or in case of a non registered actions
+ * recreated later through {@link Action.createActionFromJson} or in case of a non-registered actions
  * the serialized data can loaded through {@link Action.fromJson}.
  *
  * Also, actions can take advantage of the caching mechanism designed to improve the performance

@@ -12,9 +12,9 @@ const _response = Symbol('response');
 
 
 /**
- * WebResponse output writer.
+ * Web output writer.
  *
- * This writer is used by the output of the web handler ({@link Web.output}).
+ * This writer is used by the output of the web handler ({@link Web}).
  *
  * In case the value is an exception then it's treated as
  * {@link WebResponse._errorOutput} otherwise the value is treated as
