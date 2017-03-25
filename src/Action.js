@@ -373,8 +373,9 @@ class Action{
     const separator = ';\n';
 
     // header
-    if (this.metadata('action.name')){
-      actionSignature = this.metadata('action.name');
+    const actionRegisteredName = this.metadata('action.name');
+    if (actionRegisteredName){
+      actionSignature = actionRegisteredName;
     }
     // using the class name can be very flawed, make sure to always creating actions
     // via their registration name
