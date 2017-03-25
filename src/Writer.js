@@ -35,11 +35,9 @@ const _value = Symbol('value');
  *    _perform(data){
  *
  *      // defining a custom output option
- *      this.metadata.handler.name = {
- *        writeOptions: {
- *          someOption: 10,
- *        },
- *      };
+ *      this.setMetadata('handler.name.writeOptions', {
+ *        someOption: 10,
+ *      });
  *
  *      // ...
  *    }
