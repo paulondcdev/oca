@@ -303,7 +303,7 @@ class Action{
       id: this.id(),
       inputs: actionInputs,
       metadata: {
-        action: this.metadata('action'),
+        action: this.metadata('action', {}),
       },
       session: {
         autofill: (autofill && this.session) ? this.session.autofill : {},
