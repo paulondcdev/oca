@@ -2,6 +2,7 @@
   <img src="https://node-oca.github.io/docs/data/logo.png"/>
 </p>
 
+![status](./data/status.svg)
 [![Gitter chat](https://badges.gitter.im/node-oca/gitter.png)](https://gitter.im/node-oca)
 [![Build Status](https://travis-ci.org/node-oca/oca.svg?branch=master)](https://travis-ci.org/node-oca/oca)
 [![codecov.io](https://codecov.io/github/node-oca/oca/coverage.svg?branch=master)](https://codecov.io/github/node-oca/oca?branch=master)
