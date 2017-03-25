@@ -49,13 +49,11 @@ const _response = Symbol('response');
  *    _perform(data){
  *
  *      // 'Content-Type' header
- *      this.metadata.handler.web = {
- *        writeOptions: {
- *          header: {
- *            contentType: 'application/octet-stream',
- *          },
+ *      this.setMetadata('handler.web.writeOptions', {
+ *        header: {
+ *          contentType: 'application/octet-stream',
  *        },
- *      };
+ *      });
  *
  *      // ...
  *    }

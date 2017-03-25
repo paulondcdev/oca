@@ -108,6 +108,7 @@
           "br",
           "dev",
           "neodoc",
+          "docgen",
           "parallelization",
           "integrations",
           "promisifying",

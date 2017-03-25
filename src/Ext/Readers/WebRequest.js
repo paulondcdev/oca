@@ -107,11 +107,9 @@ const _request = Symbol('request');
  *      super();
  *
  *      // 'uploadMaxFileSize' option
- *      this.metadata.handler.web = {
- *        readOptions: {
- *          uploadMaxFileSize: 10 * 1024 * 1024,
- *        },
- *      };
+ *      this.setMetadata('handler.web.readOptions', {
+ *        uploadMaxFileSize: 10 * 1024 * 1024,
+ *      });
  *    }
  * }
  * ```

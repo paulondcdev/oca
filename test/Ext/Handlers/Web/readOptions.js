@@ -26,11 +26,9 @@ describe('Web Read Options:', () => {
       super();
       this.createInput('folder: text');
 
-      this.metadata.handler.web = {
-        readOptions: {
-          uploadDirectory: customUploadDirectory,
-        },
-      };
+      this.setMetadata('handler.web.readOptions', {
+        uploadDirectory: customUploadDirectory,
+      });
     }
 
     _perform(data){
@@ -53,7 +51,7 @@ describe('Web Read Options:', () => {
     constructor(){
       super();
 
-      this.metadata.handler.web = preserveFileNameOptions;
+      this.setMetadata('handler.web', preserveFileNameOptions);
     }
   }
 
@@ -61,7 +59,7 @@ describe('Web Read Options:', () => {
     constructor(){
       super();
 
-      this.metadata.handler.web = preserveFileNameOptions;
+      this.setMetadata('handler.web', preserveFileNameOptions);
     }
   }
 
