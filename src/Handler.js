@@ -274,9 +274,13 @@ class Handler{
 
     const handler = new HandlerClass(session);
 
-    // adding the action name used to create the action under the meta-data
-    handler.setMetadata('handler.name', handlerName.toLowerCase());
+    // adding the handler name used to factory the handler under the meta-data
+    const normalizedHandlerName = handlerName.toLowerCase();
+    handler.setMetadata('handler.name', normalizedHandlerName);
     handler.setMetadata('handler.mask', mask.toLowerCase());
+
+    // also, adding the handler name under the session arbitrary data
+    session.set('handler', normalizedHandlerName);
 
     return handler;
   }
