@@ -344,4 +344,31 @@ describe('Web Restful Generic:', () => {
       done(error);
     });
   });
+
+  it('Should use a prefix in the restful support', (done) => {
+    Oca.registerAction(testutils.Actions.Shared.Sum, 'sum.testPrefix');
+    Oca.webfyAction('sum.testPrefix', 'get', {restRoute: '/testPrefix'});
+    Oca.restful(app, '/myApi');
+
+    request(`http://localhost:${port}/myApi/testPrefix?a=5&b=5`, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+
+        const result = JSON.parse(body);
+        assert.equal(result.data.value, 10);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
 });

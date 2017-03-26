@@ -256,6 +256,12 @@ class Handler{
    *
    * Alternatively this method can be called directly from Oca as `Oca.createHandler(...)`
    *
+   * Also, the handler name gets included in the session as arbitrary data, it can be
+   * retrieved through 'handler'. This name follows the registration pattern where this
+   * value is represented in lowercase internally:
+   * ```
+   * Session.get('handler');
+   * ```
    * @param {string} handlerName - registered handler name
    * @param {string} [mask='*'] - optional mask that supports a glob syntax used
    * to match a custom registered handler (it allows to have
