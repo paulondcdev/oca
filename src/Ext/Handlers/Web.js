@@ -1,4 +1,5 @@
 const assert = require('assert');
+const path = require('path');
 const TypeCheck = require('js-typecheck');
 const Settings = require('../../Settings');
 const Action = require('../../Action');
@@ -381,26 +382,34 @@ class Web extends Handler{
   /**
    * Adds the restful support to the express app.
    *
-   * It works by registering the routes from webfied visible actions
-   * ({@link Web.webfyAction}) to the express app. The response of an action executed
-   * through rest support is done via {@link Web.output}.
+   * It works by registering the rest routes for the webfied visible actions
+   * ({@link Web.webfyAction}) to the express app. The response of actions
+   * executed through the rest support is done via the output method.
    *
    * ```javascript
    * const app = express();
    * Oca.restful(app);
    * ```
+   * or
+   * ```javascript
+   * const app = express();
+   * Oca.restful(app, '/api'); // adding a prefix for the rest routes
+   * ```
    *
    * @param {Object} expressApp - expressjs application instance
+   * @param {string} [prefix] - optional prefix that gets included in the
+   * registration of the rest routes
    */
-  static restful(expressApp){
+  static restful(expressApp, prefix=''){
 
     assert(TypeCheck.isCallable(expressApp.use), 'Invalid express instance!');
+    assert(TypeCheck.isString(prefix), 'prefix must be defined as string');
 
     // registering the routes
     for (const webfiedAction of this._webfyActions){
       if (webfiedAction.restRoute !== null){
         expressApp[webfiedAction.method](
-          webfiedAction.restRoute,
+          path.join(prefix, webfiedAction.restRoute),
           this._createMiddleware(webfiedAction.actionName),
         );
       }
