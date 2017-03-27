@@ -10,7 +10,7 @@ describe('Writer:', () => {
     constructor(value){
       super(value);
       this.result = {};
-      this.options.defaultOption = 'test';
+      this.setOption('defaultOption', 'test');
     }
 
     _errorOutput(){
@@ -28,7 +28,7 @@ describe('Writer:', () => {
 
     const writer = new CustomWriter(20);
     // default option
-    assert.equal(writer.options.defaultOption, 'test');
+    assert.equal(writer.option('defaultOption'), 'test');
   });
 
   it('Should test serialize a value as output', () => {

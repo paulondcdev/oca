@@ -25,7 +25,7 @@ describe('Checksum Action:', () => {
 
       const checksumAction = Oca.createAction('file.checksum');
 
-      checksumAction.input('file').value = path.join(temporaryFolder, filePath);
+      checksumAction.input('file').setValue(path.join(temporaryFolder, filePath));
 
       const result = await checksumAction.execute();
       assert.equal('4aef39e4090b33644513ab820b07ddfa7db4f8c9a3b201e2d789433d6d20becc', result);
@@ -39,8 +39,8 @@ describe('Checksum Action:', () => {
     return (async () => {
 
       const checksumAction = Oca.createAction('file.checksum');
-      checksumAction.input('algo').value = 'sha256';
-      checksumAction.input('file').value = path.join(temporaryFolder, filePath);
+      checksumAction.input('algo').setValue('sha256');
+      checksumAction.input('file').setValue(path.join(temporaryFolder, filePath));
 
       const result = await checksumAction.execute();
       assert.equal('4aef39e4090b33644513ab820b07ddfa7db4f8c9a3b201e2d789433d6d20becc', result);
@@ -56,7 +56,7 @@ describe('Checksum Action:', () => {
 
       const checksumAction = Oca.createAction('file.checksum');
       checksumAction.input('file').assignProperty('exists', false);
-      checksumAction.input('file').value = path.join(temporaryFolder, 'invalidFile.none');
+      checksumAction.input('file').setValue(path.join(temporaryFolder, 'invalidFile.none'));
 
       await checksumAction.execute();
 

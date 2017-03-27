@@ -8,7 +8,7 @@ describe('Text Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: text');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Should create the input using the alias: string', () => {
@@ -18,7 +18,7 @@ describe('Text Input:', () => {
 
   it('Integer should not be considered as text', (done) => {
     const input = Input.create('input: text');
-    input.value = 1;
+    input.setValue(1);
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -28,7 +28,7 @@ describe('Text Input:', () => {
 
   it('String value should be valid', () => {
     const input = Input.create('input: text');
-    input.value = 'value';
+    input.setValue('value');
     return input.validate.bind(input)();
   });
 
@@ -38,21 +38,21 @@ describe('Text Input:', () => {
 
     input.parseValue(JSON.stringify(data));
 
-    assert.equal(input.value[0], 'a');
-    assert.equal(input.value[1], null);
-    assert.equal(input.value[2], null);
+    assert.equal(input.value()[0], 'a');
+    assert.equal(input.value()[1], null);
+    assert.equal(input.value()[2], null);
   });
 
   it('Should accept a string array', () => {
     const input = Input.create('input: text[]');
-    input.value = ['a', 'b', 'c'];
+    input.setValue(['a', 'b', 'c']);
 
     return input.validate.bind(input)();
   });
 
   it('Should fail when the array contains a non string value', (done) => {
     const input = Input.create('input: text[]');
-    input.value = ['a', 2, 'c'];
+    input.setValue(['a', 2, 'c']);
 
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
@@ -63,7 +63,7 @@ describe('Text Input:', () => {
 
   it('Should fail to serialize', (done) => {
     const input = Input.create('input: text[]');
-    input.value = ['a', 2, 'c'];
+    input.setValue(['a', 2, 'c']);
 
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
@@ -74,7 +74,7 @@ describe('Text Input:', () => {
 
   it("When 'min' property is set, it should not allow strings shorter than the minimum", (done) => {
     const input = Input.create('input: text', {min: 4});
-    input.value = 'foo';
+    input.setValue('foo');
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -84,7 +84,7 @@ describe('Text Input:', () => {
 
   it("When 'max' property is set, it should not allow strings longer than the maximum", (done) => {
     const input = Input.create('input: text', {max: 2});
-    input.value = 'foo';
+    input.setValue('foo');
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -94,13 +94,13 @@ describe('Text Input:', () => {
 
   it("When 'regex' property is set, it should validate date based on a regex pattern", () => {
     const input = Input.create('input: text', {regex: '[0-9]{2}/[0-9]{2}/[0-9]{4}'});
-    input.value = '25/05/1984';
+    input.setValue('25/05/1984');
     return input.validate.bind(input)();
   });
 
   it("When 'regex' property is set, it should not validate the input with a wrong date format based on a regex pattern", (done) => {
     const input = Input.create('input: text', {regex: '[0-9]{2}/[0-9]{2}/[0-9]{4}'});
-    input.value = 'AA/05/1984';
+    input.setValue('AA/05/1984');
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -110,7 +110,7 @@ describe('Text Input:', () => {
 
   it("An empty string assigned as value should be considered as empty when calling 'isEmpty'", () => {
     const input = Input.create('input: text', {required: true});
-    input.value = '';
-    assert(input.isEmpty);
+    input.setValue('');
+    assert(input.isEmpty());
   });
 });

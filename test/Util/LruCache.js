@@ -66,14 +66,14 @@ describe('Util LruCache:', () => {
   it('Should return the keys that are part of the cache', () => {
     const cache = new LruCache(1024, 1000);
 
-    assert.equal(cache.keys.length, 0);
+    assert.equal(cache.keys().length, 0);
 
     cache.set('test', 10);
     cache.set('test2', 10);
 
     let test = false;
     let test2 = false;
-    for (const key of cache.keys){
+    for (const key of cache.keys()){
       if (key === 'test'){
         test = true;
       }

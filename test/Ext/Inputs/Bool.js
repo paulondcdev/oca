@@ -8,7 +8,7 @@ describe('Bool Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: bool');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Should create the input using the alias: boolean', () => {
@@ -27,7 +27,7 @@ describe('Bool Input:', () => {
 
   it('Integer should not be considered as boolean', (done) => {
     const input = Input.create('input: bool');
-    input.value = 1;
+    input.setValue(1);
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -37,17 +37,17 @@ describe('Bool Input:', () => {
 
   it('Boolean value should be valid', () => {
     const input = Input.create('input: bool');
-    input.value = true;
+    input.setValue(true);
     return input.validate.bind(input)();
   });
 
   it('Value should be able to be parsed from a string', () => {
     const input = Input.create('input: bool');
     input.parseValue('true');
-    assert.equal(input.value, true);
+    assert.equal(input.value(), true);
 
     input.parseValue('1');
-    assert.equal(input.value, true);
+    assert.equal(input.value(), true);
 
     return input.validate.bind(input)();
   });
@@ -68,10 +68,10 @@ describe('Bool Input:', () => {
     const input = Input.create('input: bool[]');
     input.parseValue(testValue);
 
-    assert.equal(input.value.length, 3);
-    assert.equal(input.value[0], true);
-    assert.equal(input.value[1], false);
-    assert.equal(input.value[2], true);
+    assert.equal(input.value().length, 3);
+    assert.equal(input.value()[0], true);
+    assert.equal(input.value()[1], false);
+    assert.equal(input.value()[2], true);
   });
 
   it('Vector value should be able to be parsed directly from a json version where each item is encoded as string', () => {
@@ -79,22 +79,22 @@ describe('Bool Input:', () => {
 
       const testValue = [true, false, true];
       const input = Input.create('input: bool[]');
-      input.value = testValue;
+      input.setValue(testValue);
 
       const serializedValue = await input.serializeValue();
-      input.value = null;
+      input.setValue(null);
       input.parseValue(serializedValue);
 
-      assert.equal(input.value.length, 3);
-      assert.equal(input.value[0], true);
-      assert.equal(input.value[1], false);
-      assert.equal(input.value[2], true);
+      assert.equal(input.value().length, 3);
+      assert.equal(input.value()[0], true);
+      assert.equal(input.value()[1], false);
+      assert.equal(input.value()[2], true);
     });
   });
 
   it('Vector value should be able to be serialized as string', (done) => {
     const input = Input.create('input: bool[]');
-    input.value = [true, false, true];
+    input.setValue([true, false, true]);
 
     input.serializeValue().then((value) => {
       done((value === '["1","0","1"]') ? null : new Error('unexpected value'));

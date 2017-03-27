@@ -29,9 +29,9 @@ describe('Copy Action:', () => {
     (async () => {
 
       const copyAction = Oca.createAction('file.copy');
-      copyAction.input('createTargetDirectories').value = false;
-      copyAction.input('sourceFile').value = filePath;
-      copyAction.input('targetFile').value = `${targetFilePath}__`;
+      copyAction.input('createTargetDirectories').setValue(false);
+      copyAction.input('sourceFile').setValue(filePath);
+      copyAction.input('targetFile').setValue(`${targetFilePath}__`);
 
       await copyAction.execute();
 
@@ -47,8 +47,8 @@ describe('Copy Action:', () => {
     return (async () => {
 
       const copyAction = Oca.createAction('file.copy');
-      copyAction.input('sourceFile').value = filePath;
-      copyAction.input('targetFile').value = targetFilePath;
+      copyAction.input('sourceFile').setValue(filePath);
+      copyAction.input('targetFile').setValue(targetFilePath);
 
       await copyAction.execute();
 

@@ -13,8 +13,8 @@ describe('Action Generic:', () => {
     constructor(){
       super();
 
-      this.input('a').value = 2;
-      this.input('b').value = 5;
+      this.input('a').setValue(2);
+      this.input('b').setValue(5);
       this.createInput('inputC: text', {required: false});
     }
 
@@ -38,7 +38,7 @@ describe('Action Generic:', () => {
       return super._perform(data);
     }
 
-    get isCacheable(){
+    isCacheable(){
       return true;
     }
   }
@@ -76,8 +76,8 @@ describe('Action Generic:', () => {
     return (async () => {
       const cacheableAction = Oca.createAction('cacheableAction');
 
-      cacheableAction.input('a').value = 2;
-      cacheableAction.input('b').value = 2;
+      cacheableAction.input('a').setValue(2);
+      cacheableAction.input('b').setValue(2);
 
       await cacheableAction.execute();
       await cacheableAction.execute();
@@ -89,12 +89,12 @@ describe('Action Generic:', () => {
 
   it('Should let null to be assigned as session value', () => {
     const action = Oca.createAction('cacheableAction');
-    action.session = new Session();
+    action.setSession(new Session());
 
     // replacing session to null
-    action.session = null;
+    action.setSession(null);
 
-    assert.equal(action.session, null);
+    assert.equal(action.session(), null);
   });
 
   it('LRU cache: Should return a different id when the input is set with a different value', () => {
@@ -103,7 +103,7 @@ describe('Action Generic:', () => {
       const cacheableAction = Oca.createAction('cacheableAction');
       const cacheIdA = await cacheableAction.id();
 
-      cacheableAction.input('a').value = 1;
+      cacheableAction.input('a').setValue(1);
 
       assert.notEqual(cacheIdA, await cacheableAction.id());
     })();
@@ -113,7 +113,7 @@ describe('Action Generic:', () => {
 
     return (async () => {
       const cacheableAction = Oca.createAction('cacheableAction');
-      cacheableAction.input('a').value = 2;
+      cacheableAction.input('a').setValue(2);
 
       // asking twice for the same value (the second one returns from the cache)
       let result = await cacheableAction.execute();
@@ -123,7 +123,7 @@ describe('Action Generic:', () => {
       assert.equal(result, cacheResult);
 
       // same test with a different value
-      cacheableAction.input('a').value = 1;
+      cacheableAction.input('a').setValue(1);
 
       result = await cacheableAction.execute();
       cacheResult = await cacheableAction.execute();
@@ -155,13 +155,13 @@ describe('Action Generic:', () => {
       const session = new Session();
       const wrapUpAction = Oca.createAction('multiplyAction');
 
-      wrapUpAction.input('a').value = 2;
-      wrapUpAction.input('b').value = 2;
-      session.wrapup.addAction(wrapUpAction);
+      wrapUpAction.input('a').setValue(2);
+      wrapUpAction.input('b').setValue(2);
+      session.wrapup().addAction(wrapUpAction);
 
       let wrapupPromiseWasCalled = false;
 
-      session.wrapup.addWrappedPromise(() => {
+      session.wrapup().addWrappedPromise(() => {
         return new Promise((resolve, reject) => {
           wrapupPromiseWasCalled = true;
           resolve(true);

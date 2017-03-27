@@ -8,19 +8,19 @@ describe('Email Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: email');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Should accept a valid email', () => {
     const input = Input.create('input: email');
-    input.value = 'test@domain.com';
+    input.setValue('test@domain.com');
 
     return input.validate.bind(input)();
   });
 
   it('Should not accept an invalid email', (done) => {
     const input = Input.create('input: email');
-    input.value = 'test@domain';
+    input.setValue('test@domain');
 
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));

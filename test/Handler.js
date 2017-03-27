@@ -23,7 +23,8 @@ describe('Handler:', () => {
       const result = {};
 
       for (const input of inputList){
-        result[input.name] = this.data[input.name];
+        const inputName = input.name();
+        result[inputName] = this.data[inputName];
       }
 
       return Promise.resolve(result);
@@ -124,15 +125,15 @@ describe('Handler:', () => {
   });
 
   it('Should check the registered handler names', () => {
-    const beforeRegistratorNames = Handler.registeredHandlerNames;
+    const beforeRegistratorNames = Handler.registeredHandlerNames();
     assert(!beforeRegistratorNames.includes('test'));
     Handler.registerHandler(CustomHandler, 'test');
 
     // the second registration should override the previous one (instead of adding a new one)
     Handler.registerHandler(CustomHandler, 'test');
 
-    const afterRegistratorNames = Handler.registeredHandlerNames;
-    assert(Handler.registeredHandlerNames.includes('test'));
+    const afterRegistratorNames = Handler.registeredHandlerNames();
+    assert(Handler.registeredHandlerNames().includes('test'));
     assert.equal(beforeRegistratorNames.length + 1, afterRegistratorNames.length);
   });
 
@@ -171,9 +172,10 @@ describe('Handler:', () => {
 
   it('Should create an handler with a custom session', () => {
 
-    const session = new Session({myValue: 100});
+    const session = new Session();
+    session.setAutofill('myValue', 100);
     const handler = Oca.createHandler('CustomHandler', '*', session);
-    assert.equal(session.autofill.myValue, handler.session.autofill.myValue);
+    assert.equal(session.autofill('myValue'), handler.session().autofill('myValue'));
   });
 
   it('Should perform an action through the handler', () => {
@@ -240,7 +242,7 @@ describe('Handler:', () => {
 
     (async () => {
       const handler = Oca.createHandler('sessionErrorHandler');
-      handler.session.wrapup.addWrappedPromise(() => Promise.reject(new Error('Should fail')));
+      handler.session().wrapup().addWrappedPromise(() => Promise.reject(new Error('Should fail')));
       handler.testData = {
         a: 'A value',
         b: 30,
@@ -293,7 +295,7 @@ describe('Handler:', () => {
     return (async () => {
       Handler.registerHandler(CustomHandler);
       const handler = Oca.createHandler('CustomHandler');
-      handler.session.wrapup.addWrappedPromise(() => Promise.reject(new Error('Should fail')));
+      handler.session().wrapup().addWrappedPromise(() => Promise.reject(new Error('Should fail')));
       handler.testData = {
         a: 'A value',
         b: 30,
@@ -338,7 +340,7 @@ describe('Handler:', () => {
       Handler.registerHandler(CustomHandler);
       const handler = Oca.createHandler('customHandler');
 
-      assert.equal(handler.session.get('handler'), 'customHandler'.toLowerCase());
+      assert.equal(handler.session().get('handler'), 'customHandler'.toLowerCase());
     })();
   });
 });

@@ -8,7 +8,7 @@ describe('Numeric Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: numeric');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Should create the input using the alias: number', () => {
@@ -18,13 +18,13 @@ describe('Numeric Input:', () => {
 
   it('Integer value should be valid', () => {
     const input = Input.create('input: numeric');
-    input.value = 1;
+    input.setValue(1);
     return input.validate.bind(input)();
   });
 
   it('String value should not be valid', (done) => {
     const input = Input.create('input: numeric');
-    input.value = '1';
+    input.setValue('1');
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -34,7 +34,7 @@ describe('Numeric Input:', () => {
 
   it("When 'min' property is set, it should not allow a numeric value less than the minimum", (done) => {
     const input = Input.create('input: numeric', {min: -5});
-    input.value = -10;
+    input.setValue(-10);
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
 
@@ -45,7 +45,7 @@ describe('Numeric Input:', () => {
 
   it("When 'max' property is set, it should not allow a numeric value greater than the maximum", (done) => {
     const input = Input.create('input: numeric', {max: 5});
-    input.value = 10;
+    input.setValue(10);
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {

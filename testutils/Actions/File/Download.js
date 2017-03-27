@@ -96,7 +96,7 @@ class Download extends Action{
       /* istanbul ignore next */
       const httpModule = (this.input('inputUrl').protocol() === 'http:') ? http : https;
 
-      httpModule.get(this.input('inputUrl').value, (response) => {
+      httpModule.get(this.input('inputUrl').value(), (response) => {
         response.pipe(s);
 
         s.on('finish', () => {

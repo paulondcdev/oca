@@ -8,7 +8,7 @@ describe('Timestamp Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: timestamp');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Should create the input using the alias: date', () => {
@@ -18,14 +18,14 @@ describe('Timestamp Input:', () => {
 
   it('Date value should be accepted', () => {
     const input = Input.create('input: timestamp');
-    input.value = new Date();
+    input.setValue(new Date());
 
     return input.validate.bind(input)();
   });
 
   it('Invalid date value should be allowed', (done) => {
     const input = Input.create('input: timestamp');
-    input.value = new Date('invalid');
+    input.setValue(new Date('invalid'));
 
     input.validate.bind(input)().then((value) => {
       done(new Error(`unexpected value ${value}`));

@@ -11,17 +11,17 @@ class VectorUploadAction extends Oca.Action{
   async _perform(data){
     const checksum = this.createAction('file.checksum');
 
-    checksum.input('file').value = data.file[0];
+    checksum.input('file').setValue(data.file[0]);
     const file1 = await checksum.execute();
 
-    checksum.input('file').value = data.file[1];
+    checksum.input('file').setValue(data.file[1]);
     const file2 = await checksum.execute();
 
-    checksum.input('file').value = data.file[2];
+    checksum.input('file').setValue(data.file[2]);
     const file3 = await checksum.execute();
 
     const result = {};
-    result[this.input('a').name] = data.a;
+    result[this.input('a').name()] = data.a;
     result[this.input('file').basename(0)] = file1;
     result[this.input('file').basename(1)] = file2;
     result[this.input('file').basename(2)] = file3;
@@ -33,9 +33,9 @@ class VectorUploadAction extends Oca.Action{
     // deleting files
     const deleteActionPromises = [];
 
-    for (const fileName of this.input('file').value){
+    for (const fileName of this.input('file').value()){
       const deleteAction = this.createAction('file.delete');
-      deleteAction.input('file').value = fileName;
+      deleteAction.input('file').setValue(fileName);
       deleteActionPromises.push(deleteAction.execute());
     }
 

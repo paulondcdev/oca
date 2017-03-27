@@ -22,7 +22,7 @@ describe('Delete Action:', () => {
     return (async () => {
 
       const deleteAction = Oca.createAction('file.delete');
-      deleteAction.input('file').value = filePath;
+      deleteAction.input('file').setValue(filePath);
 
       await deleteAction.execute();
 

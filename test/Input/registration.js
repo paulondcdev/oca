@@ -13,8 +13,8 @@ describe('Input Registration:', () => {
     Input.registerInput(CustomInput);
     Input.registerInput(CustomInput, 'CustomInputName_.-1');
 
-    assert(Input.registeredInputNames.includes('CustomInput'.toLowerCase()));
-    assert(Input.registeredInputNames.includes('CustomInputName_.-1'.toLowerCase()));
+    assert(Input.registeredInputNames().includes('CustomInput'.toLowerCase()));
+    assert(Input.registeredInputNames().includes('CustomInputName_.-1'.toLowerCase()));
   });
 
   it('Should fail to register a custom input type with invalid name', () => {

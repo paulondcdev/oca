@@ -26,7 +26,7 @@ describe('Input Property:', () => {
 
     const input = new Input('inputName');
     input.assignProperty('test', true, true);
-    assert(input.propertyNames.includes('test'));
+    assert(input.propertyNames().includes('test'));
   });
 
   it('Should fail when querying a non-existing property', () => {
@@ -76,12 +76,12 @@ describe('Input Property:', () => {
   it('Initial Value should match value defined at constructing time', () => {
     const i = new Input('test', {defaultValue: 'foo'});
     assert.equal(i.property('defaultValue'), 'foo');
-    assert.equal(i.value, 'foo');
+    assert.equal(i.value(), 'foo');
   });
 
   it("When the property 'required' is set (comes on by default), it should not allow null or undefined types", (done) => {
     const input3 = new Input('test');
-    input3.value = null;
+    input3.setValue(null);
 
     input3.validate.bind(input3)().then((value) => {
       done(new Error('unexpected value'));
@@ -112,7 +112,7 @@ describe('Input Property:', () => {
     try{
       const input = new Input('test');
       input.assignProperty('customProperty', 10, true);
-      input.readOnly = true;
+      input.setReadOnly(true);
       input.assignProperty('customProperty', 20, true);
     }
     catch(err){
@@ -142,7 +142,7 @@ describe('Input Property:', () => {
     try{
       const input = new Input('test');
       input.assignProperty('customProperty', 10, true);
-      input.readOnly = true;
+      input.setReadOnly(true);
       input.lockProperty('customProperty');
     }
     catch(err){
@@ -155,9 +155,9 @@ describe('Input Property:', () => {
   it('Immutable flag can be disabled', () => {
 
     const inputA = new Input('input', {vector: true, immutable: false});
-    inputA.value = [1, 2, 3];
-    inputA.value[1] = 'new value';
+    inputA.setValue([1, 2, 3]);
+    inputA.value()[1] = 'new value';
 
-    assert.equal(inputA.value[1], 'new value');
+    assert.equal(inputA.value()[1], 'new value');
   });
 });

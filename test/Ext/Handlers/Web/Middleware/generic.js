@@ -144,7 +144,7 @@ describe('Web Middleware Generic:', () => {
   it('Tests if Oca.addBeforeAction middlewares are being called', (done) => {
 
     Oca.addBeforeAction((req, res, next) => {
-      res.locals.web.session.autofill.customValue = 13;
+      res.locals.web.session().setAutofill('customValue', 13);
       next();
     });
 

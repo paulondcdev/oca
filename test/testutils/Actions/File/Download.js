@@ -48,9 +48,9 @@ describe('Download Action:', () => {
 
       const downloadAction = Oca.createAction('file.download');
 
-      downloadAction.input('createTargetDirectories').value = false;
-      downloadAction.input('inputUrl').value = `http://localhost:${port}/${fileName}`;
-      downloadAction.input('targetFolder').value = path.join(temporaryFolder, '/invalidSubDir');
+      downloadAction.input('createTargetDirectories').setValue(false);
+      downloadAction.input('inputUrl').setValue(`http://localhost:${port}/${fileName}`);
+      downloadAction.input('targetFolder').setValue(path.join(temporaryFolder, '/invalidSubDir'));
 
       await downloadAction.execute();
 
@@ -68,20 +68,20 @@ describe('Download Action:', () => {
 
       const downloadAction = Oca.createAction('file.download');
 
-      downloadAction.input('inputUrl').value = `http://localhost:${port}/${fileName}`;
-      downloadAction.input('targetFolder').value = path.join(temporaryFolder, 'folder');
+      downloadAction.input('inputUrl').setValue(`http://localhost:${port}/${fileName}`);
+      downloadAction.input('targetFolder').setValue(path.join(temporaryFolder, 'folder'));
       const downloadedFile = await downloadAction.execute();
 
       assert.equal(path.extname(downloadedFile), '.foo');
 
       const checksumAction = Oca.createAction('file.checksum');
-      checksumAction.input('file').value = downloadedFile;
+      checksumAction.input('file').setValue(downloadedFile);
 
       const result = await checksumAction.execute();
 
       // no more need for this file
       fs.unlinkSync(downloadedFile);
-      fs.rmdirSync(downloadAction.input('targetFolder').value);
+      fs.rmdirSync(downloadAction.input('targetFolder').value());
 
       assert.equal('8f017d33568c8bad2c714c86c4418a1d21c7ce5a88f7f37622d423da5ada524e', result);
 
@@ -96,20 +96,20 @@ describe('Download Action:', () => {
 
       const downloadAction = Oca.createAction('file.download');
 
-      downloadAction.input('inputUrl').value = `http://localhost:${port}/${fileNameWithoutExt}`;
-      downloadAction.input('targetFolder').value = path.join(temporaryFolder, 'folder');
+      downloadAction.input('inputUrl').setValue(`http://localhost:${port}/${fileNameWithoutExt}`);
+      downloadAction.input('targetFolder').setValue(path.join(temporaryFolder, 'folder'));
       const downloadedFile = await downloadAction.execute();
 
       assert.equal(path.extname(downloadedFile), '');
 
       const checksumAction = Oca.createAction('file.checksum');
-      checksumAction.input('file').value = downloadedFile;
+      checksumAction.input('file').setValue(downloadedFile);
 
       const result = await checksumAction.execute();
 
       // no more need for this file
       fs.unlinkSync(downloadedFile);
-      fs.rmdirSync(downloadAction.input('targetFolder').value);
+      fs.rmdirSync(downloadAction.input('targetFolder').value());
 
       assert.equal('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', result);
 
@@ -123,8 +123,8 @@ describe('Download Action:', () => {
     (async () => {
 
       const downloadAction = Oca.createAction('file.download');
-      downloadAction.input('inputUrl').value = `http://localhost:${port}/${fileName}_Invalid`;
-      downloadAction.input('targetFolder').value = temporaryFolder;
+      downloadAction.input('inputUrl').setValue(`http://localhost:${port}/${fileName}_Invalid`);
+      downloadAction.input('targetFolder').setValue(temporaryFolder);
       await downloadAction.execute();
 
     })().then((result) => {

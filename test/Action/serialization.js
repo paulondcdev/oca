@@ -17,14 +17,14 @@ describe('Action Serialization:', () => {
 
     return (async () => {
       const actionA = Oca.createAction('multiplyAction');
-      actionA.input('a').value = 3;
-      actionA.input('b').value = 4;
+      actionA.input('a').setValue(3);
+      actionA.input('b').setValue(4);
 
       const actionB = Action.createActionFromJson(await actionA.toJson());
 
       assert.equal(actionA.metadata('action.name'), actionB.metadata('action.name'));
-      assert.equal(actionA.input('a').value, actionB.input('a').value);
-      assert.equal(actionA.input('b').value, actionB.input('b').value);
+      assert.equal(actionA.input('a').value(), actionB.input('a').value());
+      assert.equal(actionA.input('b').value(), actionB.input('b').value());
       assert.equal(await actionA.id(), await actionB.id());
 
     })();
@@ -42,9 +42,9 @@ describe('Action Serialization:', () => {
 
     return (async () => {
       const action = Oca.createAction('NonSerializable');
-      action.input('a').value = 3;
-      action.input('b').value = 4;
-      action.input('nonSerializable').value = {a: 1};
+      action.input('a').setValue(3);
+      action.input('b').setValue(4);
+      action.input('nonSerializable').setValue({a: 1});
 
       let success = false;
       try{
@@ -68,14 +68,16 @@ describe('Action Serialization:', () => {
   it('Should serialize the action into json with autofill values', () => {
 
     return (async () => {
-      const actionA = Oca.createAction('multiplyAction', new Session({test: 10, test2: 1}));
-      actionA.input('a').value = 4;
-      actionA.input('b').value = 4;
+      const actionA = Oca.createAction('multiplyAction', new Session());
+      actionA.session().setAutofill('test', 10);
+      actionA.session().setAutofill('test2', 1);
+      actionA.input('a').setValue(4);
+      actionA.input('b').setValue(4);
 
       const actionB = Action.createActionFromJson(await actionA.toJson());
 
-      assert.equal(actionA.session.autofill.test, actionB.session.autofill.test);
-      assert.equal(actionA.session.autofill.test2, actionB.session.autofill.test2);
+      assert.equal(actionA.session().autofill('test'), actionB.session().autofill('test'));
+      assert.equal(actionA.session().autofill('test2'), actionB.session().autofill('test2'));
     })();
   });
 
@@ -83,14 +85,14 @@ describe('Action Serialization:', () => {
 
     return (async () => {
       const actionA = new testutils.Actions.Shared.Multiply();
-      actionA.input('a').value = 3;
-      actionA.input('b').value = 4;
+      actionA.input('a').setValue(3);
+      actionA.input('b').setValue(4);
 
       const actionB = new testutils.Actions.Shared.Multiply();
       actionB.fromJson(await actionA.toJson(false));
 
-      assert.equal(actionA.input('a').value, actionB.input('a').value);
-      assert.equal(actionA.input('b').value, actionB.input('b').value);
+      assert.equal(actionA.input('a').value(), actionB.input('a').value());
+      assert.equal(actionA.input('b').value(), actionB.input('b').value());
       assert.equal(await actionA.id(), await actionB.id());
     })();
   });
@@ -99,30 +101,34 @@ describe('Action Serialization:', () => {
 
     return (async () => {
       const actionA = new testutils.Actions.Shared.Multiply();
-      actionA.session = new Session({customValue: 'test', customValue2: 'test2'});
-      actionA.input('a').value = 3;
-      actionA.input('b').value = 4;
+      actionA.setSession(new Session());
+      actionA.session().setAutofill('customValue', 'test');
+      actionA.session().setAutofill('customValue2', 'test2');
+      actionA.input('a').setValue(3);
+      actionA.input('b').setValue(4);
 
       const actionB = new testutils.Actions.Shared.Multiply();
-      actionB.session = new Session();
+      actionB.setSession(new Session());
       actionB.fromJson(await actionA.toJson());
 
-      assert.equal(actionA.session.autofill.customValue, actionB.session.autofill.customValue);
-      assert.equal(actionA.session.autofill.customValue2, actionB.session.autofill.customValue2);
+      assert.equal(actionA.session().autofill('customValue'), actionB.session().autofill('customValue'));
+      assert.equal(actionA.session().autofill('customValue2'), actionB.session().autofill('customValue2'));
     })();
   });
 
   it('Should serialize the action into json without autofill values (disabled during serialization)', () => {
 
     return (async () => {
-      const actionA = Oca.createAction('multiplyAction', new Session({test: 10, test2: 1}));
-      actionA.input('a').value = 4;
-      actionA.input('b').value = 4;
+      const actionA = Oca.createAction('multiplyAction', new Session());
+      actionA.session().setAutofill('test', 10);
+      actionA.session().setAutofill('test2', 1);
+      actionA.input('a').setValue(4);
+      actionA.input('b').setValue(4);
 
       const actionB = Action.createActionFromJson(await actionA.toJson(false));
 
-      assert.equal(actionB.session.autofill.test, undefined);
-      assert.equal(actionB.session.autofill.test2, undefined);
+      assert.equal(actionB.session().autofill('test'), undefined);
+      assert.equal(actionB.session().autofill('test2'), undefined);
     })();
   });
 });

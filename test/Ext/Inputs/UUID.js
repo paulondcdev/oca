@@ -8,19 +8,19 @@ describe('UUID Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: uuid');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('UUID value should be accepted', () => {
     const input = Input.create('input: uuid');
-    input.value = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+    input.setValue('f47ac10b-58cc-4372-a567-0e02b2c3d479');
 
     return input.validate.bind(input)();
   });
 
   it('Invalid UUID value should be allowed', (done) => {
     const input = Input.create('input: uuid');
-    input.value = 'invalid-id';
+    input.setValue('invalid-id');
 
     input.validate.bind(input)().then((value) => {
       done(new Error('unexpected value'));

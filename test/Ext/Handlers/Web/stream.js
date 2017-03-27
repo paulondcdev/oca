@@ -74,7 +74,7 @@ describe('Web Stream:', () => {
 
         // querying the checksum from the test image file
         const checksumAction = Oca.createAction('file.checksum');
-        checksumAction.input('file').value = testDataImagePath;
+        checksumAction.input('file').setValue(testDataImagePath);
         const testImageFileChecksum = await checksumAction.execute();
 
         if (err){
