@@ -13,9 +13,13 @@ const _value = Symbol('value');
 /**
  * A writer is used to output a value through the {@link Handler}.
  *
- * New implements are expected to be implement the success ({@link Writer._successOutput})
- * and error ({@link Writer._errorOutput}) outputs. Writers can have custom options
- * ({@link Writer.setOption}) which are passed by the handler during the output
+ * The output is determined by the kind of value that's passed to the writer where
+ * exceptions are interpreted as error output, otherwise the value is interpreted
+ * as success value. Therefore, new implements are expected to implement both a success
+ * ({@link Writer._successOutput}) and error ({@link Writer._errorOutput}) outputs.
+ *
+ * Custom options can be assigned to writers ({@link Writer.setOption}). They are
+ * passed from the handler to the writer during the output process
  * ({@link Handler.output}).
  *
  * ```
