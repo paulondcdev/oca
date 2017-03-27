@@ -1,10 +1,10 @@
 const assert = require('assert');
 const TypeCheck = require('js-typecheck');
 
-
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
 const _executionOrder = Symbol('executionOrder');
+
 
 /**
  * Object that holds actions and promises, which are executed at specific events.
