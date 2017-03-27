@@ -5,7 +5,7 @@ const BaseText = require('./BaseText');
 
 
 /**
- * UUID input
+ * UUID input.
  *
  * ```javascript
  * const input = Input.create('myInput: uuid');
