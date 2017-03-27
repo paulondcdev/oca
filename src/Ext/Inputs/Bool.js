@@ -4,7 +4,7 @@ const Input = require('../../Input');
 
 
 /**
- * Boolean input
+ * Boolean input.
  *
  * ```javascript
  * const input = Input.create('myInput: bool');
