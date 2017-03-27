@@ -15,7 +15,8 @@ catch(err){
 
 /**
  * Returns a non-cryptographic hash for the buffer. By default it tries to
- * use xxHash if not available (node-gyp) then it uses SHA256.
+ * use xxHash, however if it's not available (node-gyp) then it uses SHA256
+ * as fallback.
  *
  * @param {Buffer} value - buffer value that should be used to generate the hash
  * @param {Object} options - custom options
