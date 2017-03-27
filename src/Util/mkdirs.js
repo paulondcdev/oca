@@ -8,7 +8,7 @@ const mkdir = promisify(fs.mkdir);
 
 
 /**
- * Creates folders recursively, in case a level already exist then it is skipped
+ * Creates folders recursively, in case a level already exist then the level is skipped
  *
  * @param {string} fullPath - path that should be created
  * @param {number} [mode] - optional octal value about the permission mode for the created
