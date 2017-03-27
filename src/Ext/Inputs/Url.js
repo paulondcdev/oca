@@ -11,8 +11,9 @@ const BaseText = require('./BaseText');
 
 
 /**
-* Url Input
-* suported protocols: `http`, `https`
+* Url Input.
+*
+* It supports the protocols: `http`, `https`
 *
 * ```javascript
 * const input = Input.create('myInput: url');
