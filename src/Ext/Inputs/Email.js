@@ -4,7 +4,7 @@ const BaseText = require('./BaseText');
 
 
 /**
- * Email address input
+ * Email address input.
  *
  * ```javascript
  * const input = Input.create('myInput: email');
