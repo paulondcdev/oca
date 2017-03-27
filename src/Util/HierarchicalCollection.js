@@ -37,19 +37,22 @@ class HierarchicalCollection{
     assert((/^([\w_\.\-])+$/gi).test(path), `Illegal path name: ${path}`); // eslint-disable-line no-useless-escape
 
     let currentLevel = this[_collection];
+    let finalLevel = path;
 
     // building the intermediate levels if necessary
-    const levels = path.split('.');
-    for (const level of levels.slice(0, -1)){
-      if (!(level in currentLevel)){
-        currentLevel[level] = {};
-      }
+    if (path.indexOf('.') !== -1){
+      const levels = path.split('.');
+      for (const level of levels.slice(0, -1)){
+        if (!(level in currentLevel)){
+          currentLevel[level] = {};
+        }
 
-      currentLevel = currentLevel[level];
+        currentLevel = currentLevel[level];
+      }
+      finalLevel = levels.slice(-1)[0];
     }
 
     // assigning value
-    const finalLevel = levels.slice(-1)[0];
     if (merge && TypeCheck.isPlainObject(value) && finalLevel in currentLevel){
       const merged = deepMerge(currentLevel[finalLevel], value);
       Object.assign(currentLevel[finalLevel], merged);
@@ -78,8 +81,15 @@ class HierarchicalCollection{
     if (!path.length){
       return currentLevel;
     }
+    // no intermediate levels
+    else if (path.indexOf('.') === -1){
+      if (!(path in currentLevel)){
+        return defaultValue;
+      }
+      return currentLevel[path];
+    }
 
-    // building the intermediate levels if necessary
+    // otherwise find the value going through the intermediate levels
     const levels = path.split('.');
     for (const level of levels){
       if (!(level in currentLevel)){

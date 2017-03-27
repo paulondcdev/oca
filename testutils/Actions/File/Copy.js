@@ -70,14 +70,14 @@ class Copy extends Action{
 
     return new Promise((resolve, reject) => {
 
-      const rd = fs.createReadStream(this.input('sourceFile').value);
+      const rd = fs.createReadStream(this.input('sourceFile').value());
 
       /* istanbul ignore next */
       rd.on('error', (err) => {
         reject(err);
       });
 
-      const wr = fs.createWriteStream(this.input('targetFile').value);
+      const wr = fs.createWriteStream(this.input('targetFile').value());
 
       wr.on('error', (err) => {
         rd.close();

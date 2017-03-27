@@ -128,11 +128,11 @@ class WebRequest extends Reader{
     this[_request] = null;
 
     // default options
-    this.options.uploadDirectory = Settings.get('reader/webRequest/uploadDirectory');
-    this.options.uploadPreserveFileName = Settings.get('reader/webRequest/uploadPreserveFileName');
-    this.options.uploadMaxFileSize = Settings.get('reader/webRequest/uploadMaxFileSize');
-    this.options.maxFields = Settings.get('reader/webRequest/maxFields');
-    this.options.maxFieldsSize = Settings.get('reader/webRequest/maxFieldsSize');
+    this.setOption('uploadDirectory', Settings.get('reader/webRequest/uploadDirectory'));
+    this.setOption('uploadPreserveFileName', Settings.get('reader/webRequest/uploadPreserveFileName'));
+    this.setOption('uploadMaxFileSize', Settings.get('reader/webRequest/uploadMaxFileSize'));
+    this.setOption('maxFields', Settings.get('reader/webRequest/maxFields'));
+    this.setOption('maxFieldsSize', Settings.get('reader/webRequest/maxFieldsSize'));
 
     this[_temporaryFolders] = [];
   }
@@ -143,17 +143,17 @@ class WebRequest extends Reader{
    * @param {Object} value - req object
    * @see http://expressjs.com/en/api.html#req
    */
-  set request(value){
+  setRequest(value){
     this[_request] = value;
   }
 
   /**
    * Returns the request object created by express
    *
-   * @type {Object}
+   * @return {Object}
    * @see http://expressjs.com/en/api.html#req
    */
-  get request(){
+  request(){
     return this[_request];
   }
 
@@ -167,24 +167,25 @@ class WebRequest extends Reader{
    */
   async _perform(inputList){
     const result = Object.create(null);
+    const request = this.request();
 
     // handling body fields
     let bodyFields = null;
-    if (['POST', 'PUT', 'PATCH'].includes(this.request.method)){
+    if (['POST', 'PUT', 'PATCH'].includes(request.method)){
       bodyFields = await this._bodyFields(inputList);
     }
 
     // setting the action inputs based on the request parameters
     for (const input of inputList){
-      const inputName = input.name;
+      const inputName = input.name();
 
       // value set by the request
       let requestInputValue;
       const restrictWebAccess = input.hasProperty('restrictWebAccess') ? input.property('restrictWebAccess') : false;
 
       // mapping param to input names
-      if (!restrictWebAccess && inputName in this.request.params){
-        requestInputValue = this.request.params[inputName];
+      if (!restrictWebAccess && inputName in request.params){
+        requestInputValue = request.params[inputName];
       }
       // body fields
       else if (bodyFields !== null){
@@ -203,8 +204,8 @@ class WebRequest extends Reader{
       }
 
       // GET, DELETE ...
-      else if (!restrictWebAccess && inputName in this.request.query){
-        requestInputValue = this.request.query[inputName];
+      else if (!restrictWebAccess && inputName in request.query){
+        requestInputValue = request.query[inputName];
       }
 
       if (requestInputValue !== undefined){
@@ -225,12 +226,13 @@ class WebRequest extends Reader{
   async _bodyFields(){
 
     // making sure the upload directory exists
-    if (this.options.uploadDirectory && !WebRequest._checkedUploadDirectories.includes(this.options.uploadDirectory)){
+    const uploadDirectory = this.option('uploadDirectory');
+    if (uploadDirectory && !WebRequest._checkedUploadDirectories.includes(uploadDirectory)){
 
       // in case the stat fails it will try to recreate the folders
       let needsToCreate = false;
       try{
-        await stat(this.options.uploadDirectory);
+        await stat(uploadDirectory);
       }
       // otherwise tries to create it
       catch(err){
@@ -246,10 +248,10 @@ class WebRequest extends Reader{
       }
 
       if (needsToCreate){
-        await Util.mkdirs(this.options.uploadDirectory);
+        await Util.mkdirs(uploadDirectory);
       }
 
-      WebRequest._checkedUploadDirectories.push(this.options.uploadDirectory);
+      WebRequest._checkedUploadDirectories.push(uploadDirectory);
     }
 
     // parsing the body fields
@@ -305,12 +307,13 @@ class WebRequest extends Reader{
   async _handleUploadedFiles(bodyFields){
     const keepOrignalNamePromises = new Map();
 
+    const preserveFileName = this.option('uploadPreserveFileName');
     for (const inputName in bodyFields.files){
       // multiple files
       if (TypeCheck.isList(bodyFields.files[inputName])){
 
         for (const index in bodyFields.files[inputName]){
-          if (this.options.uploadPreserveFileName){
+          if (preserveFileName){
             keepOrignalNamePromises.set([inputName, index], this._keepOriginalUploadName(bodyFields.files[inputName][index]));
           }
           else{
@@ -321,7 +324,7 @@ class WebRequest extends Reader{
 
       // single file
       else{
-        if (this.options.uploadPreserveFileName){
+        if (preserveFileName){
           keepOrignalNamePromises.set([inputName], this._keepOriginalUploadName(bodyFields.files[inputName]));
         }
         else{
@@ -350,7 +353,7 @@ class WebRequest extends Reader{
 
     // adding the cleanup temporary folders to the wrapup tasks
     if (this[_temporaryFolders].length){
-      this.action.session.wrapup.addWrappedPromise(this._cleanupTemporaryFolders.bind(this));
+      this.action().session().wrapup().addWrappedPromise(this._cleanupTemporaryFolders.bind(this));
     }
   }
 
@@ -362,16 +365,19 @@ class WebRequest extends Reader{
    */
   _parseForm(){
     return new Promise((resolve, reject) => {
+
       const form = new formidable.IncomingForm();
-      form.uploadDir = this.options.uploadDirectory;
-      form.maxFileSize = this.options.uploadMaxFileSize;
+
+      // formidable settings
+      form.uploadDir = this.option('uploadDirectory');
+      form.maxFileSize = this.option('uploadMaxFileSize');
       form.keepExtensions = true;
       form.multiples = true;
       form.encoding = 'utf-8';
-      form.maxFields = this.options.maxFields;
-      form.maxFieldsSize = this.options.maxFieldsSize;
+      form.maxFields = this.option('maxFields');
+      form.maxFieldsSize = this.option('maxFieldsSize');
 
-      form.parse(this.request, (err, formFields, formFiles) => {
+      form.parse(this.request(), (err, formFields, formFiles) => {
 
         // in case of any error
         /* istanbul ignore next */
@@ -401,7 +407,7 @@ class WebRequest extends Reader{
    * @private
    */
   async _keepOriginalUploadName(uploadFile){
-    const uploadFolder = await mkdtemp(path.join(this.options.uploadDirectory, 'file-'));
+    const uploadFolder = await mkdtemp(path.join(this.option('uploadDirectory'), 'file-'));
     const finalName = path.join(uploadFolder, uploadFile.name.replace(/[^a-zA-Z0-9 _.-]/g, '_'));
     await rename(uploadFile.path, finalName);
 

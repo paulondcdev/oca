@@ -9,7 +9,7 @@ const Input = require('../../Input');
  *
  * ```javascript
  * const input = Input.create('myInput: numeric');
- * input.value = 5;
+ * input.setValue(5);
  * ```
  *
  * *This input can also be created using the alias:* `number`

@@ -11,8 +11,8 @@ describe('Action Input:', () => {
     constructor(){
       super();
 
-      this.input('a').value = 2;
-      this.input('b').value = 5;
+      this.input('a').setValue(2);
+      this.input('b').setValue(5);
       this.createInput('inputC: text', {required: false});
     }
 
@@ -38,13 +38,13 @@ describe('Action Input:', () => {
 
   it('When querying an input that exists it should return the input object (not defaultValue)', () => {
     const multiplyAction = Oca.createAction('multiplyAction');
-    assert.equal(multiplyAction.input('a', 'defaultValueA').value, 2);
+    assert.equal(multiplyAction.input('a', 'defaultValueA').value(), 2);
   });
 
   // input names
   it('When querying the input names it should return all inputs added to the action', () => {
     const multiplyAction = Oca.createAction('multiplyAction');
-    assert.equal(multiplyAction.inputNames.filter(x => (['a', 'b'].includes(x))).length, 2);
+    assert.equal(multiplyAction.inputNames().filter(x => (['a', 'b'].includes(x))).length, 2);
   });
 
   it('Should fail when trying to add the same input name twice', () => {
@@ -66,7 +66,7 @@ describe('Action Input:', () => {
     const multiplyActionResult = new MultiplyAction();
     multiplyActionResult.createInput('customInput: bool', {defaultValue: false}, function customValidation(){
       return new Promise((resolve, reject) => {
-        reject(new ValidationFail(this.name, 'foo error'));
+        reject(new ValidationFail(this.name(), 'foo error'));
       });
     });
 

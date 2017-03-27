@@ -44,13 +44,13 @@ describe('Url Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: url');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Should match the extension', () => {
 
     const input = Input.create('input: url');
-    input.value = 'http://domain.com/foo/item.ext?arg=1&arg2=2';
+    input.setValue('http://domain.com/foo/item.ext?arg=1&arg2=2');
 
     assert.equal(input.extension(), 'ext');
   });
@@ -58,7 +58,7 @@ describe('Url Input:', () => {
   it('Should match the protocol', () => {
 
     const input = Input.create('input: url');
-    input.value = 'http://domain.com/foo/item.ext?arg=1&arg2=2';
+    input.setValue('http://domain.com/foo/item.ext?arg=1&arg2=2');
 
     assert.equal(input.protocol(), 'http:');
   });
@@ -68,7 +68,7 @@ describe('Url Input:', () => {
     (async () => {
 
       const input = Input.create('input: url', {exists: true});
-      input.value = `http://localhost:${port}/wrongItem.foo`;
+      input.setValue(`http://localhost:${port}/wrongItem.foo`);
       await input.validate();
 
     })().then((result) => {
@@ -84,7 +84,7 @@ describe('Url Input:', () => {
     (async () => {
 
       const input = Input.create('input: url', {exists: true});
-      input.value = `ftp://localhost:${port}/wrongItem.foo`;
+      input.setValue(`ftp://localhost:${port}/wrongItem.foo`);
 
       await input.validate();
 
@@ -101,7 +101,7 @@ describe('Url Input:', () => {
     return (async () => {
 
       const input = Input.create('input: url', {exists: false});
-      input.value = `http://localhost:${port}/wrongItem.foo`;
+      input.setValue(`http://localhost:${port}/wrongItem.foo`);
       await input.validate();
 
     })();
@@ -110,7 +110,7 @@ describe('Url Input:', () => {
   it('Should test protocol of a vector input', () => {
 
     const input = Input.create('input: url[]', {exists: true});
-    input.value = [`http://localhost:${port}/${smallFile}`, null];
+    input.setValue([`http://localhost:${port}/${smallFile}`, null]);
 
     assert.equal(input.protocol(0), 'http:');
     assert.equal(input.protocol(1), '');
@@ -119,7 +119,7 @@ describe('Url Input:', () => {
   it('Should test extension of a vector input', () => {
 
     const input = Input.create('input: url[]', {exists: true});
-    input.value = [`http://localhost:${port}/${smallFile}`, null];
+    input.setValue([`http://localhost:${port}/${smallFile}`, null]);
 
     assert.equal(input.extension(0), 'foo');
     assert.equal(input.extension(1), '');
@@ -130,7 +130,7 @@ describe('Url Input:', () => {
     return (async () => {
 
       const input = Input.create('input: url', {exists: true});
-      input.value = `http://localhost:${port}/${smallFile}`;
+      input.setValue(`http://localhost:${port}/${smallFile}`);
       await input.headers();
       server.close();
 
@@ -145,7 +145,7 @@ describe('Url Input:', () => {
     (async () => {
 
       const input = Input.create('input: url', {exists: true});
-      input.value = `http://localhost:${port}/${smallFile}`;
+      input.setValue(`http://localhost:${port}/${smallFile}`);
       server.close();
       try{
         await input.headers();
@@ -170,7 +170,7 @@ describe('Url Input:', () => {
     return (async () => {
 
       const input = Input.create('input: url', {exists: true});
-      input.value = `http://localhost:${port}/${smallFile}`;
+      input.setValue(`http://localhost:${port}/${smallFile}`);
       await input.validate();
 
     })();
@@ -181,7 +181,7 @@ describe('Url Input:', () => {
     return (async () => {
 
       const input = Input.create('input: url', {maxContentSize: 5 * 1024 * 1024});
-      input.value = `http://localhost:${port}/${smallFile}`;
+      input.setValue(`http://localhost:${port}/${smallFile}`);
       await input.validate();
 
     })();
@@ -192,7 +192,7 @@ describe('Url Input:', () => {
     (async () => {
 
       const input = Input.create('input: url', {maxContentSize: 5 * 1024 * 1024});
-      input.value = `http://localhost:${port}/${largeFile}`;
+      input.setValue(`http://localhost:${port}/${largeFile}`);
       await input.validate();
 
     })().then((result) => {
@@ -208,7 +208,7 @@ describe('Url Input:', () => {
     (async () => {
 
       const input = Input.create('input: url', {allowedExtensions: ['jpg', 'png']});
-      input.value = `http://localhost:${port}/${smallFile}`;
+      input.setValue(`http://localhost:${port}/${smallFile}`);
       await input.validate();
 
     })().then((result) => {
@@ -224,7 +224,7 @@ describe('Url Input:', () => {
     return (async () => {
 
       const input = Input.create('input: url', {allowedExtensions: ['foo', 'png']});
-      input.value = `http://localhost:${port}/${smallFile}`;
+      input.setValue(`http://localhost:${port}/${smallFile}`);
       await input.validate();
 
     })();

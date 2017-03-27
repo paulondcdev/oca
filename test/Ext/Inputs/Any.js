@@ -8,7 +8,7 @@ describe('Generic Object Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: any');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('A class should not be considered an object', (done) => {
@@ -44,7 +44,7 @@ describe('Generic Object Input:', () => {
         return;
       }
 
-      input.value = new Date();
+      input.setValue(new Date());
 
       await input.serializeValue();
 
@@ -60,13 +60,13 @@ describe('Generic Object Input:', () => {
 
   it('Object B should match as instance of A', () => {
     const input = Input.create('input: any', {allowedInstance: A});
-    input.value = new B();
+    input.setValue(new B());
     return input.validate.bind(input)();
   });
 
   it('Object Date should not match as instance of B', (done) => {
     const input = Input.create('input: any', {allowedInstance: B});
-    input.value = new Date();
+    input.setValue(new Date());
     input.validate.bind(input)().then((value) => {
       done(new Error('It should have failed'));
     }).catch((err) => {

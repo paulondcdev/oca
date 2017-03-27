@@ -1,6 +1,8 @@
 const stream = require('stream');
+const assert = require('assert');
 const TypeCheck = require('js-typecheck');
 const debug = require('debug')('Oca');
+const Util = require('./Util');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
@@ -11,12 +13,10 @@ const _value = Symbol('value');
 /**
  * A writer is used to output a value through the {@link Handler}.
  *
- * In case the value is an exception then it's treated as error output
- * ({@link Writer._errorOutput}) otherwise the value is treated as success output
- * ({@link Writer._successOutput}).
- *
- * Custom options can be used to change the behavior of a writer. They can be passed
- * to the handler during the output process ({@link Handler.output}).
+ * New implements are expected to be implement the success ({@link Writer._successOutput})
+ * and error ({@link Writer._errorOutput}) outputs. Writers can have custom options
+ * ({@link Writer.setOption}) which are passed by the handler during the output
+ * ({@link Handler.output}).
  *
  * ```
  * const myHandler = Oca.createHandler('someHandler');
@@ -60,25 +60,54 @@ class Writer{
    * @param {*} value - arbitrary value passed to the writer
    */
   constructor(value){
+
+    // note: currently reader & writer are completely separated entities that don't
+    // have a common parent class (aka HandlerOperation). The reason for
+    // that is currently they are so distinctive from each other that the only member in
+    // common is the option. In case they start to share more characteristics in common
+    // then a base class should be created.
+
     this[_value] = value;
-    this[_options] = {};
+    this[_options] = new Util.HierarchicalCollection();
   }
 
   /**
-   * Returns a plain object that contains writer options.
+   * Returns an option
    *
-   * @type {Object}
+   * @param {string} path - path about where the option is localized (the levels
+   * must be separated by '.'). In case of an empty string it returns the
+   * entire options
+   * @param {*} [defaultValue] - default value returned in case a value was
+   * not found for the path
+   * @return {*}
    */
-  get options(){
-    return this[_options];
+  option(path, defaultValue=undefined){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+    return this[_options].query(path, defaultValue);
+  }
+
+  /**
+   * Sets a value under the options
+   *
+   * @param {string} path - path about where the option should be stored under
+   * the options (the levels must be separated by '.')
+   * @param {*} value - value that is going to be stored under the collection
+   * @param {boolean} [merge=true] - this option is used to decide in case of the
+   * last level is already existing under the collection, if the value should be
+   * either merged (default) or overridden.
+   */
+  setOption(path, value, merge=true){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+
+    this[_options].insert(path, value, merge);
   }
 
   /**
    * Returns the value that should be serialized ({@link Writer.serialize}) by the writer
    *
-   * @type {*}
+   * @return {*}
    */
-  get value(){
+  value(){
     return this[_value];
   }
 
@@ -89,7 +118,7 @@ class Writer{
    */
   serialize(){
 
-    if (this.value instanceof Error){
+    if (this.value() instanceof Error){
       this._errorOutput();
     }
     else{
@@ -118,7 +147,7 @@ class Writer{
    */
   _errorOutput(){
 
-    const err = this.value;
+    const err = this.value();
 
     // checking if the error can be handled by the writer
     if (err.output === false){
@@ -156,14 +185,14 @@ class Writer{
   _successOutput(){
 
     // stream output
-    if (this.value instanceof Buffer){
+    if (this.value() instanceof Buffer){
       const bufferStream = new stream.PassThrough();
-      bufferStream.end(this.value);
+      bufferStream.end(this.value());
 
       return bufferStream;
     }
 
-    return this.value;
+    return this.value();
   }
 }
 

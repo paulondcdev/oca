@@ -19,10 +19,10 @@ class BaseText extends Input{
 
   /**
    * Returns if the input is empty
-   * @type {boolean}
+   * @return {boolean}
    */
-  get isEmpty(){
-    return (super.isEmpty || this.value.length === 0);
+  isEmpty(){
+    return (super.isEmpty() || this.value().length === 0);
   }
 
   /**

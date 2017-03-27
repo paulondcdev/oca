@@ -16,7 +16,7 @@ const BaseText = require('./BaseText');
 *
 * ```javascript
 * const input = Input.create('myInput: url');
-* input.value = 'http://www.google.com';
+* input.setValue('http://www.google.com');
 * ```
 *
 * <h2>Property Summary</h2>

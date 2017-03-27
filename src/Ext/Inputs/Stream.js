@@ -9,7 +9,7 @@ const Input = require('../../Input');
  * ```javascript
  * const input = Input.create('myInput: stream');
  * //...
- * input.value = fs.createReadStream('file.txt');
+ * input.setValue(fs.createReadStream('file.txt'));
  * ```
  *
  * <h2>Property Summary</h2>
@@ -73,9 +73,9 @@ class Stream extends Input{
   /**
    * Serialization is not supported
    *
-   * @type {boolean}
+   * @return {boolean}
    */
-  get isSerializable(){
+  isSerializable(){
     return false;
   }
 

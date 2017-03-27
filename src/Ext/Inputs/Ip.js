@@ -10,20 +10,20 @@ const nodeIp = require('ip');
  * ```javascript
  * // ipv4
  * const input = Input.create('myInput: ip');
- * input.value = '192.168.0.1';
+ * input.setValue('192.168.0.1');
  * ```
  *
  * ```javascript
  * // ipv6
  * const input = Input.create('myInput: ip');
- * input.value = '::ffff:127.0.0.1';
+ * input.setValue('::ffff:127.0.0.1');
  * ```
  *
  * ```javascript
  * // initializes the value of the input with 'remoteAddress'
  * // which is defined by the web handler
  * const input = Input.create('myInput: ip', {autofill: 'remoteAddress'});
- * console.log(input.value);
+ * console.log(input.value());
  * ```
  *
  * <h2>Property Summary</h2>

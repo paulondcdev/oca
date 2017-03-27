@@ -113,9 +113,9 @@ class Tasks{
   /**
    * Tells if there are no tasks
    *
-   * @type {boolean}
+   * @return {boolean}
    */
-  get isEmpty(){
+  isEmpty(){
     return this[_executionOrder].length === 0;
   }
 

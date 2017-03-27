@@ -7,7 +7,7 @@ const Input = require('../../Input');
  *
  * ```javascript
  * const input = Input.create('myInput: buffer');
- * input.value = Buffer.from('test', 'ascii');
+ * input.setValue(Buffer.from('test', 'ascii');
  * ```
  *
  * <h2>Property Summary</h2>
@@ -25,10 +25,10 @@ class Buf extends Input{
 
   /**
    * Returns if the input is empty
-   * @type {boolean}
+   * @return {boolean}
    */
-  get isEmpty(){
-    return (super.isEmpty || this.value.length === 0);
+  isEmpty(){
+    return (super.isEmpty() || this.value().length === 0);
   }
 
   /**

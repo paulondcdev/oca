@@ -33,7 +33,7 @@ describe('FilePath Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: filePath');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('restrictWebAccess should be enabled by default', () => {
@@ -46,7 +46,7 @@ describe('FilePath Input:', () => {
     (async () => {
 
       const input = Input.create('input: filePath', {exists: true});
-      input.value = 'invalid file path';
+      input.setValue('invalid file path');
       await input.validate();
 
     })().then((result) => {
@@ -62,7 +62,7 @@ describe('FilePath Input:', () => {
     return (async () => {
 
       const input = Input.create('input: filePath', {exists: false});
-      input.value = 'invalid file path';
+      input.setValue('invalid file path');
       await input.validate();
 
     })();
@@ -73,7 +73,7 @@ describe('FilePath Input:', () => {
     return (async () => {
 
       const input = Input.create('input: filePath[]', {exists: true});
-      input.value = [largeFilePath, largeFilePath];
+      input.setValue([largeFilePath, largeFilePath]);
       await input.validate();
 
     })();
@@ -87,7 +87,7 @@ describe('FilePath Input:', () => {
       fs.writeFileSync(setupFromTestB, Array(1 * 1024 * 1024).join('0'));
 
       const input = Input.create('input: filePath[]', {exists: true});
-      input.value = [setupFromTestA, setupFromTestB];
+      input.setValue([setupFromTestA, setupFromTestB]);
       await input.validate();
 
       // removing the files
@@ -98,7 +98,7 @@ describe('FilePath Input:', () => {
       inputB.setupFrom(input);
       await input.validate();
 
-      assert.equal(inputB.value.length, 2);
+      assert.equal(inputB.value().length, 2);
 
     })();
   });
@@ -111,7 +111,7 @@ describe('FilePath Input:', () => {
       fs.writeFileSync(setupFromTestD, Array(1 * 1024 * 1024).join('0'));
 
       const input = Input.create('input: filePath[]', {exists: true});
-      input.value = [setupFromTestC, setupFromTestD];
+      input.setValue([setupFromTestC, setupFromTestD]);
       await input.validate();
 
       // removing the files
@@ -188,7 +188,7 @@ describe('FilePath Input:', () => {
     (async () => {
 
       const input = Input.create('input: filePath[]', {exists: true});
-      input.value = [largeFilePath, largeFilePath, 'Fake!'];
+      input.setValue([largeFilePath, largeFilePath, 'Fake!']);
       await input.validate();
 
     })().then((result) => {
@@ -204,7 +204,7 @@ describe('FilePath Input:', () => {
     return (async () => {
 
       const input = Input.create('input: filePath', {exists: true});
-      input.value = smallFilePath;
+      input.setValue(smallFilePath);
       await input.validate();
 
     })();
@@ -217,7 +217,7 @@ describe('FilePath Input:', () => {
       fs.writeFileSync(temporaryFile, Array(1).join('0'));
 
       const input = Input.create('input: filePath');
-      input.value = temporaryFile;
+      input.setValue(temporaryFile);
 
       await input.stat();
 
@@ -235,7 +235,7 @@ describe('FilePath Input:', () => {
 
       const temporaryFile = path.join(temporaryFolder, 'cacheTestFile2');
       const input = Input.create('input: filePath', {exists: false});
-      input.value = temporaryFile;
+      input.setValue(temporaryFile);
 
       try{
         await input.stat();
@@ -273,7 +273,7 @@ describe('FilePath Input:', () => {
     return (async () => {
 
       const input = Input.create('input: filePath', {maxFileSize: 5 * 1024 * 1024});
-      input.value = smallFilePath;
+      input.setValue(smallFilePath);
       await input.validate();
 
     })();
@@ -284,17 +284,17 @@ describe('FilePath Input:', () => {
     const input = Input.create('input: filePath');
     assert.equal(input.extension(), '');
 
-    input.value = '/a/b/test.ext';
+    input.setValue('/a/b/test.ext');
     assert.equal(input.extension(), 'ext');
 
-    input.value = '/a/b/test';
+    input.setValue('/a/b/test');
     assert.equal(input.extension(), '');
   });
 
   it('Should match the base name', () => {
 
     const input = Input.create('input: filePath');
-    input.value = '/a/b/test.ext';
+    input.setValue('/a/b/test.ext');
 
     assert.equal(input.basename(), 'test.ext');
   });
@@ -302,7 +302,7 @@ describe('FilePath Input:', () => {
   it('Should match the dirname', () => {
 
     const input = Input.create('input: filePath');
-    input.value = '/a/b/test.ext';
+    input.setValue('/a/b/test.ext');
 
     assert.equal(input.dirname(), '/a/b');
   });
@@ -312,7 +312,7 @@ describe('FilePath Input:', () => {
     (async () => {
 
       const input = Input.create('input: filePath', {maxFileSize: 5 * 1024 * 1024});
-      input.value = largeFilePath;
+      input.setValue(largeFilePath);
       await input.validate();
 
     })().then((result) => {
@@ -328,7 +328,7 @@ describe('FilePath Input:', () => {
     (async () => {
 
       const input = Input.create('input: filePath', {allowedExtensions: ['jpg', 'png']});
-      input.value = largeFilePath;
+      input.setValue(largeFilePath);
       await input.validate();
 
     })().then((result) => {
@@ -344,7 +344,7 @@ describe('FilePath Input:', () => {
     return (async () => {
 
       const input = Input.create('input: filePath', {allowedExtensions: ['tmp', 'png']});
-      input.value = largeFilePath;
+      input.setValue(largeFilePath);
       await input.validate();
 
     })();

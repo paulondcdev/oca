@@ -33,8 +33,8 @@ class CommandLineOutput extends Writer{
     this[_stdout] = null;
     this[_stderr] = null;
 
-    // options
-    this.options.parsingErrorStatusCode = 700;
+    // default options
+    this.setOption('parsingErrorStatusCode', 700);
   }
 
   /**
@@ -42,7 +42,7 @@ class CommandLineOutput extends Writer{
    *
    * @param {stream} value - stream used as stdout
    */
-  set stdout(value){
+  setStdout(value){
     assert(value instanceof stream, 'Invalid stream type');
 
     this[_stdout] = value;
@@ -51,9 +51,9 @@ class CommandLineOutput extends Writer{
   /**
    * Returns the stream used as stdout
    *
-   * @type {stream}
+   * @return {stream}
    */
-  get stdout(){
+  stdout(){
     return this[_stdout];
   }
 
@@ -62,7 +62,7 @@ class CommandLineOutput extends Writer{
    *
    * @param {stream} value - stream used as stderr
    */
-  set stderr(value){
+  setStderr(value){
     assert(value instanceof stream, 'Invalid stream type');
 
     this[_stderr] = value;
@@ -71,9 +71,9 @@ class CommandLineOutput extends Writer{
   /**
    * Returns the stream used as stderr
    *
-   * @type {stream}
+   * @return {stream}
    */
-  get stderr(){
+  stderr(){
     return this[_stderr];
   }
 
@@ -91,10 +91,12 @@ class CommandLineOutput extends Writer{
 
     process.exitCode = 1;
     const message = super._errorOutput();
-    this.stderr.write(message);
 
-    if (this.value.status === this.options.parsingErrorStatusCode){
-      this.stderr.write('\n');
+    if (this.value().status === this.option('parsingErrorStatusCode')){
+      this.stderr().write(`${message}\n`);
+    }
+    else{
+      this.stderr().write(message);
     }
   }
 
@@ -109,7 +111,7 @@ class CommandLineOutput extends Writer{
   _successOutput(){
 
     /* istanbul ignore next */
-    if (this.value === undefined){
+    if (this.value() === undefined){
       return;
     }
 
@@ -117,7 +119,7 @@ class CommandLineOutput extends Writer{
 
     // readable stream
     if (output instanceof stream.Readable){
-      output.pipe(this.stdout);
+      output.pipe(this.stdout());
       return;
     }
 
@@ -125,7 +127,7 @@ class CommandLineOutput extends Writer{
     output = JSON.stringify(output, null, ' ');
     output += '\n';
 
-    this.stdout.write(output);
+    this.stdout().write(output);
   }
 }
 

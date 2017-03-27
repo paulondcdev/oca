@@ -26,12 +26,12 @@ describe('Settings:', () => {
   });
 
   it('Should return the keys that are defined under the arbitrary data', () => {
-    const currentLength = Settings.keys.length;
+    const currentLength = Settings.keys().length;
 
     Settings.set('e', 10);
     Settings.set('f', 20);
-    assert.equal(Settings.keys.length, currentLength + 2);
-    assert(Settings.keys.includes('e'));
-    assert(Settings.keys.includes('f'));
+    assert.equal(Settings.keys().length, currentLength + 2);
+    assert(Settings.keys().includes('e'));
+    assert(Settings.keys().includes('f'));
   });
 });

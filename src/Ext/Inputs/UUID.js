@@ -9,7 +9,7 @@ const BaseText = require('./BaseText');
  *
  * ```javascript
  * const input = Input.create('myInput: uuid');
- * input.value = '075054e0-810a-11e6-8c1d-e5fb28c699ca';
+ * input.setValue('075054e0-810a-11e6-8c1d-e5fb28c699ca');
  * ```
  *
  * <h2>Property Summary</h2>
@@ -26,11 +26,11 @@ class UUID extends BaseText{
    *
    */
   setNewTimeBasedId(){
-    if (this.isVector){
+    if (this.isVector()){
       throw new Error('Not supported, input is a vector!');
     }
 
-    this.value = uuid.v1();
+    this.setValue(uuid.v1());
   }
 
   /**
@@ -38,11 +38,11 @@ class UUID extends BaseText{
    * of the input
    */
   setNewRandomId(){
-    if (this.isVector){
+    if (this.isVector()){
       throw new Error('Not supported, input is a vector!');
     }
 
-    this.value = uuid.v4();
+    this.setValue(uuid.v4());
   }
 
   /**

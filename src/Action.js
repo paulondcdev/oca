@@ -45,7 +45,7 @@ const _session = Symbol('session');
  * }
  *
  * const action = new HelloWorld();
- * action.input('repeat').value = 3;
+ * action.input('repeat').setValue(3);
  * action.execute().then(...) //  HelloWorld HelloWorld HelloWorld
  * ```
  *
@@ -95,21 +95,22 @@ class Action{
    * are flagged with 'autofill' property will be initialized with the
    * session value
    *
-   * @param {Session} value - session object
+   * @param {Session} session - session object
    */
-  set session(value){
-    assert(value === null || value instanceof Session, 'session must be an instance of Session or null');
+  setSession(session){
+    assert(session === null || session instanceof Session, 'session must be an instance of Session or null');
 
-    this[_session] = value;
+    this[_session] = session;
 
-    if (value !== null){
+    if (session !== null){
       // setting the session inputs
+      const autofillKeys = session.autofillKeys();
       for (const input of this[_inputs].values()){
 
         // setting the autofill inputs
         const autofillName = input.property('autofill');
-        if (autofillName && autofillName in value.autofill){
-          input.value = value.autofill[autofillName];
+        if (autofillName && autofillKeys.includes(autofillName)){
+          input.setValue(session.autofill(autofillName));
         }
       }
     }
@@ -118,9 +119,9 @@ class Action{
   /**
    * Returns the session object
    *
-   * @type {Session|null}
+   * @return {Session|null}
    */
-  get session(){
+  session(){
     return this[_session];
   }
 
@@ -132,9 +133,9 @@ class Action{
   *
   * The configuration about the LRU cache can be found under the {@link Session}.
   *
-  * @type {boolean}
+  * @return {boolean}
   */
-  get isCacheable(){
+  isCacheable(){
     return false;
   }
 
@@ -164,19 +165,20 @@ class Action{
     assert(inputInstance instanceof Input, 'Invalid Input Type!');
 
     // making sure the new input name is not in use
-    if (this[_inputs].has(inputInstance.name)){
+    const inputName = inputInstance.name();
+    if (this[_inputs].has(inputName)){
       throw new Error('Input name is already in use!');
     }
 
-    this[_inputs].set(inputInstance.name, inputInstance);
+    this[_inputs].set(inputName, inputInstance);
   }
 
   /**
    * Returns the action input names
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get inputNames(){
+  inputNames(){
     return [...this[_inputs].keys()];
   }
 
@@ -211,12 +213,13 @@ class Action{
 
     // pulling out result from the cache (if applicable)
     let actionSignature = null;
-    if (useCache && this.isCacheable){
+    const resultCache = this.session().resultCache();
+    if (useCache && this.isCacheable()){
       actionSignature = await this.id();
 
       // checking if the input hash is under the cache
-      if (this.session.resultCache.has(actionSignature)){
-        return this.session.resultCache.get(actionSignature);
+      if (resultCache.has(actionSignature)){
+        return resultCache.get(actionSignature);
       }
     }
 
@@ -230,13 +233,13 @@ class Action{
     // is later passed as argument of _perform method, it's used as a more convenient
     // way to query the value of the inputs
     for (const [name, input] of this[_inputs]){
-      readOnlyOriginalValues.set(input, input.readOnly);
+      readOnlyOriginalValues.set(input, input.readOnly());
 
       // making input as readOnly
-      input.readOnly = true;
+      input.setReadOnly(true);
 
       // input value
-      data[name] = input.value;
+      data[name] = input.value();
     }
 
     // checking if the inputs are valid (it throws an exception in case an input fails)
@@ -246,7 +249,7 @@ class Action{
     catch(errr){
       // restoring the read-only
       for (const [input, originalReadOnly] of readOnlyOriginalValues){
-        input.readOnly = originalReadOnly;
+        input.setReadOnly(originalReadOnly);
       }
 
       throw this._processError(errr);
@@ -273,13 +276,13 @@ class Action{
 
       // restoring the read-only
       for (const [input, originalReadOnly] of readOnlyOriginalValues){
-        input.readOnly = originalReadOnly;
+        input.setReadOnly(originalReadOnly);
       }
     }
 
     // adding the result to the cache
     if (actionSignature){
-      this.session.resultCache.set(actionSignature, result);
+      resultCache.set(actionSignature, result);
     }
 
     return result;
@@ -298,6 +301,15 @@ class Action{
   async toJson(autofill=true){
 
     const actionInputs = await this._serializeInputs();
+    const session = this.session();
+
+    // collecting autofill values
+    const autofillData = {};
+    if (autofill && session){
+      for (const key of session.autofillKeys()){
+        autofillData[key] = session.autofill(key);
+      }
+    }
 
     const result = {
       id: this.id(),
@@ -306,7 +318,7 @@ class Action{
         action: this.metadata('action', {}),
       },
       session: {
-        autofill: (autofill && this.session) ? this.session.autofill : {},
+        autofill: autofillData,
       },
     };
 
@@ -404,7 +416,7 @@ class Action{
    * @return {Action|null}
    */
   createAction(actionName){
-    const action = Action.create(actionName, this.session);
+    const action = Action.create(actionName, this.session());
 
     // overriding the meta-data information about the origin of the action, by telling
     // it has been created from inside of another action
@@ -457,7 +469,7 @@ class Action{
       const action = new RegisteredAction();
 
       // adding the session to the action
-      action.session = session || new Session();
+      action.setSession(session || new Session());
 
       // adding the action name used to create the action under the meta-data
       action.setMetadata('action.name', actionName.toLowerCase());
@@ -519,9 +531,9 @@ class Action{
   /**
    * Returns a list containing the names of the registered actions
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  static get registeredActionNames(){
+  static registeredActionNames(){
     return [...this._registeredActions.keys()];
   }
 
@@ -545,7 +557,7 @@ class Action{
    *
    * @param {Object} data - plain object containing the value of the inputs, this is just to
    * provide a more convenient way to query the value of the inputs inside of the
-   * execution for instance: ```data.myInput``` instead of ```this.input('myInput').value```.
+   * execution for instance: ```data.myInput``` instead of ```this.input('myInput').value()```.
    * @return {Promise<*>} value that should be returned by the action
    *
    * @abstract
@@ -588,9 +600,11 @@ class Action{
    * @private
    */
   _loadContents(actionContents, autofill){
-    if (autofill && this.session){
-      for (const autofillName in actionContents.session.autofill){
-        this.session.autofill[autofillName] = actionContents.session.autofill[autofillName];
+
+    const session = this.session();
+    if (autofill && session){
+      for (const autofillKey in actionContents.session.autofill){
+        session.setAutofill(autofillKey, actionContents.session.autofill[autofillKey]);
       }
     }
 
@@ -609,7 +623,7 @@ class Action{
    * @private
    */
   async _serializeInputs(){
-    const inputNames = this.inputNames;
+    const inputNames = this.inputNames();
     const serializeValuePromises = inputNames.map(x => this.input(x).serializeValue());
     const serializedResult = await Promise.all(serializeValuePromises);
 

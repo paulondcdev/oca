@@ -10,7 +10,7 @@ const ValidationFail = Oca.Error.ValidationFail;
 describe('Input Generic:', () => {
 
   it("Input name should be 'test'", () => {
-    assert.equal(new Input('test').name, 'test');
+    assert.equal(new Input('test').name(), 'test');
   });
 
   it('Should set an input through setupFrom', () => {
@@ -18,19 +18,19 @@ describe('Input Generic:', () => {
     class CustomInput extends Input{}
 
     const a = new CustomInput('inputA', {defaultValue: 10});
-    a.cache.set('value', 20);
+    a.cache().set('value', 20);
 
     // with cache support
     const b = new CustomInput('inputB');
     b.setupFrom(a);
-    assert.equal(b.cache.get('value'), a.cache.get('value'));
-    assert.equal(b.value, a.value);
+    assert.equal(b.cache().get('value'), a.cache().get('value'));
+    assert.equal(b.value(), a.value());
 
     // without cache support
     const c = new CustomInput('inputC');
     c.setupFrom(a, null, false);
-    assert(!c.cache.has('value'));
-    assert.equal(c.value, a.value);
+    assert(!c.cache().has('value'));
+    assert.equal(c.value(), a.value());
   });
 
   it('Should not transfer a cache through setupFrom when either source or target input is not immutable', () => {
@@ -38,20 +38,20 @@ describe('Input Generic:', () => {
     class CustomInput extends Input{}
 
     const a = new CustomInput('inputA', {defaultValue: 10});
-    a.cache.set('value', 20);
+    a.cache().set('value', 20);
 
     const b = new CustomInput('inputB', {immutable: false});
     b.setupFrom(a);
-    assert.equal(b.cache.get('value'), undefined);
+    assert.equal(b.cache().get('value'), undefined);
   });
 
   it('Value assigned to the input should be set as immutable by default', () => {
 
     const inputA = new Input('input', {vector: true});
-    inputA.value = [1, 2, 3];
+    inputA.setValue([1, 2, 3]);
 
     try{
-      inputA.value[1] = 'new value';
+      inputA.value()[1] = 'new value';
       throw new Error('Unexpected result');
     }
     catch(err){
@@ -63,7 +63,7 @@ describe('Input Generic:', () => {
 
     return (async () => {
       const inputA = new Input('input');
-      inputA.value = 'my value';
+      inputA.setValue('my value');
 
       assert.equal(inputA.valueAt(), 'my value');
       assert.equal(await inputA._isCached(), false);
@@ -76,7 +76,7 @@ describe('Input Generic:', () => {
   it('Should fail when the value of the input is not a vector and the input is setup as a vector', (done) => {
 
     const input1 = new Input('input', {vector: true});
-    input1.value = 'not value';
+    input1.setValue('not value');
     input1.validate().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
@@ -87,11 +87,11 @@ describe('Input Generic:', () => {
   it('Extended validation callback should fail when asking if the value is valid', (done) => {
     const input1 = new Input('test', {defaultValue: 'foo'}, function customValidation(){
       return new Promise((resolve, reject) => {
-        if (this.value !== 'new foo'){
+        if (this.value() !== 'new foo'){
           reject(new ValidationFail('oops, not yet'));
         }
         else{
-          resolve(this.value);
+          resolve(this.value());
         }
       });
     });
@@ -106,16 +106,16 @@ describe('Input Generic:', () => {
   it('Extended validation should not return any message', () => {
     const input2 = new Input('test', {}, function customValidation(){
       return new Promise((resolve, reject) => {
-        if (this.value !== 'new foo'){
+        if (this.value() !== 'new foo'){
           reject(new ValidationFail('oops, not yet'));
         }
         else{
-          resolve(this.value);
+          resolve(this.value());
         }
       });
     });
 
-    input2.value = 'new foo';
+    input2.setValue('new foo');
     return input2.validate.bind(input2)();
   });
 
@@ -127,7 +127,7 @@ describe('Input Generic:', () => {
           resolve();
         }
         else{
-          reject(new ValidationFail(this.name, 'Properties are not working'));
+          reject(new ValidationFail(this.name(), 'Properties are not working'));
         }
       });
     });
@@ -140,10 +140,10 @@ describe('Input Generic:', () => {
   it('Input should have new value', () => {
     const i = new Input('name');
 
-    i.value = 10;
-    assert.equal(i.value, 10);
-    i.value = 'foo';
-    assert.equal(i.value, 'foo');
+    i.setValue(10);
+    assert.equal(i.value(), 10);
+    i.setValue('foo');
+    assert.equal(i.value(), 'foo');
   });
 
   it('Should not have duplicated error codes', () => {
@@ -175,8 +175,8 @@ describe('Input Generic:', () => {
 
     try{
       const input = new Input('test');
-      input.readOnly = true;
-      input.value = 10;
+      input.setReadOnly(true);
+      input.setValue(10);
     }
     catch(err){
       error = err;

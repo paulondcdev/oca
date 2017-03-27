@@ -29,16 +29,16 @@ describe('Tasks:', () => {
 
     return (async () => {
       const actionA1 = Oca.createAction('tasksActionA');
-      actionA1.input('a').value = 10;
-      actionA1.input('b').value = 10;
+      actionA1.input('a').setValue(10);
+      actionA1.input('b').setValue(10);
 
       const tasks = new Tasks();
       tasks.addAction(actionA1);
       tasks.addAction(actionA1);
 
       const actionA2 = Oca.createAction('tasksActionA');
-      actionA2.input('a').value = 12;
-      actionA2.input('b').value = 13;
+      actionA2.input('a').setValue(12);
+      actionA2.input('b').setValue(13);
 
       tasks.addAction(actionA2);
       tasks.addAction(actionA2);
@@ -46,9 +46,9 @@ describe('Tasks:', () => {
       assert.equal((await tasks.contents()).length, 2);
 
       const actionB = Oca.createAction('tasksActionB');
-      actionB.input('a').value = 12;
-      actionB.input('b').value = 10;
-      actionB.input('c').value = 10;
+      actionB.input('a').setValue(12);
+      actionB.input('b').setValue(10);
+      actionB.input('c').setValue(10);
 
       tasks.addAction(actionB);
       tasks.addAction(actionB);
@@ -62,8 +62,8 @@ describe('Tasks:', () => {
 
     return (async () => {
       const actionA1 = Oca.createAction('tasksActionA');
-      actionA1.input('a').value = 10;
-      actionA1.input('b').value = 10;
+      actionA1.input('a').setValue(10);
+      actionA1.input('b').setValue(10);
 
       const tasks = new Tasks();
       tasks.addAction(actionA1);
@@ -99,15 +99,15 @@ describe('Tasks:', () => {
       });
 
       const actionA = Oca.createAction('tasksActionA');
-      actionA.input('a').value = 12;
-      actionA.input('b').value = 13;
+      actionA.input('a').setValue(12);
+      actionA.input('b').setValue(13);
 
       tasks.addAction(actionA);
       assert.equal((await tasks.contents()).length, 2);
 
       tasks.clear();
       assert.equal((await tasks.contents()).length, 0);
-      assert(tasks.isEmpty);
+      assert(tasks.isEmpty());
 
     })();
   });
@@ -122,8 +122,8 @@ describe('Tasks:', () => {
       tasks.addWrappedPromise(wrappedPromise);
 
       const actionA = Oca.createAction('tasksActionA');
-      actionA.input('a').value = 12;
-      actionA.input('b').value = 13;
+      actionA.input('a').setValue(12);
+      actionA.input('b').setValue(13);
       tasks.addAction(actionA);
 
       assert.equal((await tasks.contents()).length, 2);
@@ -146,8 +146,8 @@ describe('Tasks:', () => {
       });
 
       const actionA = Oca.createAction('tasksActionA');
-      actionA.input('a').value = 12;
-      actionA.input('b').value = 13;
+      actionA.input('a').setValue(12);
+      actionA.input('b').setValue(13);
       tasks.addAction(actionA);
 
       const result = await tasks.execute();

@@ -29,16 +29,16 @@ describe('CommandLine Stream:', () => {
   it('Should output a stream', () => {
 
     const commandLine = Oca.createHandler('commandLine');
-    commandLine.stdout = new WriteStream();
-    commandLine.stderr = new WriteStream();
-    commandLine.args = [
+    commandLine.setStdout(new WriteStream());
+    commandLine.setStderr(new WriteStream());
+    commandLine.setArgs([
       'node',
       'file',
       '--type',
       'binary',
       '--file',
       testDataImagePath,
-    ];
+    ]);
 
     return (async () => {
 
@@ -47,10 +47,10 @@ describe('CommandLine Stream:', () => {
 
       // querying the checksum from the test image file
       const checksumAction = Oca.createAction('file.checksum');
-      checksumAction.input('file').value = testDataImagePath;
+      checksumAction.input('file').setValue(testDataImagePath);
       const testImageFileChecksum = await checksumAction.execute();
 
-      const streamChecksum = crypto.createHash('sha256').update(Buffer.concat(commandLine.stdout.data)).digest('hex');
+      const streamChecksum = crypto.createHash('sha256').update(Buffer.concat(commandLine.stdout().data)).digest('hex');
       assert.equal(testImageFileChecksum, streamChecksum);
     })();
   });

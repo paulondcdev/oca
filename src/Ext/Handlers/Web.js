@@ -105,16 +105,18 @@ class Web extends Handler{
    * @see http://expressjs.com/en/api.html#req
    * @param {Object} req - request object
    */
-  set request(req){
+  setRequest(req){
     assert(TypeCheck.isObject(req) && req.method, 'Invalid request object');
 
     this[_request] = req;
-    this.session.set('req', req);
+    this.session().set('req', req);
 
     // adding the remote ip address to the autofill as remoteAddress
     try{
-      this.session.autofill.remoteAddress = req.headers['x-forwarded-for'] ||
-        req.connection.remoteAddress;
+      this.session().setAutofill(
+        'remoteAddress',
+        req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+      );
     }
     catch(err){
       /* istanbul ignore next */
@@ -126,9 +128,9 @@ class Web extends Handler{
    * Returns the request object created by the express server
    *
    * @see http://expressjs.com/en/api.html#req
-   * @type {Object|null}
+   * @return {Object|null}
    */
-  get request(){
+  request(){
     return this[_request];
   }
 
@@ -140,20 +142,20 @@ class Web extends Handler{
    * @see http://expressjs.com/en/api.html#res
    * @param {Object} res - response object
    */
-  set response(res){
+  setResponse(res){
     assert(TypeCheck.isObject(res) && TypeCheck.isObject(res.locals), 'Invalid response object');
 
     this[_response] = res;
-    this.session.set('res', res);
+    this.session().set('res', res);
   }
 
   /**
    * Returns the response object created by the express server
    *
    * @see http://expressjs.com/en/api.html#res
-   * @type {Object|null}
+   * @return {Object|null}
    */
-  get response(){
+  response(){
     return this[_response];
   }
 
@@ -281,7 +283,7 @@ class Web extends Handler{
    * web handler is available under `res.locals.web`, for instance:
    * ```
    * const web = res.locals.web;
-   * web.session.autofill.customValue = 'something';
+   * web.session().setAutofill('customValue', 'myValue');
    * ```
    *
    * Where any input assigned with the autofill property 'someCustom' is going to be
@@ -326,7 +328,7 @@ class Web extends Handler{
    * web handler is available under `res.locals.web`, for instance:
    * ```
    * const web = res.locals.web;
-   * web.session.autofill.customValue = 'something';
+   * web.session().autofill.customValue = 'something';
    * ```
    *
    * Where any input assigned with the autofill property 'someCustom' is going to be
@@ -430,7 +432,7 @@ class Web extends Handler{
     const reader = super._createReader(action, options);
 
     // setting request to the reader
-    reader.request = this.request;
+    reader.setRequest(this.request());
 
     return reader;
   }
@@ -450,11 +452,12 @@ class Web extends Handler{
     const writer = super._createWriter(value, options);
 
     // setting response to the writer
-    writer.response = this.response;
+    writer.setResponse(this.response());
 
     // adding context as part of the result
-    if ('context' in this.request.query && writer.options.extendOutput){
-      writer.options.extendOutput.context = this.request.query.context;
+    const query = this.request().query;
+    if ('context' in query && writer.option('extendOutput')){
+      writer.setOption('extendOutput.context', query.context);
     }
 
     return writer;
@@ -503,8 +506,8 @@ class Web extends Handler{
       // storing the request handler inside of the res.locals, so this object
       // can be accessed later by the action
       res.locals.web = Handler.create('web', normalizedName);
-      res.locals.web.request = req;
-      res.locals.web.response = res;
+      res.locals.web.setRequest(req);
+      res.locals.web.setResponse(res);
 
       const actionDataIndex = this._actionMethodToWebfiedIndex[normalizedName][method];
       res.locals.web.requireAuth = this._webfyActions[actionDataIndex].auth;

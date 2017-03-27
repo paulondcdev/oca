@@ -9,20 +9,20 @@ describe('Stream Input:', () => {
 
   it('Input should start empty', () => {
     const input = Input.create('input: stream');
-    assert.equal(input.value, null);
+    assert.equal(input.value(), null);
   });
 
   it('Stream should be accepted as value', () => {
 
     const input = Input.create('input: stream');
-    input.value = new stream.Readable();
+    input.setValue(new stream.Readable());
 
     return input.validate();
   });
 
   it('Should fail for non-stream value', (done) => {
     const input = Input.create('input: stream');
-    input.value = 10;
+    input.setValue(10);
 
     input.validate.bind(input)().then((value) => {
       done(new Error('Unexpected value'));
@@ -34,7 +34,7 @@ describe('Stream Input:', () => {
   it('Should allow a readable stream type', () => {
 
     const input = Input.create('input: stream', {streamType: 'readable'});
-    input.value = new stream.Readable();
+    input.setValue(new stream.Readable());
 
     return input.validate();
   });
@@ -42,7 +42,7 @@ describe('Stream Input:', () => {
   it('Should allow a writable stream (type property)', () => {
 
     const input = Input.create('input: stream', {streamType: 'writable'});
-    input.value = new stream.Writable();
+    input.setValue(new stream.Writable());
 
     return input.validate();
   });
@@ -50,7 +50,7 @@ describe('Stream Input:', () => {
   it('Should allow a duplex stream (type property)', () => {
 
     const input = Input.create('input: stream', {streamType: 'duplex'});
-    input.value = new stream.Duplex();
+    input.setValue(new stream.Duplex());
 
     return input.validate();
   });
@@ -58,7 +58,7 @@ describe('Stream Input:', () => {
   it('Should allow a transform stream (type property)', () => {
 
     const input = Input.create('input: stream', {streamType: 'transform'});
-    input.value = new stream.Transform();
+    input.setValue(new stream.Transform());
 
     return input.validate();
   });
@@ -66,7 +66,7 @@ describe('Stream Input:', () => {
   it('Should fail when a stream type does not match the specified one (type property)', (done) => {
 
     const input = Input.create('input: stream', {streamType: 'transform'});
-    input.value = new stream.Writable();
+    input.setValue(new stream.Writable());
 
     input.validate.bind(input)().then((value) => {
       done(new Error('Unexpected value'));
@@ -77,7 +77,7 @@ describe('Stream Input:', () => {
 
   it('Input should not be serializable', (done) => {
     const input = Input.create('input: stream');
-    input.value = new stream.Writable();
+    input.setValue(new stream.Writable());
 
     input.serializeValue().then((value) => {
       done(new Error('Not expected result'));

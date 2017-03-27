@@ -27,15 +27,15 @@ describe('Action Registration:', () => {
   });
 
   it('Should test the registered action names', () => {
-    const currentValue = Action.registeredActionNames;
+    const currentValue = Action.registeredActionNames();
 
     // registering a new action
     Action.registerAction(testutils.Actions.Shared.Multiply, 'customNewRegisteredAction');
-    assert.equal(Action.registeredActionNames.length, currentValue.length + 1);
+    assert.equal(Action.registeredActionNames().length, currentValue.length + 1);
 
     // overriding the a registered a new action
     Action.registerAction(testutils.Actions.Shared.Multiply, 'customNewRegisteredAction');
-    assert.equal(Action.registeredActionNames.length, currentValue.length + 1);
+    assert.equal(Action.registeredActionNames().length, currentValue.length + 1);
   });
 
   it("Should return null when can't find registered action name", () => {

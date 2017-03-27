@@ -125,7 +125,7 @@ class CustomAction extends Oca.Action{
     this.createInput('a: text', {}, function(at=null){
 
       // my custom validation
-      console.log(this.name);
+      console.log(this.name());
 
       return Promise.resolve(true);
     });
@@ -142,7 +142,7 @@ class CustomAction extends Oca.Action{
 ```javascript
 const myAction = Oca.createAction('myAction');
 
-myAction.input('myInput').value = 'Some Text';
+myAction.input('myInput').setValue('Some Text');
 
 // executing the action
 myAction.execute().then((result) => {
@@ -252,7 +252,7 @@ console operations
 
 ```javascript
 const myAction = Oca.createAction('myAction');
-myAction.input('myInput').value = 'Text';
+myAction.input('myInput').setValue('Text');
 
 // serializing the action into json
 actionA.toJson().then((json) => {

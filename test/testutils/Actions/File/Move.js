@@ -24,8 +24,8 @@ describe('Move Action:', () => {
     return (async () => {
 
       const moveAction = Oca.createAction('file.move');
-      moveAction.input('sourceFile').value = sourceFilePath;
-      moveAction.input('targetFile').value = targetFilePath;
+      moveAction.input('sourceFile').setValue(sourceFilePath);
+      moveAction.input('targetFile').setValue(targetFilePath);
 
       await moveAction.execute();
 

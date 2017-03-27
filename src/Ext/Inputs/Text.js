@@ -9,13 +9,13 @@ const BaseText = require('./BaseText');
  *
  * ```javascript
  * const input = Input.create('myInput: text');
- * input.value = 'Some text';
+ * input.setValue('Some text');
  * ```
  *
  * ```javascript
  * // vector
  * const input = Input.create('myInput: text[]');
- * input.value = ['A', 'B', 'C'];
+ * input.setValue(['A', 'B', 'C']);
  * ```
  *
  * *This input can also be created using the alias:* `string`

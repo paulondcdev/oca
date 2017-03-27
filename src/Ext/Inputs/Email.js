@@ -8,7 +8,7 @@ const BaseText = require('./BaseText');
  *
  * ```javascript
  * const input = Input.create('myInput: email');
- * input.value = 'test@domain.com';
+ * input.setValue('test@domain.com');
  * ```
  *
  * <h2>Property Summary</h2>

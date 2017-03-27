@@ -8,13 +8,13 @@ const Input = require('../../Input');
  *
  * ```javascript
  * const input = Input.create('myInput: bool');
- * input.value = false;
+ * input.setValue(false);
  * ```
  *
  * ```javascript
  * // vector version
  * const input = Input.create('myInput: bool[]');
- * input.value = [false, true, false];
+ * input.setValue([false, true, false]);
  * ```
  *
  * *This input can also be created using the alias:* `boolean`
