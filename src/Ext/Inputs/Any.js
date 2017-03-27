@@ -4,9 +4,10 @@ const Input = require('../../Input');
 
 
 /**
+ * Any value input.
  *
  * This input type holds any kind of object, however it's not exposed for
- * handlers ({@link Handler}). It's intended to be used internally.
+ * handlers ({@link Handler}). It's intended to be used only internally.
  *
  * ```javascript
  * const input = Input.create('myInput: any');
