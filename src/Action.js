@@ -49,10 +49,12 @@ const _session = Symbol('session');
  * action.execute().then(...) //  HelloWorld HelloWorld HelloWorld
  * ```
  *
- * An evaluation is triggered through {@link Action.execute} that internally calls {@link Action._perform}
- * which is the method that should be used to implement the evaluation of the action.
+ * An evaluation is triggered through {@link Action.execute} which internally calls
+ * {@link Action._perform}. Use `perform` to implement the evaluation of your action.
+ * Also, you can implement {@link Action._finalize} to execute secondary routines.
  *
- * Actions are registered via {@link Action.registerAction}, in case you want to use a compound name
+ * Actions are registered via {@link Action.registerAction}
+ * (also available as `Oca.registerAction`), in case you want to use a compound name
  * with a prefix common across some group of actions you can use '.' as separator.
  * Also, there are two ways to create actions:
  *
@@ -571,6 +573,7 @@ class Action{
    * This method is called after the execution of the action.
    *
    * You could re-implement this method to:
+   * - Add custom metadata information used that can be used by a {@link Writer}
    * - Add arbitrary information to a log
    * - In case of errors to purge temporary files
    * - Customize exceptions to a more contextual one

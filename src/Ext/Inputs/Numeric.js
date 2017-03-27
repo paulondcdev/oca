@@ -5,7 +5,7 @@ const Input = require('../../Input');
 
 
 /**
- * Numeric input
+ * Numeric input.
  *
  * ```javascript
  * const input = Input.create('myInput: numeric');

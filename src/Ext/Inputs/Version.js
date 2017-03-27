@@ -6,7 +6,7 @@ const BaseText = require('./BaseText');
 
 
 /**
- * Version input
+ * Version input.
  *
  * This input follows the semver convention.
  *

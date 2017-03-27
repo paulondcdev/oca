@@ -5,7 +5,7 @@ const BaseText = require('./BaseText');
 
 
 /**
- * Text input
+ * Text input.
  *
  * ```javascript
  * const input = Input.create('myInput: text');

@@ -5,7 +5,7 @@ const nodeIp = require('ip');
 
 
 /**
- * Ip address input
+ * Ip address input.
  *
  * ```javascript
  * // ipv4

@@ -3,7 +3,7 @@ const Input = require('../../Input');
 
 
 /**
- * Buffer input
+ * Buffer input.
  *
  * ```javascript
  * const input = Input.create('myInput: buffer');

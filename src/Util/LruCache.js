@@ -13,7 +13,7 @@ const _cache = Symbol('cache');
 /**
  * A cache that discards the least recently used items first.
  *
- * This feature is provided by the {@link Session} to store the result of
+ * This feature is used by the {@link Session} to store the result of
  * cacheable actions ({@link Action.isCacheable}).
  */
 class LruCache{

@@ -333,8 +333,7 @@ class WebRequest extends Reader{
       }
     }
 
-    // 'keep original name' is done in parallel for all files at once taking full advantage
-    // of the parallelization
+    // 'keep original name' is done in parallel for all files at once
     if (keepOrignalNamePromises.size){
       const originalNameKeys = Array.from(keepOrignalNamePromises.keys());
       const originalNameValues = await Promise.all(keepOrignalNamePromises.values());
@@ -429,7 +428,7 @@ class WebRequest extends Reader{
       fs.rmdir(folder, (err) => {
 
         // theoretically this method can be called multiple times by handler.execute
-        // multiple times for the same request
+        // for the same request
         delete this[_temporaryFolders][folder];
 
         /* istanbul ignore next */

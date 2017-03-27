@@ -14,7 +14,7 @@ const _terminated = Symbol('terminated');
 
 
 /**
- * A session is used to store the data that is shared between actions.
+ * A session is used to store the data shared between actions.
  *
  * This object is created automatically by {@link Handler.create} and
  * {@link Action.create}.
@@ -70,10 +70,10 @@ class Session{
    * Returns a value under the autofill data.
    *
    * This feature is used to set the initial input value for inputs that contain the `autofill`
-   * property. It works by looking if the value of the autofill input property is under the
+   * property. It works by looking if the value of the autofill input's property is under the
    * {@link Session.autofill} then if found it sets the input value with the value of the
    * {@link Session.autofill}. This process occurs when a session is assigned to the action
-   * ({@link Action.session}).
+   * ({@link Action.setSession}).
    *
    * When inputs that contain the property `autofill` are initialized through the
    * {@link Handler} they will try to find their values under the autofill,
@@ -129,10 +129,10 @@ class Session{
   }
 
   /**
-   * Sets a key & value under the session. This is used to store arbitrary data
-   * that is not related with all handlers, for instance the request object
-   * created by express is assigned to the session through this method by the
-   * web handler.
+   * Sets a key & value under the arbitrary data. This is used to store data
+   * that may be only available in specific handlers, for instance the
+   * request object created by express is assigned to the session through this
+   * method by the web handler.
    *
    * @param {string} key - name of the key
    * @param {*} value - value for the key
@@ -144,7 +144,7 @@ class Session{
   }
 
   /**
-   * Returns the value assigned for the key
+   * Returns an value assigned for the key inside of the arbitrary data
    *
    * @param {string} key - name of the key
    * @param {*} [defaultValue] - optional value returned when the key is not assigned

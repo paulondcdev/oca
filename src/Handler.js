@@ -23,7 +23,7 @@ const _metadata = Symbol('metadata');
  *
  * The result of a handler is done through a {@link Writer}. Writers are designed
  * to support reporting a success output and an error output as well. The way the
- * result is serialized is determined by a writer implementation
+ * result is serialized is determined by the writer implementation
  * ({@link Writer._successOutput}, {@link Writer._errorOutput}). All writers
  * shipped with Oca have support for streams where in case of any readable stream
  * or buffer value they are piped to the output, otherwise the result is encoded

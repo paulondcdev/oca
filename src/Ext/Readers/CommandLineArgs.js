@@ -20,7 +20,7 @@ const _args = Symbol('args');
  * reporting it in user-friendly way. This is used to report `-h/--help` and
  * missing arguments.
  *
- * This reader supports all serializable inputs, they can be displayed
+ * All serializable inputs are supported by this handler, they can be displayed
  * either as `argument` or `option` element. This is done by setting the input
  * property `cliElementType` (option is the default one).
  *

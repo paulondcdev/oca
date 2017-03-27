@@ -17,8 +17,8 @@ const _response = Symbol('response');
  *
  * It enables the execution of actions that are triggered by web requests by reading
  * ({@link WebRequest}) the information that is passed to the action
- * ({@link Web.execute}) and taking care of the output of the response
- * ({@link Web.output}).
+ * ({@link Web.execute}). The output this handler ({@link Web.output}) is done through
+ * the writer {@link @WebResponse}.
  *
  * In order to tell which actions are visible by this handler, they are required to
  * be registered via a webfication process that describes their request method,

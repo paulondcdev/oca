@@ -149,9 +149,9 @@ class WebResponse extends Writer{
    * Implements the response for a success value.
    *
    * A readable stream value is piped using 'application/octet-stream' by default
-   * (if it has not been defined), otherwise for non-readable stream value it's
-   * automatically encoded using json, following the basics of google's json
-   * style guide.
+   * (if it has not been defined by the header option 'contentType'),
+   * otherwise for non-readable stream value it's automatically encoded
+   * using json, following the basics of google's json style guide.
    *
    * Further information can be found at base class documentation
    * {@link Writer._successOutput}.

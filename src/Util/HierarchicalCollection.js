@@ -8,8 +8,13 @@ const _collection = Symbol('collection');
 
 
 /**
- * Provides an interface to deal with data in a multi dimension
- * plain object
+ * Provides an interface to deal with data in a multi dimension plain object.
+ *
+ * It automatically creates the intermediate levels when assigning a value under
+ * nested levels to the collection. Also, if the value already exists
+ * under the collection then it allows the value to be merged with the
+ * existing values.
+ *
  * @private
  */
 class HierarchicalCollection{

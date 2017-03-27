@@ -80,10 +80,7 @@ class CommandLineOutput extends Writer{
   /**
    * Implements the response for an error value.
    *
-   * The error output writes the error message under the stderr. The only exception are
-   * parsing error messages that are identified by the status
-   * defined by {@link CommandLine._parsingErrorStatusCode} where they are outputted without
-   * any encoding.
+   * The error output writes the error message under the stderr.
    *
    * @protected
    */

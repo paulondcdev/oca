@@ -8,7 +8,7 @@ const BaseText = require('./BaseText');
 
 
 /**
-* File Path input
+* File Path input.
 *
 * ```javascript
 * const input = Input.create('myInput: filePath');

@@ -4,7 +4,7 @@ const Input = require('../../Input');
 
 
 /**
- * Timestamp input
+ * Timestamp input.
  *
  * ```javascript
  * const input = Input.create('myInput: timestamp');

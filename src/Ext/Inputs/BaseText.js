@@ -4,7 +4,7 @@ const Input = require('../../Input');
 
 
 /**
- * Base text input class derived by all text input implementations
+ * Base text input class derived by all text input implementations.
  *
  * <h2>Property Summary</h2>
  *

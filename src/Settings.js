@@ -5,8 +5,7 @@ const path = require('path');
 
 
 /**
- * Provides access to the general configuration, which is used by the features
- * provided by Oca.
+ * Provides access to the general configuration used across Oca.
  *
  * ```javascript
  * const Oca = require('oca');
