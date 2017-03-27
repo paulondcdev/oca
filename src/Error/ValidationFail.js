@@ -13,7 +13,7 @@ const _message = Symbol('message');
  * Exception raised by {@link Input} validations.
  *
  * It carries additional information about the context of the error that can be used when
- * reporting/handling it. For this reason when this exception is raised through a {@link Handler}
+ * reporting/handling it. For this reason when this exception handled by a {@link Handler}
  * it gets encoded into json {@link ValidationFail.toJson}.
  *
  * ```javascript
