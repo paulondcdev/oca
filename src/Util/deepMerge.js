@@ -3,7 +3,7 @@ const TypeCheck = require('js-typecheck');
 
 
 /**
- * Merges two plain objects recursively and returns and returns a new one
+ * Merges two plain objects recursively and returns a new one
  *
  * @param {Object} objectA - plain object a
  * @param {Object} objectB - plain object b
