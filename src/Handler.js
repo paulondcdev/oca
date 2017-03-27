@@ -107,9 +107,9 @@ class Handler{
   /**
    * Returns the session
    *
-   * @type {Session}
+   * @return {Session}
    */
-  get session(){
+  session(){
     return this[_session];
   }
 
@@ -167,7 +167,7 @@ class Handler{
    */
   async execute(actionName, options={}){
 
-    const action = Action.create(actionName, this.session);
+    const action = Action.create(actionName, this.session());
     assert(action, `Action ${actionName} not found!`);
 
     // collecting read options from the action
@@ -245,7 +245,7 @@ class Handler{
     // the session finalization runs in parallel, since it does secondary tasks
     // (such as clean-up, logging, etc...) there is no need to await for that
     if (finalizeSession){
-      this.session.finalize().then().catch((err) => {
+      this.session().finalize().then().catch((err) => {
         this._emitOutputError(err);
       });
     }
@@ -378,9 +378,9 @@ class Handler{
   /**
    * Returns a list containing the names of the registered handler types
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  static get registeredHandlerNames(){
+  static registeredHandlerNames(){
     const result = new Set();
 
     for (const [registeredHandleName] of this._registeredHandlers.keys()){
@@ -450,7 +450,10 @@ class Handler{
     assert(ReaderClass, 'Invalid registered reader!');
     const reader = new ReaderClass(action);
 
-    Object.assign(reader.options, options);
+    // passing options to the reader
+    for (const option in options){
+      reader.setOption(option, options[option]);
+    }
 
     return reader;
   }
@@ -472,7 +475,10 @@ class Handler{
     assert(WriterClass, 'Invalid registered writer!');
     const writer = new WriterClass(value);
 
-    Object.assign(writer.options, options);
+    // passing options to the writer
+    for (const option in options){
+      writer.setOption(option, options[option]);
+    }
 
     return writer;
   }
@@ -506,12 +512,13 @@ class Handler{
 
     // setting inputs
     for (const inputName in inputValues){
-      action.input(inputName).value = inputValues[inputName];
+      action.input(inputName).setValue(inputValues[inputName]);
     }
 
     // setting autofill
+    const session = this.session();
     for (const autofillName in autofillValues){
-      this.session.autofill[autofillName] = autofillValues[autofillName];
+      session.setAutofill(autofillName, autofillValues[autofillName]);
     }
   }
 

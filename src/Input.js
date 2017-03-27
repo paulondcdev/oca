@@ -141,7 +141,7 @@ class Input{
     this.lockProperty('vector');
     this.lockProperty('defaultValue');
 
-    this.value = this.property('defaultValue');
+    this.setValue(this.property('defaultValue'));
     this._extendedValidation = extendedValidation;
   }
 
@@ -168,7 +168,7 @@ class Input{
    *    if (this.valueAt(at) === 3)
    *      reject(new ValidationFail('Failed for some reason'));
    *    else
-   *      resolve(this.value);
+   *      resolve(this.value());
    *  });
    * })
    */
@@ -218,20 +218,20 @@ class Input{
    * the property `required=false` to know if the input does not have a value
    * assigned to it.
    *
-   * @type {boolean} If the input is empty
+   * @return {boolean} If the input is empty
    */
-  get isEmpty(){
-    return TypeCheck.isNone(this.value) || (this.property('vector') &&
-      TypeCheck.isList(this.value) && this.value.length === 0);
+  isEmpty(){
+    return TypeCheck.isNone(this.value()) || (this.property('vector') &&
+      TypeCheck.isList(this.value()) && this.value().length === 0);
   }
 
   /**
    * Returns if the value of the input is a vector. This information is defined
    * by the property `vector=true`
    *
-   * @type {boolean} if the input is a vector
+   * @return {boolean} if the input is a vector
    */
-  get isVector(){
+  isVector(){
     return this.property('vector') === true;
   }
 
@@ -239,9 +239,9 @@ class Input{
    * Returns if the value of the input is required. This information is defined
    * by the property `required=true`
    *
-   * @type {boolean} if the input is required
+   * @return {boolean} if the input is required
    */
-  get isRequired(){
+  isRequired(){
     return this.property('required') === true;
   }
 
@@ -261,41 +261,42 @@ class Input{
   setupFrom(sourceInput, at=null, cache=true){
     assert(TypeCheck.isSameType(sourceInput, this), 'Inputs are not the same type!');
 
-    if (at !== null && !sourceInput.isVector){
+    if (at !== null && !sourceInput.isVector()){
       throw new Error(`Can't use at, since the source input is not a vector`);
     }
-    else if (at !== null && this.isVector){
+    else if (at !== null && this.isVector()){
       throw new Error(`Can't use at, from a source vector input to a target vector input`);
     }
-    else if (this.isVector && !sourceInput.isVector){
+    else if (this.isVector() && !sourceInput.isVector()){
       throw new Error(`Source input is not a vector, can't setup to a vector target input`);
     }
-    else if (at === null && sourceInput.isVector && !this.isVector){
+    else if (at === null && sourceInput.isVector() && !this.isVector()){
       throw new Error(`Target input is not a vector, can't setup from a vector target input without supplying 'at'`);
     }
 
     // transferring the value
     if (at === null){
-      this.value = sourceInput.value;
+      this.setValue(sourceInput.value());
     }
     else{
-      this.value = sourceInput.value[at];
+      this.setValue(sourceInput.value()[at]);
     }
 
     // transferring the cache to the current input
     if (cache && sourceInput.property('immutable') && this.property('immutable')){
-      assert(sourceInput.cache instanceof Util.ImmutableMap);
+      assert(sourceInput.cache() instanceof Util.ImmutableMap);
 
+      const sourceCache = sourceInput.cache();
       if (at === null){
-        for (const key of sourceInput.cache.keys()){
-          this.cache.set(key, sourceInput.cache.get(key));
+        for (const key of sourceCache.keys()){
+          this.cache().set(key, sourceCache.get(key));
         }
       }
       else{
         const indexToken = `(${at})`;
-        for (const key of sourceInput.cache.keys()){
+        for (const key of sourceCache.keys()){
           if (key.endsWith(indexToken)){
-            this._setToCache(key.slice(0, -indexToken.length), sourceInput.cache.get(key));
+            this._setToCache(key.slice(0, -indexToken.length), sourceCache.get(key));
           }
         }
       }
@@ -308,9 +309,9 @@ class Input{
   * This method is called by ({@link setupFrom}) to setup the input based on an
   * already existing input
   *
-  * @type {ImmutableMap}
+  * @return {ImmutableMap}
   */
-  get cache(){
+  cache(){
     return this[_cache];
   }
 
@@ -318,7 +319,7 @@ class Input{
    * Forces to flush the internal input cache
    */
   clearCache(){
-    this.cache.clear();
+    this.cache().clear();
   }
 
   /**
@@ -331,24 +332,24 @@ class Input{
 
     try{
       // required check
-      if (this.isEmpty){
-        if (this.isRequired !== false){
+      if (this.isEmpty()){
+        if (this.isRequired() !== false){
           throw new ValidationFail('Input is required, it cannot be empty!', Input.errorCodes[0]);
         }
       }
 
       // vector check
-      else if (this.isVector && !TypeCheck.isList(this.value)){
+      else if (this.isVector() && !TypeCheck.isList(this.value())){
         throw new ValidationFail('Input needs to be a vector!', Input.errorCodes[1]);
       }
 
       // otherwise perform the asynchronous validations
       else{
         const validationPromises = [];
-        const length = this.isVector ? this.value.length : 1;
+        const length = this.isVector() ? this.value().length : 1;
         for (let i=0; i < length; ++i){
           // setting the context index
-          const at = this.isVector ? i : null;
+          const at = this.isVector() ? i : null;
           validationPromises.push(this._validation(at));
 
           // running extended validations
@@ -364,7 +365,7 @@ class Input{
     catch(err){
       // including the input name to the validation fail
       if (err instanceof ValidationFail){
-        err.inputName = this.name;
+        err.inputName = this.name();
 
         // disabling the output when input is marked as hidden
         if (this.property('hidden')){
@@ -419,8 +420,8 @@ class Input{
     assert(TypeCheck.isString(name), 'property name needs to be defined as string');
 
     // checking if input is read-only
-    if (this.readOnly){
-      throw new Error(`Input ${this.name} is read only, cannot be modified!`);
+    if (this.readOnly()){
+      throw new Error(`Input ${this.name()} is read only, cannot be modified!`);
     }
 
     // checking if property is valid
@@ -448,8 +449,8 @@ class Input{
   lockProperty(name, lock=true){
 
     // checking if input is read-only
-    if (this.readOnly){
-      throw new Error(`Input ${this.name} is read only, cannot be modified!`);
+    if (this.readOnly()){
+      throw new Error(`Input ${this.name()} is read only, cannot be modified!`);
     }
 
     if (lock){
@@ -485,9 +486,9 @@ class Input{
   /**
    * Returns a list containing the property names assigned to the input
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get propertyNames(){
+  propertyNames(){
     return [...new Set([...this[_properties].keys(),
       ...Input._allRegisteredProperties(this.constructor).keys(),
     ])];
@@ -498,11 +499,11 @@ class Input{
    *
    * @param {*} inputValue - value that should be set to the input
    */
-  set value(inputValue){
+  setValue(inputValue){
 
     // checking if input is read-only
-    if (this.readOnly){
-      throw new Error(`Input ${this.name} is read only, cannot be modified!`);
+    if (this.readOnly()){
+      throw new Error(`Input ${this.name()} is read only, cannot be modified!`);
     }
 
     // Due the overhead that may occur on going through recursively and freezing
@@ -518,9 +519,9 @@ class Input{
   /**
    * Returns the value of the input
    *
-   * @type {*}
+   * @return {*}
    */
-  get value(){
+  value(){
     return this._value;
   }
 
@@ -528,9 +529,9 @@ class Input{
    * Returns the name of the input which is defined at construction time (inputs cannot
    * be renamed)
    *
-   * @type {string}
+   * @return {string}
    */
-  get name(){
+  name(){
     return this[_name];
   }
 
@@ -543,9 +544,9 @@ class Input{
    * In case of a serializable input, the methods {@link Input._encode} and {@link Input._decode}
    * are expected to be implemented.
    *
-   * @type {boolean}
+   * @return {boolean}
    */
-  get isSerializable(){
+  isSerializable(){
     return true;
   }
 
@@ -558,7 +559,7 @@ class Input{
    *
    * @param {boolean} enable - tells if a input is read-only
    */
-  set readOnly(enable){
+  setReadOnly(enable){
     this[_readOnly] = enable;
   }
 
@@ -566,9 +567,9 @@ class Input{
    * Returns a boolean telling if the input is in read-only mode. A read-only input
    * cannot have its value and properties modified
    *
-   * @type {boolean}
+   * @return {boolean}
    */
-  get readOnly(){
+  readOnly(){
     return this[_readOnly];
   }
 
@@ -592,7 +593,7 @@ class Input{
    * @return {*}
    */
   parseValue(value, assignValue=true){
-    assert(this.isSerializable, 'parsing not supported!');
+    assert(this.isSerializable(), 'parsing not supported!');
     assert(TypeCheck.isString(value), 'value needs to be defined as string or string array');
 
     let result;
@@ -601,7 +602,7 @@ class Input{
     if (value.length === 0){
       result = null;
     }
-    else if (this.isVector){
+    else if (this.isVector()){
       const decodedValue = [];
 
       // it may worth to allow passing an Array directly as valid value as well, so it would
@@ -634,7 +635,7 @@ class Input{
     }
 
     if (assignValue){
-      this.value = result;
+      this.setValue(result);
     }
 
     return result;
@@ -653,7 +654,7 @@ class Input{
    * @return {Promise<string>}
    */
   async serializeValue(){
-    assert(this.isSerializable, 'serialization not supported!');
+    assert(this.isSerializable(), 'serialization not supported!');
 
     // making sure the value can be serialized without any issues
     await this.validate();
@@ -661,20 +662,20 @@ class Input{
     // serializing the value
     let result;
 
-    if (this.isEmpty){
+    if (this.isEmpty()){
       result = '';
     }
-    else if (this.isVector){
+    else if (this.isVector()){
       const encodedValue = [];
 
-      for (const item of this.value){
+      for (const item of this.value()){
         encodedValue.push(this.constructor._encode(item));
       }
 
       return JSON.stringify(encodedValue);
     }
     else{
-      result = this.constructor._encode(this.value);
+      result = this.constructor._encode(this.value());
     }
 
     return String(result);
@@ -748,16 +749,16 @@ class Input{
   /**
    * Returns a list containing the names of the registered input types
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  static get registeredInputNames(){
+  static registeredInputNames(){
     return [...this._registeredInputs.keys()];
   }
 
   /**
-   * This method enforces the consistence of the value that is being queried.
-   * Since the input can behave as vector as well, it makes sure that when it's
-   * the case the index is being supplied otherwise it raises an exception.
+   * This method enforces the context of the value being queried.
+   * Since the input can behave as vector, it makes sure that when that's
+   * the case the index must be supplied otherwise it raises an exception.
    * Use this method when you need to query the value through validations where
    * the index (at) is always passed to them, either if the input is vector
    * or scalar
@@ -767,12 +768,12 @@ class Input{
    * @return {*}
    */
   valueAt(index=null){
-    if (this.isVector){
+    if (this.isVector()){
       assert(index !== null, 'Could not determine the index of the vector');
-      return this.value[index];
+      return this.value()[index];
     }
 
-    return this.value;
+    return this.value();
   }
 
   /**
@@ -850,7 +851,7 @@ class Input{
    * @protected
    */
   _isCached(name, at=null){
-    return this.cache.has(this._cacheEntry(name, at));
+    return this.cache().has(this._cacheEntry(name, at));
   }
 
   /**
@@ -864,7 +865,7 @@ class Input{
    * @protected
    */
   _setToCache(name, value, at=null){
-    this.cache.set(this._cacheEntry(name, at), value);
+    this.cache().set(this._cacheEntry(name, at), value);
   }
 
   /**
@@ -878,7 +879,7 @@ class Input{
    * @protected
    */
   _getFromCache(name, at=null){
-    return this.cache.get(this._cacheEntry(name, at));
+    return this.cache().get(this._cacheEntry(name, at));
   }
 
   /**
@@ -891,11 +892,11 @@ class Input{
    * @private
    */
   _cacheEntry(name, at){
-    if (this.isVector){
+    if (this.isVector()){
       assert(at !== null, 'Could not determine the index of the vector');
     }
 
-    return (this.isVector) ? `${name}(${at})` : `${name}()`;
+    return (this.isVector()) ? `${name}(${at})` : `${name}()`;
   }
 
   /**

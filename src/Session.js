@@ -6,7 +6,7 @@ const LruCache = require('./Util/LruCache');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
-const _arbitraryData = Symbol('_arbitraryData');
+const _arbitraryData = Symbol('arbitraryData');
 const _autofill = Symbol('autofill');
 const _wrapup = Symbol('wrapup');
 const _resultCache = Symbol('resultCache');
@@ -24,34 +24,51 @@ class Session{
   /**
    * Creates a session
    *
-   * @param {Object} [autofill={}] - plain object containing the autofill values. This
-   * feature is used to set the initial input value for inputs that contain the `autofill`
-   * property. It works by looking if the value of the autofill input property is under the
-   * {@link Session.autofill} then if found it sets the input value with the value of the
-   * {@link Session.autofill}. This process occurs when a session is assigned to the action
-   * ({@link Action.session}).
    * @param {Tasks} [wrapup] - task object used to hold actions and promises that are triggered
    * when finalizing ({@link finalize}) the session
    * @param {LruCache} [resultCache] - cache used to store results of cacheable actions
    */
-  constructor(autofill={}, wrapup=null, resultCache=null){
+  constructor(wrapup=null, resultCache=null){
 
-    assert(TypeCheck.isPlainObject(autofill), 'autofill needs to defined with a plain object');
     assert(wrapup === null || wrapup instanceof Tasks, 'wrapup needs to defined with a Tasks object or null');
     assert(resultCache === null || resultCache instanceof LruCache, 'resultCache needs to defined with a LruCache object or null');
 
-    this[_autofill] = autofill;
-    this[_wrapup] = (wrapup === null) ? new Tasks() : wrapup;
-    this[_resultCache] = (resultCache === null) ? new LruCache(Settings.get('session/lruCacheSize'), Settings.get('session/lruCacheLifespan') * 1000) : resultCache;
+    this[_wrapup] = wrapup || new Tasks();
+    this[_resultCache] = resultCache || new LruCache(Settings.get('session/lruCacheSize'), Settings.get('session/lruCacheLifespan') * 1000);
     this[_terminated] = false;
 
+    // container used to store autofill values inside of the session
+    this[_autofill] = {};
+
     // generic container used to store arbitrary inside of the session
-    this[_arbitraryData] = Object.create(null);
+    this[_arbitraryData] = {};
   }
 
   /**
-   * Returns a plain object containing the autofill data, you can alter
-   * this object to include additional autofill values.
+   * Returns the tasks object used to hold actions and promises that are triggered
+   * when finalizing ({@link finalize}) the session. Wrapup actions can be used to avoid
+   * the execution of an action that may be triggered multiple times across
+   * nested actions where ideally it should be executed only once in the end,
+   * after all nested actions are done.
+   *
+   * @return {Tasks}
+   */
+  wrapup(){
+    return this[_wrapup];
+  }
+
+  /**
+   * Returns the {@link LruCache} cache used to store results of cacheable actions
+   *
+   * @return {LruCache}
+   */
+  resultCache(){
+    return this[_resultCache];
+  }
+
+  /**
+   * Returns a value under the autofill data.
+   *
    * This feature is used to set the initial input value for inputs that contain the `autofill`
    * property. It works by looking if the value of the autofill input property is under the
    * {@link Session.autofill} then if found it sets the input value with the value of the
@@ -63,32 +80,52 @@ class Session{
    * however if a value is not defined for them they will assign their input value
    * to the autofill data automatically.
    *
-   * @type {Object}
+   * @param {string} key - key name used to query the autofill value
+   * @param {*} [defaultValue] - optional default value returned in case
+   * the key does not exist
+   * @return {*}
    */
-  get autofill(){
-    return this[_autofill];
+  autofill(key, defaultValue=undefined){
+    assert(TypeCheck.isString(key), 'key needs to defined as string');
+
+    if (key in this[_autofill]){
+      return this[_autofill][key];
+    }
+
+    return defaultValue;
   }
 
   /**
-   * Returns the tasks object used to hold actions and promises that are triggered
-   * when finalizing ({@link finalize}) the session. Wrapup actions can be used to avoid
-   * the execution of an action that may be triggered multiple times across
-   * nested actions where ideally it should be executed only once in the end,
-   * after all nested actions are done.
+   * Returns a boolean telling if the key exists under the autofill data.
    *
-   * @type {Tasks}
+   * @param {string} key - key name
+   * @return {boolean}
    */
-  get wrapup(){
-    return this[_wrapup];
+  hasAutofill(key){
+    return (key in this[_autofill]);
   }
 
   /**
-   * Returns the {@link LruCache} cache used to store results of cacheable actions
+   * Sets a key & value under the autofill data
    *
-   * @type {LruCache}
+   * @param {string} key - key name
+   * @param {*} value - value associated with the key
+   *
+   * @see {@link Session.autofill}
    */
-  get resultCache(){
-    return this[_resultCache];
+  setAutofill(key, value){
+    assert(TypeCheck.isString(key), 'key needs to defined as string');
+
+    this[_autofill][key] = value;
+  }
+
+  /**
+   * Returns the keys included in the autofill data
+   *
+   * @return {Array<string>}
+   */
+  autofillKeys(){
+    return Object.keys(this[_autofill]);
   }
 
   /**
@@ -134,9 +171,9 @@ class Session{
   /**
    * Returns the keys included in the arbitrary data
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get keys(){
+  keys(){
     return Object.keys(this[_arbitraryData]);
   }
 
@@ -156,14 +193,14 @@ class Session{
     }
 
     this[_terminated] = true;
+    const wrapup = this.wrapup();
+    if (!wrapup.isEmpty()){
 
-    if (!this.wrapup.isEmpty){
-
-      await this.wrapup.execute();
-      this.wrapup.clear();
+      await wrapup.execute();
+      wrapup.clear();
     }
 
-    this.resultCache.flush();
+    this.resultCache().flush();
 
     return true;
   }

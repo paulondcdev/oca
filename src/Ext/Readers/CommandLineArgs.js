@@ -69,11 +69,9 @@ class CommandLineArgs extends Reader{
   constructor(action){
     super(action);
 
-    // options
-    Object.assign(this.options, {
-      description: '',
-      parsingErrorStatusCode: 700,
-    });
+    // default options
+    this.setOption('description', '');
+    this.setOption('parsingErrorStatusCode', 700);
   }
 
   /**
@@ -82,7 +80,7 @@ class CommandLineArgs extends Reader{
    *
    * @param {Array<string>} value - argument list
    */
-  set args(value){
+  setArgs(value){
     assert(TypeCheck.isList(value), 'value needs to be a list');
     assert(value.length >= 2, 'missing first argument process.execPath and second argument javaScript file being executed');
 
@@ -93,19 +91,19 @@ class CommandLineArgs extends Reader{
    * Returns a list of args used by the reader, by default it uses
    * `process.argv`.
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get args(){
+  args(){
     return this[_args];
   }
 
   /**
    * Returns the executable name based on the args
    *
-   * @type {string}
+   * @return {string}
    */
-  get executableName(){
-    return path.basename(this.args[1]);
+  executableName(){
+    return path.basename(this.args()[1]);
   }
 
   /**
@@ -124,7 +122,7 @@ class CommandLineArgs extends Reader{
     // it thrown an exception if something went wrong (like missing a required parameter)
     try{
       parsedArgs = neodoc.run(helpString, {
-        argv: this.args.slice(2),
+        argv: this.args().slice(2),
         dontExit: true,
         smartOptions: true,
         repeatableOptions: true,
@@ -136,20 +134,20 @@ class CommandLineArgs extends Reader{
       // the error does not come as an instance of error, for this reason
       // creating a new error and copying the contents
       const error = Object.assign(new Error(), err);
-      error.status = this.options.parsingErrorStatusCode;
+      error.status = this.option('parsingErrorStatusCode');
       throw error;
     }
 
     // however when the user asks for the help it does not raises an exception
     if ('.help' in parsedArgs){
       const error = new Error(parsedArgs['.help']);
-      error.status = this.options.parsingErrorStatusCode;
+      error.status = this.option('parsingErrorStatusCode');
       throw error;
     }
 
     for (const input of inputList){
-      if (input instanceof Inputs.Bool && !input.isVector){
-        input.value = Boolean(input.value);
+      if (input instanceof Inputs.Bool && !input.isVector()){
+        input.setValue(Boolean(input.value()));
       }
     }
 
@@ -176,18 +174,18 @@ class CommandLineArgs extends Reader{
       }
 
       // querying the input value
-      const inputNames = inputList.map(x => x.name);
+      const inputNames = inputList.map(x => x.name());
       if (foundInputName && !alreadyParsed.includes(foundInputName)){
         alreadyParsed.push(foundInputName);
 
         const input = inputList[inputNames.indexOf(foundInputName)];
 
         let value;
-        if (TypeCheck.isBool(parsedArgs[elementName]) && !input.isVector){
-          value = String(!input.value);
+        if (TypeCheck.isBool(parsedArgs[elementName]) && !input.isVector()){
+          value = String(!input.value());
         }
         else{
-          if (input.isVector && !TypeCheck.isList(parsedArgs[elementName])){
+          if (input.isVector() && !TypeCheck.isList(parsedArgs[elementName])){
             value = [parsedArgs[elementName]];
           }
           else{
@@ -223,13 +221,13 @@ class CommandLineArgs extends Reader{
     let currentIndex = 0;
     for (const input of inputList){
 
-      const inputName = input.name;
+      const inputName = input.name();
       let argName = this._camelCaseToArgument(inputName);
 
       // in case of a boolean input that is true by default adding
       // the `no` prefix to the input name automatically. For boolean inputs they
       // work as toggles when represented through the command line
-      if (input instanceof Inputs.Bool && !input.isVector && input.value){
+      if (input instanceof Inputs.Bool && !input.isVector() && input.value()){
         argName = `no-${argName}`;
       }
 
@@ -242,8 +240,8 @@ class CommandLineArgs extends Reader{
       inputData.description = descriptions[currentIndex];
       inputData.elementDisplay = this._elementDisplay(argName, input);
       inputData.usageDisplay = this._usageDisplay(argName, input);
-      inputData.required = ((input.isRequired && input.isEmpty) && !(input instanceof Inputs.Bool && !input.isVector));
-      inputData.vector = input.isVector;
+      inputData.required = ((input.isRequired() && input.isEmpty()) && !(input instanceof Inputs.Bool && !input.isVector()));
+      inputData.vector = input.isVector();
 
       if (elementType === 'option'){
         inputData.shortOptionDisplay = this._shortOptionDisplay(input);
@@ -288,12 +286,12 @@ class CommandLineArgs extends Reader{
 
     // adding the value type to the argument
     const isBoolInput = input instanceof Inputs.Bool;
-    if ((isBoolInput && input.isVector) || !isBoolInput){
+    if ((isBoolInput && input.isVector()) || !isBoolInput){
 
       // adding the default value as part of the description
-      if (!input.isEmpty){
+      if (!input.isEmpty()){
         let serializedValue = await input.serializeValue();
-        serializedValue = (input.isVector) ? JSON.parse(serializedValue) : [serializedValue];
+        serializedValue = (input.isVector()) ? JSON.parse(serializedValue) : [serializedValue];
         const defaultValue = [];
 
         for (const value of serializedValue){
@@ -314,7 +312,7 @@ class CommandLineArgs extends Reader{
       }
     }
 
-    const inputTypeDisplay = input.isVector ? `${inputTypeName}[]` : inputTypeName;
+    const inputTypeDisplay = input.isVector() ? `${inputTypeName}[]` : inputTypeName;
 
     if (description.length){
       description += ' ';
@@ -341,13 +339,13 @@ class CommandLineArgs extends Reader{
       const shortOption = this._shortOptionDisplay(input);
 
       const isBoolInput = input instanceof Inputs.Bool;
-      if ((isBoolInput && input.isVector) || !isBoolInput){
+      if ((isBoolInput && input.isVector()) || !isBoolInput){
 
         // adding short option
         if (shortOption){
           result += shortOption;
 
-          if (input.isVector){
+          if (input.isVector()){
             result += '...';
           }
 
@@ -356,7 +354,7 @@ class CommandLineArgs extends Reader{
 
         result += this._usageDisplay(name, input);
 
-        if (input.isVector){
+        if (input.isVector()){
           result += '...';
         }
       }
@@ -393,7 +391,7 @@ class CommandLineArgs extends Reader{
       result = `--${name}`;
 
       const isBoolInput = input instanceof Inputs.Bool;
-      if ((isBoolInput && input.isVector) || !isBoolInput){
+      if ((isBoolInput && input.isVector()) || !isBoolInput){
         result = `${result}=<value>`;
       }
     }
@@ -431,7 +429,7 @@ class CommandLineArgs extends Reader{
    */
   static _shortOptionDisplay(input){
     let result = this._shortOption(input);
-    if (result && !(input instanceof Inputs.Bool && !input.isVector)){
+    if (result && !(input instanceof Inputs.Bool && !input.isVector())){
       result = `${result}=<value>`;
     }
 
@@ -447,9 +445,10 @@ class CommandLineArgs extends Reader{
    */
   _buildDescription(elements){
     let output = '';
-    if (this.options.description.length){
-      output += this.options.description;
-      if (!this.options.description.endsWith('.')){
+    const description = this.option('description');
+    if (description.length){
+      output += description;
+      if (!description.endsWith('.')){
         output += '.';
       }
       output += '\n\n';
@@ -468,7 +467,7 @@ class CommandLineArgs extends Reader{
   _buildUsage(elements){
     let output = '';
 
-    output += `Usage: ${this.executableName} `;
+    output += `Usage: ${this.executableName()} `;
 
     const requiredArguments = Object.create(null);
     const optionalArguments = Object.create(null);
@@ -550,7 +549,7 @@ class CommandLineArgs extends Reader{
     for (const inputName in elements.option){
 
       if (elements.option[inputName].vector){
-        output += `\n       ${this.executableName} `;
+        output += `\n       ${this.executableName()} `;
 
         for (const requiredArg of argumentNames){
           output += elements.argument[requiredArg].usageDisplay;

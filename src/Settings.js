@@ -12,7 +12,7 @@ const path = require('path');
  * const Oca = require('oca');
  *
  * // listing the available settings
- * console.log(Settings.keys);
+ * console.log(Settings.keys());
  * ```
  */
 class Settings{
@@ -57,9 +57,9 @@ class Settings{
   /**
    * Returns the keys included under the settings
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  static get keys(){
+  static keys(){
     return Object.keys(this._data).sort();
   }
 

@@ -145,6 +145,7 @@ class ValidationFail extends Error{
    * @private
    */
   _updateMessage(){
+
     if (this.inputName){
       this.message = `${this.inputName}: ${this[_message]}`;
     }

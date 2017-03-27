@@ -12,7 +12,7 @@ const BaseText = require('./BaseText');
  *
  * ```javascript
  * const input = Input.create('myInput: version');
- * input.value = '2.2.1';
+ * input.setValue('2.2.1');
  * ```
  *
  * <h2>Property Summary</h2>

@@ -1,6 +1,7 @@
 const assert = require('assert');
 const TypeCheck = require('js-typecheck');
 const Action = require('./Action');
+const Util = require('./Util');
 
 // symbols used for private instance variables to avoid any potential clashing
 // caused by re-implementations
@@ -14,9 +15,9 @@ const _result = Symbol('result');
  * to query the input and session information that should be used by the action.
  *
  * In case of new implements the only method expected to be overridden is
- * {@link Reader._perform} by implementing that you can provide support for
- * custom options ({@link Reader.options}) which are passed by the handler
- * ({@link Handler.execute}) to the reader.
+ * {@link Reader._perform}. Readers can have custom options
+ * ({@link Reader.setOption}) which are passed by the handler during the execution
+ * ({@link Handler.execute}).
  *
  * When a value is found for an input it's decoded using {@link Input.parseValue}
  * where each input implementation has its own way of parsing the serialized data,
@@ -66,41 +67,70 @@ class Reader{
   constructor(action){
     assert(action instanceof Action, 'Invalid action instance');
 
+    // note: currently reader & writer are completely separated entities that don't
+    // have a common parent class (aka HandlerOperation). The reason for
+    // that is currently they are so distinctive from each other that the only member in
+    // common is the option. In case they start to share more characteristics in common
+    // then a base class should be created.
+
     this[_action] = action;
     this[_result] = null;
-    this[_options] = {};
+    this[_options] = new Util.HierarchicalCollection();
   }
 
   /**
    * Returns the action that is associated with the reader.
    *
-   * @type {Action}
+   * @return {Action}
    */
-  get action(){
+  action(){
     return this[_action];
   }
 
   /**
-   * Returns a plain object that contains reader options.
+   * Returns an option
    *
-   * @type {Object}
+   * @param {string} path - path about where the option is localized (the levels
+   * must be separated by '.'). In case of an empty string it returns the
+   * entire options
+   * @param {*} [defaultValue] - default value returned in case a value was
+   * not found for the path
+   * @return {*}
    */
-  get options(){
-    return this[_options];
+  option(path, defaultValue=undefined){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+    return this[_options].query(path, defaultValue);
+  }
+
+  /**
+   * Sets a value under the options
+   *
+   * @param {string} path - path about where the option should be stored under
+   * the options (the levels must be separated by '.')
+   * @param {*} value - value that is going to be stored under the collection
+   * @param {boolean} [merge=true] - this option is used to decide in case of the
+   * last level is already existing under the collection, if the value should be
+   * either merged (default) or overridden.
+   */
+  setOption(path, value, merge=true){
+    assert(TypeCheck.isString(path), 'path needs to be defined as string');
+
+    this[_options].insert(path, value, merge);
   }
 
   /**
    * Returns a list of valid input names that should be used for the parsing.
    * This avoids hidden inputs to get exposed in the parsing.
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get validInputNames(){
+  validInputNames(){
+
     const inputs = [];
-    for (const inputName of this[_action].inputNames){
+    for (const inputName of this[_action].inputNames()){
       const input = this[_action].input(inputName);
 
-      if (input.isSerializable && !input.property('hidden')){
+      if (input.isSerializable() && !input.property('hidden')){
         inputs.push(input);
       }
     }
@@ -136,15 +166,17 @@ class Reader{
     }
 
     const result = Object.create(null);
+    const action = this.action();
+    const session = action.session();
     for (const inputName in this[_result]){
 
-      const autofillName = this[_action].input(inputName).property('autofill');
+      const autofillName = action.input(inputName).property('autofill');
 
       if (autofillName){
 
         // if the input name is already under autofill (assigned previously
         // then not overriding them)
-        if (this[_action].session && autofillName in this[_action].session.autofill){
+        if (session && session.hasAutofill(autofillName)){
           continue;
         }
         result[autofillName] = this[_result][inputName];
@@ -185,11 +217,12 @@ class Reader{
    */
   async _parse(){
     if (!this._parsed){
-      this[_result] = await this._perform(this.validInputNames);
+      this[_result] = await this._perform(this.validInputNames());
+      const action = this.action();
 
       // decoding the values if needed
       for (const inputName in this[_result]){
-        const input = this[_action].input(inputName);
+        const input = action.input(inputName);
         const value = this[_result][inputName];
 
         if (TypeCheck.isString(value)){

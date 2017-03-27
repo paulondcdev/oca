@@ -8,7 +8,7 @@ const Input = require('../../Input');
  *
  * ```javascript
  * const input = Input.create('myInput: timestamp');
- * input.value = new Date();
+ * input.setValue(new Date());
  * ```
  *
  * *This input can also be created using the alias:* `date`

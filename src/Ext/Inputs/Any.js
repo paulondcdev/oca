@@ -10,7 +10,7 @@ const Input = require('../../Input');
  *
  * ```javascript
  * const input = Input.create('myInput: any');
- * input.value = {a: 1};
+ * input.setValue({a: 1});
  * ```
  *
  * <h2>Property Summary</h2>
@@ -56,9 +56,9 @@ class Any extends Input{
   /**
    * Serialization is not supported
    *
-   * @type {boolean}
+   * @return {boolean}
    */
-  get isSerializable(){
+  isSerializable(){
     return false;
   }
 

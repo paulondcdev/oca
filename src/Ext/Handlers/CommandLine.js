@@ -91,9 +91,9 @@ class CommandLine extends Handler{
    */
   constructor(session){
     super(session);
-    this.args = process.argv;
-    this.stdout = process.stdout;
-    this.stderr = process.stderr;
+    this.setArgs(process.argv);
+    this.setStdout(process.stdout);
+    this.setStderr(process.stderr);
   }
 
   /**
@@ -102,7 +102,7 @@ class CommandLine extends Handler{
    *
    * @param {Array<string>} value - argument list
    */
-  set args(value){
+  setArgs(value){
     assert(TypeCheck.isList(value), 'value needs to be a list');
     assert(value.length >= 2, 'missing first argument process.execPath and second argument javaScript file being executed');
 
@@ -113,9 +113,9 @@ class CommandLine extends Handler{
    * Returns a list of argument values used by the reader, by default it uses
    * `process.argv`.
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get args(){
+  args(){
     return this[_args];
   }
 
@@ -124,7 +124,7 @@ class CommandLine extends Handler{
    *
    * @param {stream} value - stream used as stdout
    */
-  set stdout(value){
+  setStdout(value){
     assert(value instanceof stream, 'Invalid stream type');
 
     this[_stdout] = value;
@@ -133,9 +133,9 @@ class CommandLine extends Handler{
   /**
    * Returns the stream used as stdout
    *
-   * @type {stream}
+   * @return {stream}
    */
-  get stdout(){
+  stdout(){
     return this[_stdout];
   }
 
@@ -144,7 +144,7 @@ class CommandLine extends Handler{
    *
    * @param {stream} value - stream used as stderr
    */
-  set stderr(value){
+  setStderr(value){
     assert(value instanceof stream, 'Invalid stream type');
 
     this[_stderr] = value;
@@ -153,9 +153,9 @@ class CommandLine extends Handler{
   /**
    * Returns the stream used as stderr
    *
-   * @type {stream}
+   * @return {stream}
    */
-  get stderr(){
+  stderr(){
     return this[_stderr];
   }
 
@@ -172,7 +172,7 @@ class CommandLine extends Handler{
     const reader = super._createReader(action, options);
 
     // setting args to the reader
-    reader.args = this.args;
+    reader.setArgs(this.args());
 
     return reader;
   }
@@ -192,8 +192,8 @@ class CommandLine extends Handler{
     const writer = super._createWriter(value, options);
 
     // setting stdout & stderr to the writer
-    writer.stdout = this.stdout;
-    writer.stderr = this.stderr;
+    writer.setStdout(this.stdout());
+    writer.setStderr(this.stderr());
 
     return writer;
   }

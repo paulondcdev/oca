@@ -12,7 +12,7 @@ const BaseText = require('./BaseText');
 *
 * ```javascript
 * const input = Input.create('myInput: filePath');
-* input.value = '/tmp/foo.txt';
+* input.setValue('/tmp/foo.txt');
 * ```
 *
 * <h2>Property Summary</h2>
@@ -38,7 +38,7 @@ class FilePath extends BaseText{
   *
   * ```javascript
   * let myInput = Input.createInput('myInput: filePath');
-  * myInput.value = '/tmp/file.jpg';
+  * myInput.setValue('/tmp/file.jpg');
   * console.log(myInput.extension()); // jpg
   * ```
   *
@@ -50,7 +50,7 @@ class FilePath extends BaseText{
 
     let result = '';
 
-    if (!this.isEmpty){
+    if (!this.isEmpty()){
       const value = this.valueAt(at);
       const ext = path.extname(value);
 
@@ -67,7 +67,7 @@ class FilePath extends BaseText{
   *
   * ```javascript
   * const myInput = Input.createInput('myInput: filePath');
-  * myInput.value = '/tmp/file.jpg';
+  * myInput.setValue('/tmp/file.jpg');
   * console.log(myInput.basename()); // 'file.jpg'
   * ```
   *
@@ -84,7 +84,7 @@ class FilePath extends BaseText{
   *
   * ```javascript
   * let myInput = Input.createInput('myInput: filePath');
-  * myInput.value = '/tmp/file.jpg';
+  * myInput.setValue('/tmp/file.jpg');
   * console.log(myInput.dirname()); // tmp
   * ```
   *

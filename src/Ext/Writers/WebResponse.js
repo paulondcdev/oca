@@ -69,16 +69,14 @@ class WebResponse extends Writer{
     super(value);
     this[_response] = null;
 
-    // options
-    Object.assign(this.options, {
-      headerOnly: false,
-      header: {},
-      extendOutput: {
-        apiVersion: Settings.get('apiVersion'),
-      },
-      successStatus: 200,
-      successResultLabel: undefined,
+    // default options
+    this.setOption('headerOnly', false);
+    this.setOption('header', {});
+    this.setOption('extendOutput', {
+      apiVersion: Settings.get('apiVersion'),
     });
+    this.setOption('successStatus', 200);
+    this.setOption('successResultLabel', undefined);
   }
 
   /**
@@ -87,17 +85,17 @@ class WebResponse extends Writer{
    * @param {Object} value - res object
    * @see http://expressjs.com/en/api.html#res
    */
-  set response(value){
+  setResponse(value){
     this[_response] = value;
   }
 
   /**
    * Returns the response object created by express
    *
-   * @type {Object}
+   * @return {Object}
    * @see http://expressjs.com/en/api.html#res
    */
-  get response(){
+  response(){
     return this[_response];
   }
 
@@ -121,10 +119,10 @@ class WebResponse extends Writer{
    */
   _errorOutput(){
 
-    const status = this.value.status || 500;
+    const status = this.value().status || 500;
 
     // setting the status code for the response
-    this.response.status(status);
+    this.response().status(status);
 
     const result = {
       error: {
@@ -136,7 +134,7 @@ class WebResponse extends Writer{
     // adding the stack-trace information when running in development mode
     /* istanbul ignore next */
     if (process.env.NODE_ENV === 'development'){
-      result.error.stacktrace = this.value.stack.split('\n');
+      result.error.stacktrace = this.value().stack.split('\n');
     }
 
     // should not leak any error message for the status code 500
@@ -166,7 +164,7 @@ class WebResponse extends Writer{
     const value = super._successOutput();
 
     // setting the status code for the response
-    this.response.status(this.options.successStatus);
+    this.response().status(this.option('successStatus'));
 
     // setting header
     this._setResponseHeaders();
@@ -189,11 +187,12 @@ class WebResponse extends Writer{
   _successStreamOutput(value){
     // setting a default content-type for readable stream in case
     // it has not been set previously
-    if (!(this.options.header && this.options.header.contentType)){
-      this.response.setHeader('Content-Type', 'application/octet-stream');
+    const header = this.option('header');
+    if (!(header && header.contentType)){
+      this.response().setHeader('Content-Type', 'application/octet-stream');
     }
 
-    value.pipe(this.response);
+    value.pipe(this.response());
   }
 
   /**
@@ -229,16 +228,16 @@ class WebResponse extends Writer{
   _genericOutput(data){
 
     // ending response without any data
-    if (this.options.headerOnly){
-      this.response.end();
+    if (this.option('headerOnly')){
+      this.response().end();
       return;
     }
 
     // extending output
-    const result = Util.deepMerge(data, this.options.extendOutput);
+    const result = Util.deepMerge(data, this.option('extendOutput'));
 
     // json output
-    this.response.json(result);
+    this.response().json(result);
   }
 
   /**
@@ -255,7 +254,7 @@ class WebResponse extends Writer{
    * @private
    */
   _resultLabel(value){
-    let resultLabel = this.options.successResultLabel;
+    let resultLabel = this.option('successResultLabel');
     if (resultLabel === undefined){
       if (TypeCheck.isPrimitive(value)){
         resultLabel = 'value';
@@ -282,12 +281,14 @@ class WebResponse extends Writer{
    */
   _setResponseHeaders(){
 
-    if (this.options.header){
-      for (const headerName in this.options.header){
+    const header = this.option('header');
+    const response = this.response();
+    if (header){
+      for (const headerName in header){
         const convertedHeaderName = headerName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
         // assigning a header value to the response
-        this.response.setHeader(convertedHeaderName, this.options.header[headerName]);
+        response.setHeader(convertedHeaderName, header[headerName]);
       }
     }
   }

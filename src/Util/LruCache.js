@@ -78,9 +78,9 @@ class LruCache{
   /**
    * Returns a list containing the keys of the values held by the cache
    *
-   * @type {Array<string>}
+   * @return {Array<string>}
    */
-  get keys(){
+  keys(){
     return (this[_cache] === null) ? [] : this[_cache].keys();
   }
 
@@ -90,7 +90,7 @@ class LruCache{
    * @type {number}
    */
   get length(){
-    return this.keys.length;
+    return this.keys().length;
   }
 
   /**
