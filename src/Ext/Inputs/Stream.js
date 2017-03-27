@@ -4,7 +4,7 @@ const Input = require('../../Input');
 
 
 /**
- * Stream input
+ * Stream input.
  *
  * ```javascript
  * const input = Input.create('myInput: stream');
