@@ -18,7 +18,7 @@ const _stderr = Symbol('stderr');
 * by reading ({@link CommandLineArgs}) the arguments that are
 * passed to the action during the execution ({@link CommandLine.execute}).
 * The result of this handler ({@link CommandLine.output}) is done through
-* the writer {@link CommandLineOutput}.
+* the {@link CommandLineOutput} writer.
 *
 * Using the command-line handler:
 *
