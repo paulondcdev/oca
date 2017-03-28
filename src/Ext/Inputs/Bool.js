@@ -20,6 +20,10 @@ const Input = require('../../Input');
  * *This input can also be created using the alias:* `boolean`
  *
  * <h2>Property Summary</h2>
+ * Property Name | Description | Defined&nbsp;by Default | Default Value
+ * --- | --- | :---: | :---:
+ * primitive | ensures the value is a primitive | ::on:: | ::true::
+ *
  * All properties including the inherited ones can be listed via
  * {@link registeredPropertyNames}
  */
@@ -39,8 +43,12 @@ class Bool extends Input{
     return super._validation(at).then((value) => {
 
       // type checking
-      if (!TypeCheck.isBool(value)){
+      if (!(TypeCheck.isBool(value) || value instanceof Boolean)){
         throw new ValidationFail('Value needs to be a boolean', Bool.errorCodes[0]);
+      }
+      // primitive property
+      else if (this.property('primitive') && value instanceof Boolean){
+        throw new ValidationFail('Value needs to be a primitive', Bool.errorCodes[1]);
       }
 
       return value;
@@ -74,6 +82,7 @@ class Bool extends Input{
 
   static errorCodes = [
     '4304c51a-a48f-41d2-a2b8-9ba43c6617f3',
+    '5decf593-f5a2-4368-a675-9b47256c395a',
   ];
 }
 
@@ -82,5 +91,8 @@ Input.registerInput(Bool);
 
 // also, registering as 'boolean' for convenience
 Input.registerInput(Bool, 'boolean');
+
+// registering properties
+Input.registerProperty(Bool, 'primitive', true);
 
 module.exports = Bool;

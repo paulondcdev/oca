@@ -497,9 +497,9 @@ class Input{
   /**
    * Sets the value of the input
    *
-   * @param {*} inputValue - value that should be set to the input
+   * @param {*} value - value that should be set to the input
    */
-  setValue(inputValue){
+  setValue(value){
 
     // checking if input is read-only
     if (this.readOnly()){
@@ -509,8 +509,8 @@ class Input{
     // Due the overhead that may occur on going through recursively and freezing
     // the whole hierarchy of the value, it freezes only value itself. In case
     // this is not enough consider in changing it to perform a deep-freeze instead
-    this._value = (!this.property('immutable') || TypeCheck.isNone(inputValue)) ||
-      inputValue instanceof Buffer ? inputValue : Object.freeze(inputValue);
+    this._value = (!this.property('immutable') || TypeCheck.isNone(value)) ||
+      value instanceof Buffer ? value : Object.freeze(value);
 
     // flushing the cache when a new value is set
     this.clearCache();
