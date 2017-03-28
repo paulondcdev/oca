@@ -5,9 +5,9 @@
 ![status](https://node-oca.github.io/docs/data/status.svg)
 [![Gitter chat](https://badges.gitter.im/node-oca/gitter.png)](https://gitter.im/node-oca)
 [![Build Status](https://travis-ci.org/node-oca/oca.svg?branch=master)](https://travis-ci.org/node-oca/oca)
+[![Known Vulnerabilities](https://snyk.io/test/github/node-oca/oca/badge.svg)](https://snyk.io/test/github/node-oca/oca)
 [![codecov.io](https://codecov.io/github/node-oca/oca/coverage.svg?branch=master)](https://codecov.io/github/node-oca/oca?branch=master)
 [![Esdocs](https://node-oca.github.io/badge.svg)](https://node-oca.github.io/)
-[![Known Vulnerabilities](https://snyk.io/test/github/node-oca/oca/badge.svg)](https://snyk.io/test/github/node-oca/oca)
 </p>
 
 ### What is it ?
