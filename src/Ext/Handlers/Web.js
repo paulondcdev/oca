@@ -328,11 +328,11 @@ class Web extends Handler{
    * web handler is available under `res.locals.web`, for instance:
    * ```
    * const web = res.locals.web;
-   * web.session().autofill.customValue = 'something';
+   * web.session().setAutofill('customValue', 'value');
    * ```
    *
-   * Where any input assigned with the autofill property 'someCustom' is going to be
-   * assigned with the 'something' value:
+   * Where any input assigned with the autofill property 'customValue' is going to be
+   * assigned with 'value':
    *
    * ```
    * class MyAction extends Oca.action{
