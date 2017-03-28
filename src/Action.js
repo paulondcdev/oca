@@ -573,7 +573,7 @@ class Action{
    * This method is called after the execution of the action.
    *
    * You could re-implement this method to:
-   * - Add custom metadata information used that can be used by a {@link Writer}
+   * - Add custom metadata information that can be used by a {@link Writer}
    * - Add arbitrary information to a log
    * - In case of errors to purge temporary files
    * - Customize exceptions to a more contextual one
