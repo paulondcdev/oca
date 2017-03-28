@@ -89,7 +89,7 @@ const _cache = Symbol('cache');
  * hidden | boolean telling if the input is hidden from the {@link Reader}, \
  * therefore the input should only be used internally | ::off:: | ::none::
  * autofill | key name about a value that may be under the {@link Session.autofill}. This \
- * value is used to initialize the input. It occurs when a session is assigned
+ * value is used to initialize the input. It occurs when a session is assigned \
  * to an action ({@link Action.setSession}) | ::off:: | ::none::
  * description | description about the input, currently this information is displayed \
  * when an action is running through {@link CommandLine} | ::off:: | ::none::
