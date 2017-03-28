@@ -33,10 +33,10 @@ exports.onHandleHTML = (ev) => {
   .replace(new RegExp('::off::', 'g'), '<img src="data/docs/toggle/off.png" title="no">')
 
   // adding the star button to the README displayed in the index page
-  if (ev.data.html.indexOf(' alt="Known Vulnerabilities"></a>' !== -1)){
+  if (ev.data.html.indexOf(' alt="Esdocs"></a>' !== -1)){
     ev.data.html = ev.data.html
     .replace('</head>', '<link rel="icon" type="image/png" sizes="256x256" href="data/thumbnail.png"><script async defer src="https://buttons.github.io/buttons.js"></script></head>')
-    .replace(' alt="Known Vulnerabilities"></a>', ' alt="Known Vulnerabilities"></a> <a class="github-button" href="https://github.com/node-oca/oca" data-icon="octicon-star" data-style="mega" data-count-href="/node-oca/oca/stargazers" data-count-api="/repos/node-oca/oca#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star Oca on GitHub">Star</a>');
+    .replace(' alt="Esdocs"></a>', ' alt=Esdocs"></a> <a class="github-button" href="https://github.com/node-oca/oca" data-icon="octicon-star" data-style="mega" data-count-href="/node-oca/oca/stargazers" data-count-api="/repos/node-oca/oca#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star Oca on GitHub">Star</a>');
   }
 
   // replacing the domain that is hard coded in the INTRODUCTION to the relative doc location
