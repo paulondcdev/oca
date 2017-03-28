@@ -91,26 +91,4 @@ describe('Text Input:', () => {
       done((err.code === 'c7ff4423-2c27-4538-acd7-923dada7f4d3') ? null : err);
     });
   });
-
-  it("When 'regex' property is set, it should validate date based on a regex pattern", () => {
-    const input = Input.create('input: text', {regex: '[0-9]{2}/[0-9]{2}/[0-9]{4}'});
-    input.setValue('25/05/1984');
-    return input.validate.bind(input)();
-  });
-
-  it("When 'regex' property is set, it should not validate the input with a wrong date format based on a regex pattern", (done) => {
-    const input = Input.create('input: text', {regex: '[0-9]{2}/[0-9]{2}/[0-9]{4}'});
-    input.setValue('AA/05/1984');
-    input.validate.bind(input)().then((value) => {
-      done(new Error('unexpected value'));
-    }).catch((err) => {
-      done(err.code === 'c902610c-ef17-4a10-bc75-887d1550793a' ? null : err);
-    });
-  });
-
-  it("An empty string assigned as value should be considered as empty when calling 'isEmpty'", () => {
-    const input = Input.create('input: text', {required: true});
-    input.setValue('');
-    assert(input.isEmpty());
-  });
 });

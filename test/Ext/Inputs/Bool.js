@@ -102,4 +102,30 @@ describe('Bool Input:', () => {
       done(err);
     });
   });
+
+  it('Input should fail when validating a non-primitive value when primitive property is enabled (default)', (done) => {
+    const input = Input.create('input: bool');
+
+    const value = new Boolean(true); // eslint-disable-line no-new-wrappers
+    input.setValue(value);
+
+    input.validate.bind(input)().then(() => {
+      done(new Error('unexpected value'));
+    }).catch((err) => {
+      done(err.code === '5decf593-f5a2-4368-a675-9b47256c395a' ? null : err);
+    });
+  });
+
+  it(`Input should allow validating a non primitive value when primitive property is disabled`, (done) => {
+    const input = Input.create('input: bool', {primitive: false});
+
+    const value = new Boolean(true); // eslint-disable-line no-new-wrappers
+    input.setValue(value);
+
+    input.validate.bind(input)().then(() => {
+      done();
+    }).catch((err) => {
+      done(err);
+    });
+  });
 });
