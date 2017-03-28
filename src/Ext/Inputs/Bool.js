@@ -20,6 +20,7 @@ const Input = require('../../Input');
  * *This input can also be created using the alias:* `boolean`
  *
  * <h2>Property Summary</h2>
+ *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
  * primitive | ensures the value is a primitive | ::on:: | ::true::
