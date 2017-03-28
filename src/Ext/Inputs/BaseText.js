@@ -10,6 +10,7 @@ const Input = require('../../Input');
  *
  * Property Name | Description | Defined&nbsp;by Default | Default Value
  * --- | --- | :---: | :---:
+ * primitive | ensures the value is a primitive | ::on:: | ::true::
  * regex | custom regular expression to test the value | ::off:: | ::none::
  *
  * All properties including the inherited ones can be listed via
@@ -42,7 +43,10 @@ class BaseText extends Input{
       if (!TypeCheck.isString(value)){
         throw new ValidationFail('Value needs to be a string', BaseText.errorCodes[0]);
       }
-
+      // primitive property
+      else if (this.property('primitive') && value instanceof String){
+        throw new ValidationFail('Value needs to be a primitive', BaseText.errorCodes[2]);
+      }
       // regex property
       else if (this.property('regex') && (!(new RegExp(this.property('regex'))).test(value))){
         throw new ValidationFail('Value does not meet the requirements', BaseText.errorCodes[1]);
@@ -55,10 +59,12 @@ class BaseText extends Input{
   static errorCodes = [
     '71b205ae-95ed-42a2-b5e9-ccf8e42ba454',
     'c902610c-ef17-4a10-bc75-887d1550793a',
+    '81b44982-3c7b-4a25-952b-70ec640c58d4',
   ];
 }
 
 // registering properties
+Input.registerProperty(BaseText, 'primitive', true);
 Input.registerProperty(BaseText, 'regex');
 
 module.exports = BaseText;
