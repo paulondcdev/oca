@@ -64,8 +64,8 @@ const _session = Symbol('session');
  * - {@link Action.create} - factory an action (also available as `Oca.createAction`) with
  * custom session when supplied otherwise it creates a new session.
  *
- * An action can be serialized ({@link Action.bakeToJSON}) to postpone their execution where it can be
- * recreated later through {@link Action.createActionFromJSON} or in case of a non-registered actions
+ * You can serialize an action ({@link Action.bakeToJSON}) to postpone their execution where it can be
+ * recreated later through {@link Action.createActionFromJSON} or in case of non-registered actions
  * the serialized data can loaded through {@link Action.fromJSON}.
  *
  * Also, actions can take advantage of the caching mechanism designed to improve the performance
@@ -292,9 +292,9 @@ class Action{
 
   /**
    * Bakes the current interface of the action into json format.
-   * An action can be serialized ({@link Action.bakeToJSON}) to postpone their execution where it can be
-   * recreated later through {@link Action.createActionFromJSON} or in case of a non-registered actions
-   * the serialized data can loaded through {@link Action.fromJSON}.
+   * You can serialize an action to postpone their execution where it can be
+   * recreated later through {@link Action.createActionFromJSON} or in case of non-registered
+   * actions the serialized data can loaded through {@link Action.fromJSON}.
    *
    * @param {boolean} [autofill=true] - tells if the {@link Session.autofill} will be
    * included in the serialization
