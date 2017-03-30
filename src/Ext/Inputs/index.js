@@ -12,3 +12,5 @@ module.exports.UUID = require('./UUID');
 module.exports.Timestamp = require('./Timestamp');
 module.exports.Stream = require('./Stream');
 module.exports.Buf = require('./Buf');
+module.exports.Hex = require('./Hex');
+module.exports.Hash = require('./Hash');
