@@ -31,7 +31,7 @@ describe('UUID Input:', () => {
 
   it('Should set the input with a new time based id (v1)', () => {
     const input = Input.create('input: uuid');
-    input.setNewTimeBasedId();
+    input.setTimeBasedRandom();
 
     return input.validate.bind(input)();
   });
@@ -41,7 +41,7 @@ describe('UUID Input:', () => {
     let error = null;
 
     try{
-      input.setNewTimeBasedId();
+      input.setTimeBasedRandom();
     }
     catch(err){
       error = err;
@@ -57,7 +57,7 @@ describe('UUID Input:', () => {
 
   it('Should set the input with a new random id (v4)', () => {
     const input = Input.create('input: uuid');
-    input.setNewRandomId();
+    input.setRandom();
 
     return input.validate.bind(input)();
   });
@@ -67,7 +67,7 @@ describe('UUID Input:', () => {
     let error = null;
 
     try{
-      input.setNewRandomId();
+      input.setRandom();
     }
     catch(err){
       error = err;

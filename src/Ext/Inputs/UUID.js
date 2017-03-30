@@ -22,10 +22,10 @@ class UUID extends BaseText{
 
   /**
    * Generates a new time based id (uuid v1) and assigns it to the value
-   * of the input
+   * of the input. This method is not supported by vector inputs.
    *
    */
-  setNewTimeBasedId(){
+  setTimeBasedRandom(){
     if (this.isVector()){
       throw new Error('Not supported, input is a vector!');
     }
@@ -35,9 +35,9 @@ class UUID extends BaseText{
 
   /**
    * Generates a new random id (uuid v4) and assigns it to the value
-   * of the input
+   * of the input. This method is not supported by vector inputs.
    */
-  setNewRandomId(){
+  setRandom(){
     if (this.isVector()){
       throw new Error('Not supported, input is a vector!');
     }
