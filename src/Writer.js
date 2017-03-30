@@ -55,6 +55,13 @@ const _value = Symbol('value');
  *    myHandler.output(err);
  * });
  * ```
+ *
+ * <h2>Options Summary</h2>
+ *
+ * Option Name | Description | Default Value
+ * --- | --- | :---:
+ * convertBufferToReadableStream | Tells if buffer value should be converted to a \
+ * readable stream | ::true::
  */
 class Writer{
 
@@ -73,6 +80,9 @@ class Writer{
 
     this[_value] = value;
     this[_options] = new Util.HierarchicalCollection();
+
+    // default options
+    this.setOption('convertBufferToReadableStream', true);
   }
 
   /**
@@ -179,7 +189,8 @@ class Writer{
    * otherwise the result is encoded using Json (defined per writer bases).
    *
    * Note: any Buffer value passed to this method gets automatically converted to
-   * a readable stream.
+   * a readable stream (this behavior is driven by the option
+   * 'convertBufferToReadableStream').
    *
    * This method is called by {@link Handler.output}.
    *
@@ -187,9 +198,8 @@ class Writer{
    * @protected
    */
   _successOutput(){
-
     // stream output
-    if (this.value() instanceof Buffer){
+    if (this.option('convertBufferToReadableStream') && this.value() instanceof Buffer){
       const bufferStream = new stream.PassThrough();
       bufferStream.end(this.value());
 
