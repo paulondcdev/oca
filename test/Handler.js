@@ -331,7 +331,7 @@ describe('Handler:', () => {
         throw new Error('Expected exception');
       }
 
-      assert.equal(handler.result.value, error.toJson());
+      assert.equal(handler.result.value, error.toJSON());
     })();
   });
 

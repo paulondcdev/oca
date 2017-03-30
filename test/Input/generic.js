@@ -99,7 +99,7 @@ describe('Input Generic:', () => {
     input1.validate.bind(input1)().then((value) => {
       done(new Error('unexpected value'));
     }).catch((err) => {
-      done(JSON.parse(err.toJson()).message === 'oops, not yet' ? null : err);
+      done(JSON.parse(err.toJSON()).message === 'oops, not yet' ? null : err);
     });
   });
 

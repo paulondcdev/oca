@@ -81,6 +81,6 @@ describe('Writer:', () => {
 
     const writer = new CustomWriter(err);
     writer.serialize();
-    assert.equal(writer.result, err.toJson());
+    assert.equal(writer.result, err.toJSON());
   });
 });

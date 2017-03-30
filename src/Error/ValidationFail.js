@@ -14,7 +14,7 @@ const _message = Symbol('message');
  *
  * It carries additional information about the context of the error that can be used when
  * reporting/handling it. For this reason when this exception handled by a {@link Handler}
- * it gets encoded into json {@link ValidationFail.toJson}.
+ * it gets encoded into json {@link ValidationFail.toJSON}.
  *
  * ```javascript
  * throw new ValidationFail('File does not exit!')
@@ -119,7 +119,7 @@ class ValidationFail extends Error{
    *
    * @return {string} json string containing the serialized version of the exception
    */
-  toJson(){
+  toJSON(){
     return JSON.stringify({
       message: this[_message],
       code: this.code,
@@ -133,7 +133,7 @@ class ValidationFail extends Error{
    * @param {string} json - string containing the serialized json version of the exception
    * @return {ValidationFail}
    */
-  static fromJson(json){
+  static fromJSON(json){
     assert(TypeCheck.isString(json) && json.length, 'json needs to be defined as valid string');
 
     const data = JSON.parse(json);

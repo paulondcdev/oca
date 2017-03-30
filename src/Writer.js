@@ -146,7 +146,7 @@ class Writer{
    * as value by the {@link Handler.output}.
    *
    * By default the contents of the error output are driven by the `err.message`,
-   * however if an error contains `err.toJson` method ({@link ValidationFail.toJson})
+   * however if an error contains `err.toJSON` property ({@link ValidationFail.toJSON})
    * then that's used instead of the message.
    *
    * Also, you can avoid specific errors to be handled via output process by defining the member
@@ -168,7 +168,10 @@ class Writer{
       throw err;
     }
 
-    const result = (TypeCheck.isCallable(err.toJson)) ? err.toJson() : err.message;
+    // objects with the property 'toJSON' can define a custom representation
+    // when they are serialized using json using (otherwise use the error message), reference:
+    // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
+    const result = (TypeCheck.isCallable(err.toJSON)) ? err.toJSON() : err.message;
 
     // printing the stack-trace information when running in development mode
     /* istanbul ignore next */
