@@ -66,7 +66,7 @@ const _session = Symbol('session');
  *
  * You can serialize an action ({@link Action.bakeToJSON}) to postpone their execution where it can be
  * recreated later through {@link Action.createActionFromJSON} or in case of non-registered actions
- * the serialized data can loaded through {@link Action.fromJSON}.
+ * the serialized data can be loaded through {@link Action.fromJSON}.
  *
  * Also, actions can take advantage of the caching mechanism designed to improve the performance
  * by avoiding re-evaluations in actions that might be executed multiple times. This can enabled
@@ -294,7 +294,7 @@ class Action{
    * Bakes the current interface of the action into json format.
    * You can serialize an action to postpone their execution where it can be
    * recreated later through {@link Action.createActionFromJSON} or in case of non-registered
-   * actions the serialized data can loaded through {@link Action.fromJSON}.
+   * actions the serialized data can be loaded through {@link Action.fromJSON}.
    *
    * @param {boolean} [autofill=true] - tells if the {@link Session.autofill} will be
    * included in the serialization
