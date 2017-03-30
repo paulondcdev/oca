@@ -41,6 +41,8 @@ Oca comes bundled with the inputs types:
 | [Email](https://node-oca.github.io/docs/class/src/Ext/Inputs/Email.js~Email.html) | ```user@domain.com``` |
 | [Ip](https://node-oca.github.io/docs/class/src/Ext/Inputs/Ip.js~Ip.html) | ```192.168.0.1``` |
 | [Timestamp](https://node-oca.github.io/docs/class/src/Ext/Inputs/Timestamp.js~Timestamp.html) | ```new Date()``` |
+| [Hex](https://node-oca.github.io/docs/class/src/Ext/Inputs/Hex.js~Hex.html) | ```ffff00```|
+| [Hash](https://node-oca.github.io/docs/class/src/Ext/Inputs/Hash.js~Hash.html) | ```d41d8cd98f00b204e9800998ecf8427e```|
 | [UUID](https://node-oca.github.io/docs/class/src/Ext/Inputs/UUID.js~UUID.html) | ```10ec58a-a0f2-4ac4-8393-c866d813b8d1```|
 | [Version](https://node-oca.github.io/docs/class/src/Ext/Inputs/Version.js~Version.html) | ```0.1.12```|
 | [Stream](https://node-oca.github.io/docs/class/src/Ext/Inputs/Stream.js~Stream.html) | ```new stream.Writable()```|
