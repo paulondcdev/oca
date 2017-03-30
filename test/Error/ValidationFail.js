@@ -23,7 +23,7 @@ describe('ValidationFail:', () => {
 
   it('Should test the json support', () => {
     const errorA = new ValidationFail('Some Message', '96c45e1f-cd2f-417f-9977-cf96101366ef', 'inputName');
-    const errorB = ValidationFail.fromJson(errorA.toJson());
+    const errorB = ValidationFail.fromJSON(errorA.toJSON());
 
     assert.equal(errorA.message, errorB.message);
     assert.equal(errorA.code, errorB.code);

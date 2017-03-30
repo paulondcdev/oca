@@ -398,7 +398,7 @@ describe('CommandLine Generic:', () => {
 
       assert(error);
       assert.equal(stdout, '');
-      assert.equal(stderr, error.toJson());
+      assert.equal(stderr, error.toJSON());
 
     })();
   });
