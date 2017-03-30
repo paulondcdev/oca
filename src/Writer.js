@@ -189,7 +189,7 @@ class Writer{
    *
    * All writers shipped with Oca have support for streams where in case of
    * any readable stream or buffer value are piped to the output,
-   * otherwise the result is encoded using Json (defined per writer bases).
+   * otherwise the result is encoded using JSON (defined per writer bases).
    *
    * Note: any Buffer value passed to this method gets automatically converted to
    * a readable stream (this behavior is driven by the option

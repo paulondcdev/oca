@@ -20,7 +20,7 @@ describe('Action Serialization:', () => {
       actionA.input('a').setValue(3);
       actionA.input('b').setValue(4);
 
-      const actionB = Action.createActionFromJson(await actionA.toJson());
+      const actionB = Action.createActionFromJSON(await actionA.bakeToJSON());
 
       assert.equal(actionA.metadata('action.name'), actionB.metadata('action.name'));
       assert.equal(actionA.input('a').value(), actionB.input('a').value());
@@ -48,7 +48,7 @@ describe('Action Serialization:', () => {
 
       let success = false;
       try{
-        await action.toJson();
+        await action.bakeToJSON();
       }
       catch(err){
         if (err.message === 'serialization not supported!'){
@@ -74,7 +74,7 @@ describe('Action Serialization:', () => {
       actionA.input('a').setValue(4);
       actionA.input('b').setValue(4);
 
-      const actionB = Action.createActionFromJson(await actionA.toJson());
+      const actionB = Action.createActionFromJSON(await actionA.bakeToJSON());
 
       assert.equal(actionA.session().autofill('test'), actionB.session().autofill('test'));
       assert.equal(actionA.session().autofill('test2'), actionB.session().autofill('test2'));
@@ -89,7 +89,7 @@ describe('Action Serialization:', () => {
       actionA.input('b').setValue(4);
 
       const actionB = new testutils.Actions.Shared.Multiply();
-      actionB.fromJson(await actionA.toJson(false));
+      actionB.fromJSON(await actionA.bakeToJSON(false));
 
       assert.equal(actionA.input('a').value(), actionB.input('a').value());
       assert.equal(actionA.input('b').value(), actionB.input('b').value());
@@ -109,7 +109,7 @@ describe('Action Serialization:', () => {
 
       const actionB = new testutils.Actions.Shared.Multiply();
       actionB.setSession(new Session());
-      actionB.fromJson(await actionA.toJson());
+      actionB.fromJSON(await actionA.bakeToJSON());
 
       assert.equal(actionA.session().autofill('customValue'), actionB.session().autofill('customValue'));
       assert.equal(actionA.session().autofill('customValue2'), actionB.session().autofill('customValue2'));
@@ -125,7 +125,7 @@ describe('Action Serialization:', () => {
       actionA.input('a').setValue(4);
       actionA.input('b').setValue(4);
 
-      const actionB = Action.createActionFromJson(await actionA.toJson(false));
+      const actionB = Action.createActionFromJSON(await actionA.bakeToJSON(false));
 
       assert.equal(actionB.session().autofill('test'), undefined);
       assert.equal(actionB.session().autofill('test2'), undefined);
