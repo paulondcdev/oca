@@ -22,8 +22,6 @@ const Hex = require('./Hex');
  *
  * All properties including the inherited ones can be listed via
  * {@link registeredPropertyNames}
- *
- * @see https://en.wikipedia.org/wiki/Universally_unique_identifier
  */
 class Hash extends Hex{
 
