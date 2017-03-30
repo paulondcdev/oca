@@ -37,12 +37,14 @@ const _result = Symbol('result');
  * {@link Ip} | `'192.168.0.1'` | `'["192.168.0.1","192.168.0.2"]'`
  * {@link Timestamp} | `'2017-02-02T22:26:30.431Z'` | \
  * `'["2017-02-02T22:26:30.431Z","2017-02-02T22:27:19.066Z"]'`
- * {@link UUID} | `'075054e0-810a-11e6-8c1d-e5fb28c699ca'` | \
- * `'["075054e0-810a-11e6-8c1d-e5fb28c699ca","98e631d3-6255-402a-88bd-66056e1ca9df"]'`
  * {@link Url} | `'#http#://www.google.com'` | \
  * `'["#http#://www.google.com","#http#://www.wikipedia.com"]'`
  * {@link Version} | `'10.1.1'` | `'["10.1.1","10.2"]'`
  * {@link Buf} | `'aGVsbG8='` | `'["aGVsbG8=","d29ybGQ="]'`
+ * {@link Hex} | `'ffff00'` | `'["ffff00","ff"]'`
+ * {@link Hash} | `'d65709ab'` | `'["d65709ab","b94d6fe4"]'`
+ * {@link UUID} | `'075054e0-810a-11e6-8c1d-e5fb28c699ca'` | \
+ * `'["075054e0-810a-11e6-8c1d-e5fb28c699ca","98e631d3-6255-402a-88bd-66056e1ca9df"]'`
  *
  * <br/>**Hidding inputs from readers:**
  * A reader only sees inputs that are capable of serialization
