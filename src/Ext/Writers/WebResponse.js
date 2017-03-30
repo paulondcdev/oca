@@ -206,14 +206,27 @@ class WebResponse extends Writer{
       data: {},
     };
 
-    // resolving the result label
-    const resultLabel = this._resultLabel(value);
-    if (resultLabel){
-      result.data[resultLabel] = value;
-    }
-    else{
-      assert(!TypeCheck.isPrimitive(value), "Can't output a primitive value without 'resultLabel'");
-      Object.assign(result.data, value);
+    if (value !== undefined){
+
+      // in case the value has defined 'toJSON' calling that to get result
+      // value that should be used for the output, reference:
+      // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
+      let resultValue = value;
+      if (TypeCheck.isCallable(value.toJSON)){
+        resultValue = JSON.parse(JSON.stringify(value));
+      }
+
+      // resolving the result label
+      const resultLabel = this._resultLabel(resultValue);
+
+      if (resultLabel){
+        result.data[resultLabel] = resultValue;
+      }
+      else{
+        assert(!TypeCheck.isPrimitive(value), "Can't output a primitive value without a 'resultLabel'");
+        assert(TypeCheck.isPlainObject(resultValue), "Can't output a non-plain object value");
+        result.data = resultValue;
+      }
     }
 
     this._genericOutput(result);

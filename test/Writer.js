@@ -1,4 +1,5 @@
 const assert = require('assert');
+const stream = require('stream');
 const Oca = require('../src');
 
 const Writer = Oca.Writer;
@@ -39,6 +40,23 @@ describe('Writer:', () => {
     writer.serialize();
 
     assert.equal(writer.result, value);
+  });
+
+  it("A buffer value should be converted to a stream automatically when the option 'convertBufferToReadableStream' is enabled (default)", () => {
+
+    const writer = new CustomWriter(Buffer.from('test'));
+    writer.serialize();
+
+    assert(writer.result instanceof stream.Readable);
+  });
+
+  it("A buffer value should not be converted to a stream automatically when the option 'convertBufferToReadableStream' is disabled", () => {
+
+    const writer = new CustomWriter(Buffer.from('test'));
+    writer.setOption('convertBufferToReadableStream', false);
+    writer.serialize();
+
+    assert(writer.result instanceof Buffer);
   });
 
   it('Should test serialize a vector value as output', () => {
