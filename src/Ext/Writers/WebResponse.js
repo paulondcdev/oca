@@ -175,7 +175,7 @@ class WebResponse extends Writer{
       return;
     }
 
-    this._successJsonOutput(value);
+    this._successJSONOutput(value);
   }
 
   /**
@@ -201,7 +201,7 @@ class WebResponse extends Writer{
    * @param {*} value - output value
    * @private
    */
-  _successJsonOutput(value){
+  _successJSONOutput(value){
     const result = {
       data: {},
     };

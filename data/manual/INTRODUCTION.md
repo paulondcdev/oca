@@ -255,10 +255,10 @@ const myAction = Oca.createAction('myAction');
 myAction.input('myInput').setValue('Text');
 
 // serializing the action into json
-actionA.toJson().then((json) => {
+actionA.bakeToJSON().then((json) => {
 
   // re-creating the action
-  const myAction2 = Oca.Action.createActionFromJson(json);
+  const myAction2 = Oca.Action.createActionFromJSON(json);
 
   // executing it
   return myAction2.execute();
@@ -268,7 +268,7 @@ actionA.toJson().then((json) => {
 });
 ```
 
-[JSON Action Documentation](https://node-oca.github.io/docs/class/src/Action.js~Action.html#instance-method-toJson)
+[JSON Action Documentation](https://node-oca.github.io/docs/class/src/Action.js~Action.html#instance-method-bakeToJSON)
 
 ## How to share data between actions ?
 

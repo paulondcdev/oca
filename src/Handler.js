@@ -27,7 +27,7 @@ const _metadata = Symbol('metadata');
  * ({@link Writer._successOutput}, {@link Writer._errorOutput}). All writers
  * shipped with Oca have support for streams where in case of any readable stream
  * or buffer value they are piped to the output, otherwise the result is encoded
- * using Json.
+ * using JSON.
  *
  * Both reader and writer can be customized through options that can be either
  * defined through the action's metadata or directly through the handler. If you would

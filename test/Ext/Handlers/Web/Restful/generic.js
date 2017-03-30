@@ -47,7 +47,7 @@ describe('Web Restful Generic:', () => {
     }
   }
 
-  class JsonRepresentation extends Oca.Action{
+  class JSONRepresentation extends Oca.Action{
     _perform(data){
 
       class _CustomRepresentation{
@@ -70,7 +70,7 @@ describe('Web Restful Generic:', () => {
     Oca.registerAction(ForceToFail);
     Oca.registerAction(CheckRemoteAddress);
     Oca.registerAction(UndefinedResult);
-    Oca.registerAction(JsonRepresentation);
+    Oca.registerAction(JSONRepresentation);
 
     // webfying actions
     Oca.webfyAction('sum', 'get', {restRoute: '/A'});
@@ -78,7 +78,7 @@ describe('Web Restful Generic:', () => {
     Oca.webfyAction(ForceToFail, 'get', {restRoute: '/forceToFail'});
     Oca.webfyAction(CheckRemoteAddress, 'get', {restRoute: '/checkRemoteAddress'});
     Oca.webfyAction(UndefinedResult, 'get', {restRoute: '/undefinedResult'});
-    Oca.webfyAction(JsonRepresentation, 'get', {restRoute: '/jsonRepresentation'});
+    Oca.webfyAction(JSONRepresentation, 'get', {restRoute: '/jsonRepresentation'});
 
 
     // express server
