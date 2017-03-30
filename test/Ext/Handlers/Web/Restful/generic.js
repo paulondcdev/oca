@@ -34,18 +34,52 @@ describe('Web Restful Generic:', () => {
     }
   }
 
+  class UndefinedResult extends Oca.Action{
+    _perform(data){
+      this.setMetadata('handler.web.writeOptions.extendOutput', {
+        data: {
+          myCustomDataA: 1,
+          myCustomDataB: 2,
+        },
+      });
+
+      return Promise.resolve();
+    }
+  }
+
+  class JsonRepresentation extends Oca.Action{
+    _perform(data){
+
+      class _CustomRepresentation{
+        toJSON(){
+          return {
+            a: 1,
+            b: 2,
+          };
+        }
+      }
+
+      return Promise.resolve(new _CustomRepresentation());
+    }
+  }
+
   before((done) => {
 
     // registrations
     Oca.registerAction(testutils.Actions.Shared.Sum, 'sum');
     Oca.registerAction(ForceToFail);
     Oca.registerAction(CheckRemoteAddress);
+    Oca.registerAction(UndefinedResult);
+    Oca.registerAction(JsonRepresentation);
 
     // webfying actions
     Oca.webfyAction('sum', 'get', {restRoute: '/A'});
     Oca.webfyAction('sum', 'patch', {restRoute: '/A/:a/test'});
     Oca.webfyAction(ForceToFail, 'get', {restRoute: '/forceToFail'});
-    Oca.webfyAction(CheckRemoteAddress, 'get', {restRoute: '/D'});
+    Oca.webfyAction(CheckRemoteAddress, 'get', {restRoute: '/checkRemoteAddress'});
+    Oca.webfyAction(UndefinedResult, 'get', {restRoute: '/undefinedResult'});
+    Oca.webfyAction(JsonRepresentation, 'get', {restRoute: '/jsonRepresentation'});
+
 
     // express server
     app = express();
@@ -65,7 +99,7 @@ describe('Web Restful Generic:', () => {
   });
 
   it('Should test if the remoteAddress is being set by the autofill', (done) => {
-    request(`http://localhost:${port}/D?ipAddress=0`, (err, response, body) => {
+    request(`http://localhost:${port}/checkRemoteAddress?ipAddress=0`, (err, response, body) => {
 
       if (err){
         return done(err);
@@ -363,6 +397,56 @@ describe('Web Restful Generic:', () => {
 
         const result = JSON.parse(body);
         assert.equal(result.data.value, 10);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should be able to response to an action that does not have a returning value', (done) => {
+
+    request(`http://localhost:${port}/undefinedResult`, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+        const result = JSON.parse(body);
+        assert.equal(Object.keys(result.data).length, 2);
+        assert.equal(result.data.myCustomDataA, 1);
+        assert.equal(result.data.myCustomDataB, 2);
+      }
+      catch(errr){
+        error = errr;
+      }
+
+      done(error);
+    });
+  });
+
+  it('Should cast the value used in the response to the json representation defined in the result', (done) => {
+
+    request(`http://localhost:${port}/jsonRepresentation`, (err, response, body) => {
+
+      if (err){
+        return done(err);
+      }
+
+      let error = null;
+
+      try{
+        assert.equal(response.statusCode, 200);
+        const result = JSON.parse(body);
+        assert.equal(Object.keys(result.data).length, 2);
+        assert.equal(result.data.a, 1);
+        assert.equal(result.data.b, 2);
       }
       catch(errr){
         error = errr;
