@@ -47,8 +47,8 @@ const _cache = Symbol('cache');
  * Input.create('myInput?: bool[]')
  * ```
  *
- * You can also create inputs through a verbose ([boilerplate](https://en.wikipedia.org/wiki/Boilerplate_code))
- * interface where each of the options described above can be defined at construction time via properties:
+ * You can also create inputs through a verbose (boilerplate) interface where each
+ * of the options described above can be defined at construction time via properties:
  * ```javascript
  * Input.create('myInput', {type: 'bool', vector: true, required: false})
  * ```
@@ -87,7 +87,7 @@ const _cache = Symbol('cache');
  * vector | boolean telling if the input holds a vector value (defined \
  * at the construction time) | ::on:: | ::auto::
  * hidden | boolean telling if the input is hidden from the {@link Reader}, \
- * therefore the input should only be used internally | ::off:: | ::none::
+ * therefore it should only be used internally | ::off:: | ::none::
  * autofill | key name about a value that may be under the {@link Session.autofill}. This \
  * value is used to initialize the input. It occurs when a session is assigned \
  * to an action ({@link Action.setSession}) | ::off:: | ::none::
@@ -146,7 +146,7 @@ class Input{
   }
 
   /**
-   * Creates an input instance
+   * Creates an input instance (also available as `Oca.createInput`)
    *
    * @param {string} inputInterface - string followed by either the pattern `name: type`
    * or `name?: type` in case of optional {@link Input}. The type is case-insensitive
@@ -710,6 +710,7 @@ class Input{
 
   /**
    * Registers a new input type to the available inputs
+   * (also available as `Oca.registerInput`)
    *
    * @param {Input} inputClass - input implementation that will be registered
    * @param {string} [name] - string containing the registration name for the
@@ -777,11 +778,11 @@ class Input{
   }
 
   /**
-   * Registers a property for the input type
+   * Registers a property for the input type (also available as `Oca.registerProperty`)
    *
    * ```
    * // example of registering a new property
-   * Oca.Input.registerProperty('text', 'myCustomProperty', 'A initial value if necessary')
+   * Oca.registerProperty('text', 'myCustomProperty', 'A initial value if necessary')
    * ```
    *
    * @param {string|Input} inputClassOrRegisteredName - registered input name or input class
