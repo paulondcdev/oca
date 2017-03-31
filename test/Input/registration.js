@@ -93,4 +93,20 @@ describe('Input Registration:', () => {
   it('When querying an input name that is not registered it should return null', () => {
     assert.equal(Input.registeredInput('InvalidRegisteredName'), null);
   });
+
+  it('Should register an input using Oca.registerInput', () => {
+
+    class CustomInput extends Input{}
+
+    Oca.registerInput(CustomInput, 'customNameUsingRegShortcut');
+    assert(Input.registeredInputNames().includes('customNameUsingRegShortcut'.toLowerCase()));
+  });
+
+  it('Should create an input using Oca.createInput', () => {
+
+    class CustomInput extends Input{}
+
+    Oca.registerInput(CustomInput, 'customNameUsingCreateShortcut');
+    assert(Oca.createInput('input: customNameUsingCreateShortcut') instanceof CustomInput);
+  });
 });
