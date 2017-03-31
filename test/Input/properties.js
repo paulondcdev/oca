@@ -160,4 +160,12 @@ describe('Input Property:', () => {
 
     assert.equal(inputA.value()[1], 'new value');
   });
+
+  it('Should register a property using Oca.registerProperty', () => {
+
+    class CustomPropertyInput extends Input{}
+    Oca.registerInput(CustomPropertyInput);
+    Oca.registerProperty(CustomPropertyInput, 'myCustomProperty', true);
+    assert(Input.registeredPropertyNames(CustomPropertyInput).includes('myCustomProperty'));
+  });
 });
