@@ -260,7 +260,7 @@ myAction.input('myInput').setValue('Text');
 actionA.bakeToJSON().then((json) => {
 
   // re-creating the action
-  const myAction2 = Oca.Action.createActionFromJSON(json);
+  const myAction2 = Oca.Action.createFromJSON(json);
 
   // executing it
   return myAction2.execute();
