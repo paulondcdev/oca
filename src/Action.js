@@ -95,26 +95,30 @@ class Action{
   /**
    * Associates a {@link Session} with the action. By doing this all inputs that
    * are flagged with 'autofill' property will be initialized with the
-   * session value
+   * session value. The session assigned to the action is cloned during the assignment
+   * ({@link Session.clone}).
    *
-   * @param {Session} session - session object
+   * @param {Session|null} session - session object or null
    */
   setSession(session){
     assert(session === null || session instanceof Session, 'session must be an instance of Session or null');
 
-    this[_session] = session;
-
     if (session !== null){
+      this[_session] = session.clone();
+
       // setting the session inputs
-      const autofillKeys = session.autofillKeys();
+      const autofillKeys = this[_session].autofillKeys();
       for (const input of this[_inputs].values()){
 
         // setting the autofill inputs
         const autofillName = input.property('autofill');
         if (autofillName && autofillKeys.includes(autofillName)){
-          input.setValue(session.autofill(autofillName));
+          input.setValue(this[_session].autofill(autofillName));
         }
       }
+    }
+    else{
+      this[_session] = null;
     }
   }
 

@@ -204,6 +204,36 @@ class Session{
 
     return true;
   }
+
+  /**
+   * Returns a cloned version of the current session where all autofill
+   * and arbitrary data are copied (not deep copy) to the cloned version.
+   *
+   * This feature is used by the actions during the session assignment
+   * ({@link Action.setSession}) to prevent that modifications done by nested actions
+   * inside of the autofill/arbitrary data reflect back in session of their parent
+   * action. Therefore, the cloned session acts as scope for changes
+   * in the autofill/arbitrary data.
+   *
+   * The current wrapup and resultCache are also assigned to the cloned version.
+   *
+   * @return {Session}
+   */
+  clone(){
+    const result = new Session(this.wrapup(), this.resultCache());
+
+    // transferring autofill data
+    for (const autofillKey in this[_autofill]){
+      result.setAutofill(autofillKey, this[_autofill][autofillKey]);
+    }
+
+    // transferring arbitrary data
+    for (const arbitraryKey in this[_arbitraryData]){
+      result.set(arbitraryKey, this[_arbitraryData][arbitraryKey]);
+    }
+
+    return result;
+  }
 }
 
 // Setting the default settings:

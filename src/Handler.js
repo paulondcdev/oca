@@ -516,7 +516,7 @@ class Handler{
     }
 
     // setting autofill
-    const session = this.session();
+    const session = action.session();
     for (const autofillName in autofillValues){
       session.setAutofill(autofillName, autofillValues[autofillName]);
     }
