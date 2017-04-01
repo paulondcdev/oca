@@ -13,14 +13,14 @@ describe('Action Serialization:', () => {
   });
 
   // tests
-  it('Should serialize the action into json', () => {
+  it('Should serialize action into json', () => {
 
     return (async () => {
       const actionA = Oca.createAction('multiplyAction');
       actionA.input('a').setValue(3);
       actionA.input('b').setValue(4);
 
-      const actionB = Action.createActionFromJSON(await actionA.bakeToJSON());
+      const actionB = Action.createFromJSON(await actionA.bakeToJSON());
 
       assert.equal(actionA.metadata('action.name'), actionB.metadata('action.name'));
       assert.equal(actionA.input('a').value(), actionB.input('a').value());
@@ -30,12 +30,12 @@ describe('Action Serialization:', () => {
     })();
   });
 
-  it('Should fail to serialize the action that contains a non-serializable input', () => {
+  it('Should fail to serialize action that contains a non-serializable input', () => {
 
     class NonSerializable extends testutils.Actions.Shared.Multiply{
       constructor(){
         super();
-        this.createInput('nonSerializable: any');
+        this.createInput('nonSerializable: any', {hidden: false});
       }
     }
     Oca.registerAction(NonSerializable);
@@ -65,7 +65,37 @@ describe('Action Serialization:', () => {
     })();
   });
 
-  it('Should serialize the action into json with autofill values', () => {
+  it('Should serialize action into json with hidden inputs when avoidHidden is false', () => {
+
+    return (async () => {
+      const actionA = Oca.createAction('multiplyAction', new Session());
+      actionA.input('a').setValue(4);
+      actionA.input('b').setValue(5);
+      actionA.input('b').assignProperty('hidden', true);
+
+      const actionB = Action.createFromJSON(await actionA.bakeToJSON(true, false));
+
+      assert.equal(actionA.input('a').value(), actionB.input('a').value());
+      assert.equal(actionA.input('b').value(), actionB.input('b').value());
+    })();
+  });
+
+  it('Should serialize action into json without hidden inputs when avoidHidden is true (default)', () => {
+
+    return (async () => {
+      const actionA = Oca.createAction('multiplyAction', new Session());
+      actionA.input('a').setValue(4);
+      actionA.input('b').setValue(5);
+      actionA.input('b').assignProperty('hidden', true);
+
+      const actionB = Action.createFromJSON(await actionA.bakeToJSON());
+
+      assert.equal(actionA.input('a').value(), actionB.input('a').value());
+      assert(actionB.input('b').isEmpty());
+    })();
+  });
+
+  it('Should serialize action into json with autofill values', () => {
 
     return (async () => {
       const actionA = Oca.createAction('multiplyAction', new Session());
@@ -74,14 +104,14 @@ describe('Action Serialization:', () => {
       actionA.input('a').setValue(4);
       actionA.input('b').setValue(4);
 
-      const actionB = Action.createActionFromJSON(await actionA.bakeToJSON());
+      const actionB = Action.createFromJSON(await actionA.bakeToJSON());
 
       assert.equal(actionA.session().autofill('test'), actionB.session().autofill('test'));
       assert.equal(actionA.session().autofill('test2'), actionB.session().autofill('test2'));
     })();
   });
 
-  it('Should serialize the action contents into json testing the input values', () => {
+  it('Should serialize action contents into json testing the input values', () => {
 
     return (async () => {
       const actionA = new testutils.Actions.Shared.Multiply();
@@ -97,7 +127,7 @@ describe('Action Serialization:', () => {
     })();
   });
 
-  it('Should serialize the action contents into json testing the autofill', () => {
+  it('Should serialize action contents into json testing the autofill', () => {
 
     return (async () => {
       const actionA = new testutils.Actions.Shared.Multiply();
@@ -116,7 +146,7 @@ describe('Action Serialization:', () => {
     })();
   });
 
-  it('Should serialize the action into json without autofill values (disabled during serialization)', () => {
+  it('Should serialize action into json without autofill values (disabled during serialization)', () => {
 
     return (async () => {
       const actionA = Oca.createAction('multiplyAction', new Session());
@@ -125,7 +155,7 @@ describe('Action Serialization:', () => {
       actionA.input('a').setValue(4);
       actionA.input('b').setValue(4);
 
-      const actionB = Action.createActionFromJSON(await actionA.bakeToJSON(false));
+      const actionB = Action.createFromJSON(await actionA.bakeToJSON(false));
 
       assert.equal(actionB.session().autofill('test'), undefined);
       assert.equal(actionB.session().autofill('test2'), undefined);

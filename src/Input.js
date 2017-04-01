@@ -576,7 +576,7 @@ class Input{
   /**
    * Decodes a value represented as string to the type that is compatible with the input.
    * This method is called by the {@link Handler} or when an action is loaded/created using
-   * {@link Action.fromJSON}/{@link Action.createActionFromJSON}. In case the input
+   * {@link Action.fromJSON}/{@link Action.createFromJSON}. In case the input
    * is defined as vector then the value can be defined using an array encoded in JSON.
    * The parsed value gets returned and assigned to the input (you can control it by
    * the `assignValue` argument).
