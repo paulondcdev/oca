@@ -186,4 +186,12 @@ describe('Action Generic:', () => {
       }
     })();
   });
+
+  it('Should clone session during session assignment', () => {
+    const session = new Session();
+    const action = new Action();
+    action.setSession(session);
+
+    assert.notEqual(action.session(), session);
+  });
 });

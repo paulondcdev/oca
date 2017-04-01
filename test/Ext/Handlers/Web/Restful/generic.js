@@ -122,25 +122,6 @@ describe('Web Restful Generic:', () => {
 
   it('Should assign an input value as autofill', (done) => {
 
-    class TestAutofillAction extends Action{
-      constructor(){
-        super();
-
-        this.createInput('a: text', {autofill: 'userId'});
-        this.createInput('b: text', {autofill: 'projectId'});
-        this.createInput('c: text');
-      }
-
-      _perform(data){
-        const action = this.createAction('AvailableActionE');
-        return action.execute();
-      }
-    }
-
-    Oca.registerAction(TestAutofillAction);
-    Oca.webfyAction(TestAutofillAction, 'post', {auth: false, restRoute: '/TestAutofillAction'});
-    Oca.restful(app);
-
     class AvailableActionE extends Action{
       constructor(){
         super();
@@ -160,6 +141,25 @@ describe('Web Restful Generic:', () => {
     }
 
     Oca.registerAction(AvailableActionE);
+
+    class TestAutofillAction extends Action{
+      constructor(){
+        super();
+
+        this.createInput('a: text', {autofill: 'userId'});
+        this.createInput('b: text', {autofill: 'projectId'});
+        this.createInput('c: text');
+      }
+
+      _perform(data){
+        const action = this.createAction('AvailableActionE');
+        return action.execute();
+      }
+    }
+
+    Oca.registerAction(TestAutofillAction);
+    Oca.webfyAction(TestAutofillAction, 'post', {auth: false, restRoute: '/TestAutofillAction'});
+    Oca.restful(app);
 
     const postFormData = {
       a: 'TestA',
